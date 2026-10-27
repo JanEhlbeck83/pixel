@@ -15,6 +15,8 @@ class AuthenticationTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200);
+        $response->assertDontSee('auth-showcase');
+        $response->assertSee('auth-mobile-brand');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

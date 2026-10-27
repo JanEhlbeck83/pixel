@@ -25,7 +25,7 @@ let wallDimensionsLoaded = false;
 let initialViewportTilesLoaded = false;
 let initialViewportTilesLoading = false;
 let displayScale = 1;
-const zoomLevels = [1, 1.5, 2, 3, 4];
+const zoomLevels = [1, 1.5, 2, 3, 4, 6, 8];
 let viewOffsetX = 0;
 let viewOffsetY = 0;
 let viewWidth = wallWidth;
@@ -47,12 +47,21 @@ const clearSelectionBtn = document.getElementById('clearSelectionBtn');
 const applySelectionBtn = document.getElementById('applySelectionBtn');
 const closeEditorBtn = document.getElementById('closeEditorBtn');
 const editorPopup = document.getElementById('editorPopup');
-const imageUpload = document.getElementById('imageUpload');
+const colorPicker = document.getElementById('colorPicker');
+const colorHexInput = document.getElementById('colorHexInput');
 const rulesModal = document.getElementById('rulesModal');
 const cookieBanner = document.getElementById('cookieBanner');
 const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
 const closeRulesBtn = document.getElementById('closeRulesBtn');
 const openRulesBtn = document.getElementById('openRulesBtn');
+const shareViewBtn = document.getElementById('shareViewBtn');
+const shareFacebookLink = document.getElementById('shareFacebookLink');
+const cursorCoords = document.getElementById('cursorCoords');
+const neighborhoodCanvas = document.getElementById('neighborhoodCanvas');
+const neighborhoodLabel = document.getElementById('neighborhoodLabel');
+const pixelCounter = document.getElementById('pixelCounter');
+const pixelCounterValue = document.getElementById('pixelCounterValue');
+const pixelCounterNote = document.getElementById('pixelCounterNote');
 const authFlag = document.getElementById('isAuthenticated');
 const isAuthenticated = authFlag ? authFlag.dataset.auth === '1' : false;
 
@@ -220,6 +229,10 @@ async function requestPixelAreaLock(area, method = 'POST') {
         const payload = await response.json();
 
         if (!response.ok || !payload.success) {
+            if (payload.limit) {
+                showLimitModal(payload);
+                return false;
+            }
             payload.locked_pixels?.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
             setStatus(payload.message || 'Der Bereich konnte nicht reserviert werden.');
             return false;
@@ -253,26 +266,19 @@ function ensureSelectionBounds() {
         return;
     }
 
-    selection.width = clamp(selection.width, 5, Math.min(wallWidth, 1024));
-    selection.height = clamp(selection.height, 5, Math.min(wallHeight, 1024));
+    selection.width = 1;
+    selection.height = 1;
 
     selection.x = clamp(selection.x, 0, wallWidth - selection.width);
     selection.y = clamp(selection.y, 0, wallHeight - selection.height);
 }
 
-function snapToStep(value) {
-    return Math.max(5, Math.round(value / 5) * 5);
-}
-
-function updateSelection(x, y, width, height) {
-    const snappedWidth = clamp(snapToStep(width), 5, Math.min(wallWidth, 1024));
-    const snappedHeight = clamp(snapToStep(height), 5, Math.min(wallHeight, 1024));
-
+function updateSelection(x, y) {
     selection = {
-        x: clamp(x, 0, wallWidth - Math.max(5, snappedWidth)),
-        y: clamp(y, 0, wallHeight - Math.max(5, snappedHeight)),
-        width: snappedWidth,
-        height: snappedHeight,
+        x: clamp(x, 0, wallWidth - 1),
+        y: clamp(y, 0, wallHeight - 1),
+        width: 1,
+        height: 1,
     };
 
     ensureSelectionBounds();
@@ -280,6 +286,7 @@ function updateSelection(x, y, width, height) {
 }
 
 function renderCanvas() {
+    renderNeighborhood();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -294,7 +301,7 @@ function renderCanvas() {
     });
 
     if (!selection && hoverCell
-        && hoverCell.x + 5 > viewOffsetX && hoverCell.y + 5 > viewOffsetY
+        && hoverCell.x + 1 > viewOffsetX && hoverCell.y + 1 > viewOffsetY
         && hoverCell.x < viewOffsetX + viewWidth && hoverCell.y < viewOffsetY + viewHeight) {
         const lineWidth = 1 / displayScale;
         ctx.strokeStyle = '#ffffff';
@@ -302,8 +309,8 @@ function renderCanvas() {
         ctx.strokeRect(
             (hoverCell.x - viewOffsetX) + lineWidth / 2,
             (hoverCell.y - viewOffsetY) + lineWidth / 2,
-            5 - lineWidth,
-            5 - lineWidth
+            1 - lineWidth,
+            1 - lineWidth
         );
     }
 
@@ -402,6 +409,7 @@ function changeZoom(zoom) {
 
     zoomOutBtn.disabled = zoomLevels.indexOf(displayScale) === 0;
     zoomInBtn.disabled = zoomLevels.indexOf(displayScale) === zoomLevels.length - 1;
+    zoomResetBtn.textContent = `${Math.round(displayScale * 100)}%`;
     zoomResetBtn.setAttribute('aria-label', `Zoom auf 100 Prozent zurücksetzen; aktuell ${Math.round(displayScale * 100)} Prozent`);
 }
 
@@ -503,9 +511,88 @@ async function loadWallDimensions() {
     wallTileSize = dimensions.tile_size;
     wallDimensionsLoaded = true;
     updateCanvasDisplaySize();
+    applyViewFromUrl();
     loadInitialViewportTiles();
     renderCanvas();
 }
+
+// Teilen: ?x=<Pixel>&y=<Pixel>[&z=<Zoom>] zentriert die Ansicht; zu große Werte stoppen am Wandende.
+function applyViewFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const x = Number.parseInt(params.get('x'), 10);
+    const y = Number.parseInt(params.get('y'), 10);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return;
+    }
+
+    const zoomIndex = zoomLevels.indexOf(Number(params.get('z')));
+    if (zoomIndex !== -1) {
+        changeZoom(zoomIndex);
+    }
+
+    const targetX = clamp(x, 0, wallWidth - 1);
+    const targetY = clamp(y, 0, wallHeight - 1);
+    viewOffsetX = clamp(targetX - Math.floor(viewWidth / 2), 0, Math.max(0, wallWidth - viewWidth));
+    viewOffsetY = clamp(targetY - Math.floor(viewHeight / 2), 0, Math.max(0, wallHeight - viewHeight));
+    hoverCell = { x: targetX, y: targetY };
+    positionWallBackgroundImages();
+}
+
+function buildShareUrl() {
+    const centerX = selection
+        ? selection.x + Math.floor(selection.width / 2)
+        : Math.floor(viewOffsetX + viewWidth / 2);
+    const centerY = selection
+        ? selection.y + Math.floor(selection.height / 2)
+        : Math.floor(viewOffsetY + viewHeight / 2);
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set('x', clamp(centerX, 0, wallWidth - 1));
+    url.searchParams.set('y', clamp(centerY, 0, wallHeight - 1));
+    url.searchParams.set('z', displayScale);
+
+    return url.toString();
+}
+
+shareFacebookLink?.addEventListener('click', () => {
+    shareFacebookLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(buildShareUrl())}`;
+});
+
+shareViewBtn?.addEventListener('click', async () => {
+    const url = buildShareUrl();
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: 'Pixel Chaos', text: 'Schau dir diesen Ausschnitt an!', url });
+            return;
+        } catch (error) {
+            if (error?.name === 'AbortError') {
+                return;
+            }
+        }
+    }
+    try {
+        await navigator.clipboard.writeText(url);
+        setStatus(`Link kopiert: ${url}`);
+    } catch (error) {
+        window.prompt('Link zum Teilen:', url);
+    }
+});
+
+function moveCursorCoords(event) {
+    if (!cursorCoords) {
+        return;
+    }
+    const cell = getCellFromEvent(event);
+    if (!cell) {
+        cursorCoords.classList.add('hidden');
+        return;
+    }
+    cursorCoords.textContent = `⌖ ${cell.x} : ${cell.y}`;
+    cursorCoords.style.transform = `translate(${event.clientX + 16}px, ${event.clientY + 18}px)`;
+    cursorCoords.classList.remove('hidden');
+}
+
+canvas.addEventListener('pointermove', moveCursorCoords);
+canvas.addEventListener('pointerleave', () => cursorCoords?.classList.add('hidden'));
 
 function loadInitialViewportTiles() {
     if (initialViewportTilesLoaded || initialViewportTilesLoading
@@ -618,57 +705,8 @@ async function navigateWall(direction) {
     }
 }
 
-let wallExpansionInProgress = false;
-
-async function extendWall(axis) {
-    if (wallExpansionInProgress) {
-        return;
-    }
-    if (!isAuthenticated) {
-        setStatus('Bitte melde dich an, um die Pixelwand zu erweitern.');
-        window.location.href = '/login';
-        return;
-    }
-
-    wallExpansionInProgress = true;
-    const button = wallExtensionButtons[axis];
-    if (button) {
-        button.disabled = true;
-    }
-    try {
-        const previousWidth = wallWidth;
-        const previousHeight = wallHeight;
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        const response = await fetch('/api/wall/extend', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrf,
-            },
-            body: JSON.stringify({ axis }),
-        });
-        const payload = await response.json();
-        if (!response.ok || !payload.success) {
-            throw new Error(payload.message || 'Die Wall konnte nicht erweitert werden.');
-        }
-
-        wallWidth = payload.width;
-        wallHeight = payload.height;
-        invalidateExpandedEdgeTiles(axis, previousWidth, previousHeight);
-        updateCanvasDisplaySize();
-        await loadWallTiles();
-        renderCanvas();
-        setStatus(`Die Pixelwand wurde nach ${axis === 'x' ? 'rechts' : 'unten'} erweitert.`);
-    } catch (error) {
-        console.error(error);
-        setStatus(error.message || 'Die Wall konnte nicht erweitert werden.');
-    } finally {
-        wallExpansionInProgress = false;
-        if (button) {
-            button.disabled = false;
-        }
-    }
+function extendWall(axis) {
+    openShop(axis === 'x' ? 'extend_x' : 'extend_y');
 }
 
 async function loadPixelsForSelection(area = selection) {
@@ -693,6 +731,18 @@ async function loadPixelsForSelection(area = selection) {
             }
         });
 
+        // Angrenzende Pixel (1 Pixel Rand) für die Umgebungsansicht laden.
+        const nx = Math.max(0, area.x - 1);
+        const ny = Math.max(0, area.y - 1);
+        const nw = Math.min(wallWidth, area.x + area.width + 1) - nx;
+        const nh = Math.min(wallHeight, area.y + area.height + 1) - ny;
+        const neighborResponse = await fetch(`/api/pixels?x=${nx}&y=${ny}&width=${nw}&height=${nh}`);
+        if (neighborResponse.ok) {
+            ((await neighborResponse.json()).pixels || []).forEach((pixel) => {
+                pixels.set(keyFor(pixel.x, pixel.y), pixel.color);
+            });
+        }
+
         if (selection && selection.x === area.x && selection.y === area.y
             && selection.width === area.width && selection.height === area.height) {
             selectionOriginalPixels = new Map(nextPixels);
@@ -711,13 +761,6 @@ async function loadPixelsForSelection(area = selection) {
 }
 
 function savePixel(x, y, color) {
-    if (!isAuthenticated) {
-        pixels.set(keyFor(x, y), color);
-        renderCanvas();
-        setStatus(`Lokale Vorschau gespeichert: Pixel ${x}:${y}. Melde dich an, um dauerhaft zu sichern.`);
-        return Promise.resolve();
-    }
-
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     return fetch('/api/pixels', {
@@ -744,16 +787,20 @@ function savePixel(x, y, color) {
             pixelLocks.set(key, { x, y, locked_until: payload.locked_until });
         }
         renderCanvas();
-        setStatus(`Pixel ${x}:${y} gespeichert.`);
+        fetchPixelStatus().then((status) => setStatus(`Pixel ${x}:${y} gespeichert. ${describeQuota(status)}`));
     }).catch((error) => {
         console.error(error);
+        if (error.payload?.limit) {
+            showLimitModal(error.payload);
+            return false;
+        }
         if (error.payload?.locked_pixels?.length) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
             setStatus('Bereits bearbeitet. Bearbeitung in 10 Minuten wieder möglich.');
             return false;
         }
 
-        setStatus('Das Pixel konnte nicht gespeichert werden.');
+        setStatus(error.message || 'Das Pixel konnte nicht gespeichert werden.');
         return false;
     });
 }
@@ -761,13 +808,6 @@ function savePixel(x, y, color) {
 function savePixels(changedPixels) {
     if (changedPixels.length === 0) {
         return Promise.resolve();
-    }
-
-    if (!isAuthenticated) {
-        changedPixels.forEach((pixel) => pixels.set(keyFor(pixel.x, pixel.y), pixel.color));
-        renderCanvas();
-        setStatus('Änderungen lokal übernommen. Zum Sperren und Speichern bitte anmelden.');
-        return Promise.resolve({ local: true });
     }
 
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -798,10 +838,14 @@ function savePixels(changedPixels) {
             }
         });
         renderCanvas();
-        setStatus(`Batch übernommen: ${changedPixels.length} Pixel gespeichert.`);
+        fetchPixelStatus().then((status) => setStatus(`Pixel gespeichert: ${changedPixels[0].x}:${changedPixels[0].y}. ${describeQuota(status)}`));
         return payload;
     }).catch((error) => {
         console.error(error);
+        if (error.payload?.limit) {
+            showLimitModal(error.payload);
+            return false;
+        }
         if (error.payload?.locked_pixels) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
             const firstLock = error.payload.locked_pixels[0];
@@ -811,14 +855,14 @@ function savePixels(changedPixels) {
             return false;
         }
 
-        setStatus('Speichern fehlgeschlagen. Die Wand wurde nicht geändert.');
+        setStatus(error.message || 'Speichern fehlgeschlagen. Die Wand wurde nicht geändert.');
         return false;
     });
 }
 
 function paintCell(x, y) {
     if (!selection) {
-        setStatus('Wähle zuerst eine Gestaltungsfläche aus.');
+        setStatus('Wähle zuerst einen Pixel aus.');
         return;
     }
 
@@ -833,11 +877,7 @@ function paintCell(x, y) {
     renderCanvas();
     renderSelectionPreview();
 
-    if (isAuthenticated) {
-        savePixel(x, y, activeColor);
-    } else {
-        setStatus('Lokale Vorschau: Pixel gesetzt. Bitte anmelden, um dauerhaft zu speichern.');
-    }
+    savePixel(x, y, activeColor);
 }
 
 function paintPopupCell(event) {
@@ -865,19 +905,60 @@ function paintPopupCell(event) {
     const key = keyFor(globalX, globalY);
     selectionPixels.set(key, activeColor);
     renderSelectionPreview();
-    setStatus('Pixel in der Vorschau geändert. Klicke auf „Übernehmen“, um die Gestaltungsfläche zu speichern.');
+    setStatus('Pixel in der Vorschau geändert. Klicke auf „Übernehmen“, um ihn zu speichern.');
 }
 
 function createSelectionAtCell(x, y) {
     selection = {
-        x: clamp(x, 0, wallWidth - 5),
-        y: clamp(y, 0, wallHeight - 5),
-        width: 5,
-        height: 5,
+        x: clamp(x, 0, wallWidth - 1),
+        y: clamp(y, 0, wallHeight - 1),
+        width: 1,
+        height: 1,
     };
 
     renderCanvas();
-    setStatus('Gestaltungsfläche markiert. Du kannst sie vergrößern oder mit Farbe füllen.');
+    setStatus(`Pixel ${selection.x}:${selection.y} ausgewählt.`);
+}
+
+const pendingPaints = new Set();
+
+// Klick = Pixel sofort setzen (optimistisch), bei Fehler wird zurückgerollt.
+async function paintInstant(x, y) {
+    const key = keyFor(x, y);
+    if (pendingPaints.has(key)) {
+        return;
+    }
+    pendingPaints.add(key);
+
+    const area = { x, y, width: 1, height: 1 };
+    const previous = pixels.get(key);
+    const color = activeColor;
+    pixels.set(key, color);
+    renderCanvas();
+
+    let ok = true;
+    try {
+        if (isAuthenticated && !(await requestPixelAreaLock(area))) {
+            ok = false;
+            refreshPixelLocks();
+        } else {
+            ok = (await savePixel(x, y, color)) !== false;
+            if (isAuthenticated) {
+                requestPixelAreaLock(area, 'DELETE');
+            }
+        }
+    } finally {
+        pendingPaints.delete(key);
+    }
+
+    if (!ok) {
+        if (previous === undefined) {
+            pixels.delete(key);
+        } else {
+            pixels.set(key, previous);
+        }
+        renderCanvas();
+    }
 }
 
 function handlePointerDown(event) {
@@ -892,17 +973,7 @@ function handlePointerDown(event) {
         return;
     }
 
-    if (selection && cell.x >= selection.x && cell.x < selection.x + selection.width && cell.y >= selection.y && cell.y < selection.y + selection.height) {
-        setStatus('Bearbeitung läuft nur im Popup. Wähle die Fläche neu oder bearbeite sie im Editor.');
-        return;
-    }
-
-    window.clearTimeout(selectionPopupTimer);
-    selectionPopupTimer = null;
-    dragOrigin = cell;
-    selectionDrag = true;
-    canvas.setPointerCapture(event.pointerId);
-    createSelectionAtCell(cell.x, cell.y);
+    paintInstant(cell.x, cell.y);
 }
 
 function handleCanvasHover(event) {
@@ -916,6 +987,7 @@ function handleCanvasHover(event) {
     }
 
     hoverCell = nextCell;
+    renderNeighborhood();
     renderCanvas();
 }
 
@@ -929,13 +1001,8 @@ function handlePointerMove(event) {
         return;
     }
 
-    const minX = Math.min(dragOrigin.x, cell.x);
-    const minY = Math.min(dragOrigin.y, cell.y);
-    const width = Math.max(5, Math.abs(dragOrigin.x - cell.x) + 1);
-    const height = Math.max(5, Math.abs(dragOrigin.y - cell.y) + 1);
-
-    updateSelection(minX, minY, width, height);
-    setStatus(`Auswahl: ${selection.width} × ${selection.height} px`);
+    updateSelection(cell.x, cell.y);
+    setStatus(`Pixel ${selection.x}:${selection.y} ausgewählt.`);
 }
 
 function handlePointerUp() {
@@ -952,11 +1019,11 @@ function handlePointerUp() {
         if (lockedPixel) {
             selection = null;
             renderCanvas();
-            setStatus('Die Auswahl enthält bereits bearbeitete Pixel. Wähle eine freie Fläche.');
+            setStatus('Dieser Pixel wurde gerade bearbeitet. Wähle einen anderen Pixel.');
             return;
         }
 
-        setStatus(`Ausgewählte Fläche: ${selection.width} × ${selection.height} px. Editor öffnet gleich.`);
+        setStatus(`Pixel ${selection.x}:${selection.y} ausgewählt. Editor öffnet gleich.`);
         loadPixelsForSelection({ ...selection });
         selectionPopupTimer = window.setTimeout(() => {
             selectionPopupTimer = null;
@@ -976,7 +1043,7 @@ function handlePointerCancel() {
     dragOrigin = null;
     selection = null;
     renderCanvas();
-    setStatus('Auswahl abgebrochen. Markiere erneut eine Gestaltungsfläche.');
+    setStatus('Pixel-Auswahl abgebrochen. Klicke erneut auf einen Pixel.');
 }
 
 function renderSelectionPreview() {
@@ -1015,27 +1082,40 @@ function renderOriginalSelectionPreview() {
     }
 
     const previewCtx = selectionOriginalCanvas.getContext('2d');
-    const width = selection.width;
-    const height = selection.height;
+    const cols = selection.width + 2;
+    const rows = selection.height + 2;
+    const scale = Math.max(1, Math.floor(240 / Math.max(cols, rows)));
 
-    selectionOriginalCanvas.width = width;
-    selectionOriginalCanvas.height = height;
-    previewCtx.clearRect(0, 0, width, height);
-    previewCtx.fillStyle = '#f8fafc';
-    previewCtx.fillRect(0, 0, width, height);
+    selectionOriginalCanvas.width = cols * scale;
+    selectionOriginalCanvas.height = rows * scale;
+    previewCtx.imageSmoothingEnabled = false;
+    previewCtx.fillStyle = '#0b0f16';
+    previewCtx.fillRect(0, 0, cols * scale, rows * scale);
 
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const absoluteX = selection.x + x;
-            const absoluteY = selection.y + y;
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+            const absoluteX = selection.x - 1 + x;
+            const absoluteY = selection.y - 1 + y;
+            if (absoluteX < 0 || absoluteY < 0 || absoluteX >= wallWidth || absoluteY >= wallHeight) {
+                continue;
+            }
             const absoluteKey = keyFor(absoluteX, absoluteY);
-            const color = selectionOriginalPixels.get(absoluteKey)
+            const inside = x >= 1 && y >= 1 && x <= selection.width && y <= selection.height;
+            const color = (inside ? selectionOriginalPixels.get(absoluteKey) : null)
+                || pixels.get(absoluteKey)
                 || getReferencePixelColor(absoluteX, absoluteY)
                 || '#f8fafc';
             previewCtx.fillStyle = color;
-            previewCtx.fillRect(x, y, 1, 1);
+            previewCtx.fillRect(x * scale, y * scale, scale, scale);
         }
     }
+
+    previewCtx.lineWidth = 2;
+    previewCtx.strokeStyle = '#ffffff';
+    previewCtx.strokeRect(scale + 1, scale + 1, selection.width * scale - 2, selection.height * scale - 2);
+    previewCtx.lineWidth = 1;
+    previewCtx.strokeStyle = '#000000';
+    previewCtx.strokeRect(scale + 3, scale + 3, selection.width * scale - 6, selection.height * scale - 6);
 }
 
 async function openEditorPopup() {
@@ -1044,9 +1124,17 @@ async function openEditorPopup() {
     }
 
     if (!isAuthenticated) {
-        selection = null;
-        renderCanvas();
-        setStatus('Bitte anmelden, um den Bereich während der Bearbeitung zu sperren.');
+        const status = await fetchPixelStatus();
+        if (status && !status.can_edit) {
+            selection = null;
+            renderCanvas();
+            showLimitModal(status);
+            return;
+        }
+        renderSelectionPreview();
+        renderOriginalSelectionPreview();
+        editorPopup?.classList.remove('hidden');
+        setStatus(`Wähle eine Farbe und übernimm deinen Pixel. ${describeQuota(status)}`);
         return;
     }
 
@@ -1090,87 +1178,18 @@ function closeEditorPopup() {
     selectionPixels.clear();
     selectionOriginalPixels.clear();
     renderCanvas();
-    setStatus('Auswahl beendet. Markiere erneut eine Gestaltungsfläche.');
+    setStatus('Pixel-Bearbeitung beendet. Klicke erneut auf einen Pixel.');
 }
 
 function clearSelection() {
     selection = null;
     closeEditorPopup();
     renderCanvas();
-    setStatus('Auswahl gelöscht. Markiere erneut eine Gestaltungsfläche.');
+    setStatus('Pixel-Auswahl gelöscht. Klicke erneut auf einen Pixel.');
 }
 
 function rgbToHex(r, g, b) {
     return `#${[r, g, b].map((value) => value.toString(16).padStart(2, '0')).join('')}`;
-}
-
-function applyImageToSelection(file) {
-    if (!file || !selection) {
-        setStatus('Wähle zuerst eine Gestaltungsfläche aus und lade danach ein Bild hoch.');
-        return Promise.resolve(false);
-    }
-
-    const lockedPixel = findLockedPixelInSelection();
-    if (lockedPixel) {
-        setStatus('Die Auswahl enthält bereits bearbeitete Pixel und ist noch gesperrt.');
-        return Promise.resolve(false);
-    }
-
-    return new Promise((resolve) => {
-        const bounds = { ...selection };
-        const reader = new FileReader();
-        reader.onerror = () => {
-            setStatus('Das Bild konnte nicht gelesen werden.');
-            resolve(false);
-        };
-        reader.onload = () => {
-            const img = new Image();
-            img.onerror = () => {
-                setStatus('Das Bild konnte nicht geladen werden.');
-                resolve(false);
-            };
-            img.onload = async () => {
-            const offscreen = document.createElement('canvas');
-            offscreen.width = bounds.width;
-            offscreen.height = bounds.height;
-            const offCtx = offscreen.getContext('2d');
-            offCtx.drawImage(img, 0, 0, bounds.width, bounds.height);
-
-            const changedPixels = [];
-            for (let y = 0; y < bounds.height; y++) {
-                for (let x = 0; x < bounds.width; x++) {
-                    const data = offCtx.getImageData(x, y, 1, 1).data;
-                    const alpha = data[3];
-                    if (alpha < 10) {
-                        continue;
-                    }
-
-                    const targetX = bounds.x + x;
-                    const targetY = bounds.y + y;
-                    const color = rgbToHex(data[0], data[1], data[2]);
-                    const key = keyFor(targetX, targetY);
-                    selectionPixels.set(key, color);
-                    changedPixels.push({ x: targetX, y: targetY, color });
-                }
-            }
-
-            const saved = await savePixels(changedPixels);
-            if (saved === false) {
-                resolve(false);
-                return;
-            }
-
-            renderCanvas();
-            renderSelectionPreview();
-            setStatus('Bild in die Gestaltungsfläche übertragen.');
-            resolve(true);
-            };
-
-            img.src = reader.result;
-        };
-
-        reader.readAsDataURL(file);
-    });
 }
 
 function persistSelectionToDatabase() {
@@ -1195,8 +1214,7 @@ function persistSelectionToDatabase() {
         return Promise.resolve();
     }
 
-    const firstPixels = changedPixels.slice(0, 5).map((pixel) => `${pixel.x}:${pixel.y}`).join(', ');
-    setStatus(`Pixelkoordinaten übernommen: ${firstPixels}${changedPixels.length > 5 ? ' ...' : ''}`);
+    setStatus(`Pixel ${changedPixels[0].x}:${changedPixels[0].y} wird übernommen.`);
 
     return savePixels(changedPixels);
 }
@@ -1230,6 +1248,30 @@ function initCookieAndRules() {
     });
 }
 
+function setActiveColor(color) {
+    activeColor = color.toLowerCase();
+    activeColorLabel.textContent = activeColor;
+    activeColorLabel.style.background = activeColor;
+    if (colorPicker) {
+        colorPicker.value = activeColor;
+    }
+    if (colorHexInput && document.activeElement !== colorHexInput) {
+        colorHexInput.value = activeColor;
+    }
+    setStatus(`Farbe ausgewählt: ${activeColor}`);
+}
+
+colorPicker?.addEventListener('input', () => setActiveColor(colorPicker.value));
+colorHexInput?.addEventListener('input', () => {
+    let value = colorHexInput.value.trim();
+    if (value && !value.startsWith('#')) {
+        value = `#${value}`;
+    }
+    if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+        setActiveColor(value);
+    }
+});
+
 if (popupPalette) {
     popupPalette.addEventListener('click', (event) => {
         const button = event.target.closest('[data-color]');
@@ -1237,10 +1279,7 @@ if (popupPalette) {
             return;
         }
 
-        activeColor = button.dataset.color;
-        activeColorLabel.textContent = activeColor;
-        activeColorLabel.style.background = activeColor;
-        setStatus(`Farbe ausgewählt: ${activeColor}`);
+        setActiveColor(button.dataset.color);
     });
 }
 
@@ -1304,6 +1343,64 @@ feedbackForm?.addEventListener('submit', async (event) => {
 
 canvas.addEventListener('pointerdown', handlePointerDown);
 canvas.addEventListener('pointermove', handleCanvasHover);
+
+let wheelPanX = 0;
+let wheelPanY = 0;
+let wheelPanFrame = null;
+let wheelZoomLockedUntil = 0;
+
+async function applyWheelPan() {
+    wheelPanFrame = null;
+    const stepX = Math.trunc(wheelPanX / displayScale);
+    const stepY = Math.trunc(wheelPanY / displayScale);
+    if (stepX === 0 && stepY === 0) {
+        return;
+    }
+    wheelPanX -= stepX * displayScale;
+    wheelPanY -= stepY * displayScale;
+
+    viewOffsetX = clamp(viewOffsetX + stepX, 0, Math.max(0, wallWidth - viewWidth));
+    viewOffsetY = clamp(viewOffsetY + stepY, 0, Math.max(0, wallHeight - viewHeight));
+    positionWallBackgroundImages();
+    renderCanvas();
+    try {
+        await loadWallTiles();
+        positionWallBackgroundImages();
+        renderCanvas();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// Zwei-Finger-Wischen auf dem Touchpad (und das Mausrad) verschiebt die Ansicht;
+// Strg + Wheel (Pinch-Geste) zoomt in den vorhandenen Stufen.
+canvas.addEventListener('wheel', (event) => {
+    event.preventDefault();
+
+    if (event.ctrlKey) {
+        const now = performance.now();
+        if (now < wheelZoomLockedUntil || event.deltaY === 0) {
+            return;
+        }
+        wheelZoomLockedUntil = now + 180;
+        const index = zoomLevels.indexOf(displayScale);
+        const nextIndex = clamp(index + (event.deltaY < 0 ? 1 : -1), 0, zoomLevels.length - 1);
+        if (nextIndex !== index) {
+            changeZoom(nextIndex);
+            loadWallTiles().then(() => {
+                positionWallBackgroundImages();
+                renderCanvas();
+            }).catch((error) => console.error(error));
+        }
+        return;
+    }
+
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvasShell.clientHeight : 1;
+    wheelPanX += (event.shiftKey && event.deltaX === 0 ? event.deltaY : event.deltaX) * unit;
+    wheelPanY += (event.shiftKey && event.deltaX === 0 ? 0 : event.deltaY) * unit;
+    wheelPanFrame ??= requestAnimationFrame(applyWheelPan);
+}, { passive: false });
+
 canvas.addEventListener('pointermove', handlePointerMove);
 canvas.addEventListener('pointermove', updatePixelLockTooltip);
 canvas.addEventListener('pointerup', handlePointerUp);
@@ -1323,14 +1420,6 @@ applySelectionBtn?.addEventListener('click', async () => {
 });
 closeEditorBtn?.addEventListener('click', closeEditorPopup);
 selectionPreviewCanvas?.addEventListener('click', paintPopupCell);
-imageUpload?.addEventListener('change', async (event) => {
-    const applied = await applyImageToSelection(event.target.files[0]);
-    if (!applied) {
-        return;
-    }
-
-    closeEditorPopup();
-});
 
 initCookieAndRules();
 reservationLoadingRetry?.addEventListener('click', () => window.location.reload());
@@ -1357,10 +1446,305 @@ window.addEventListener('resize', () => {
     renderCanvas();
 });
 renderCanvas();
-setStatus('Klicke und ziehe auf der Leinwand, um eine Gestaltungsfläche zu markieren. Mindestgröße: 5×5 px.');
+setStatus('Klicke auf einen Pixel, um ihn auszuwählen und zu bearbeiten.');
 loadWallDimensions().catch((error) => {
     console.error(error);
     setStatus(error.message || 'Die Pixelwand konnte nicht geladen werden.');
     showInitialViewportLoadFailure();
 });
 window.setInterval(refreshWallDimensions, 15000);
+
+// ---------------------------------------------------------------------------
+// Limits (Popup bei zu früher Änderung) und Shop (Pixel kaufen)
+// ---------------------------------------------------------------------------
+const limitModal = document.getElementById('limitModal');
+const limitText = document.getElementById('limitText');
+const limitTitle = document.getElementById('limitTitle');
+const limitCountdown = document.getElementById('limitCountdown');
+const limitGuestActions = document.getElementById('limitGuestActions');
+const limitUserActions = document.getElementById('limitUserActions');
+const limitBuyBtn = document.getElementById('limitBuyBtn');
+const shopModal = document.getElementById('shopModal');
+const shopProductsEl = document.getElementById('shopProducts');
+const shopProvidersEl = document.getElementById('shopProviders');
+const shopCheckoutEl = document.getElementById('shopCheckout');
+const shopGuestNotice = document.getElementById('shopGuestNotice');
+const shopCreditsEl = document.getElementById('shopCredits');
+const shopErrorEl = document.getElementById('shopError');
+let limitTimer = null;
+let shopData = null;
+let shopSelected = null;
+
+function formatDuration(totalSeconds) {
+    const seconds = Math.max(0, Math.ceil(totalSeconds));
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    const pad = (value) => String(value).padStart(2, '0');
+
+    return h > 0 ? `${h}:${pad(m)}:${pad(s)} Std.` : `${pad(m)}:${pad(s)} Min.`;
+}
+
+let latestPixelStatus = null;
+
+function updatePixelCounter(status) {
+    if (!status || !pixelCounter) {
+        return;
+    }
+    latestPixelStatus = status;
+    const total = status.free + (status.credits || 0);
+    pixelCounterValue.textContent = String(total);
+    pixelCounterNote.textContent = !status.authenticated
+        ? `Gast-Vorrat (von ${status.max_free})`
+        : (status.credits > 0 ? `${status.free} frei + ${status.credits} gekauft` : `von ${status.max_free} (+1 alle 30 s)`);
+    pixelCounter.classList.toggle('empty', total === 0);
+}
+
+async function fetchPixelStatus() {
+    try {
+        const response = await fetch('/api/pixels/status', { headers: { Accept: 'application/json' } });
+        const status = response.ok ? await response.json() : null;
+        updatePixelCounter(status);
+
+        return status;
+    } catch (error) {
+        console.error('Failed to load pixel status:', error);
+        return null;
+    }
+}
+
+window.setInterval(fetchPixelStatus, 10000);
+fetchPixelStatus();
+
+function renderNeighborhood() {
+    if (!neighborhoodCanvas) {
+        return;
+    }
+    const nctx = neighborhoodCanvas.getContext('2d');
+    const center = hoverCell;
+    nctx.imageSmoothingEnabled = false;
+    nctx.fillStyle = '#0b0f16';
+    nctx.fillRect(0, 0, neighborhoodCanvas.width, neighborhoodCanvas.height);
+    if (!center) {
+        return;
+    }
+
+    const size = neighborhoodCanvas.width / 3;
+    for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            const x = center.x + dx;
+            const y = center.y + dy;
+            if (x < 0 || y < 0 || x >= wallWidth || y >= wallHeight) {
+                continue;
+            }
+            nctx.fillStyle = pixels.get(keyFor(x, y)) || getReferencePixelColor(x, y) || '#f8fafc';
+            nctx.fillRect((dx + 1) * size, (dy + 1) * size, size, size);
+        }
+    }
+    nctx.lineWidth = 2;
+    nctx.strokeStyle = '#ffffff';
+    nctx.strokeRect(size + 1, size + 1, size - 2, size - 2);
+    nctx.strokeStyle = '#000000';
+    nctx.lineWidth = 1;
+    nctx.strokeRect(size + 3, size + 3, size - 6, size - 6);
+    neighborhoodLabel.textContent = `${center.x} : ${center.y}`;
+}
+
+function describeQuota(status) {
+    if (!status) {
+        return '';
+    }
+    if (!status.authenticated) {
+        return `Gast-Vorrat: noch ${status.free} von ${status.max_free} Pixeln – danach mit kostenlosem Konto weiter.`;
+    }
+    const extra = status.credits > 0 ? ` + ${status.credits} Extra-Pixel` : '';
+
+    return `Vorrat: ${status.free} / ${status.max_free}${extra}.`;
+}
+
+function hideLimitModal() {
+    window.clearInterval(limitTimer);
+    limitTimer = null;
+    limitModal?.classList.add('hidden');
+}
+
+function showLimitModal(payload) {
+    if (!limitModal) {
+        return;
+    }
+
+    const isGuest = payload.limit === 'guest';
+    limitTitle.textContent = isGuest ? `Dein Gast-Vorrat von ${payload.max_free} Pixeln ist aufgebraucht` : 'Vorrat leer';
+    limitText.textContent = isGuest
+        ? 'Melde dich kostenlos an oder registriere dich. Dann bekommst du alle 30 Sekunden ein neues Pixel (bis zu 50 im Vorrat).'
+        : 'Alle 30 Sekunden wächst ein Pixel nach (maximal 50 im Vorrat). Das nächste Pixel ist verfügbar in:';
+    limitGuestActions.classList.toggle('hidden', !isGuest);
+    limitUserActions.classList.toggle('hidden', isGuest);
+    limitCountdown.classList.toggle('hidden', isGuest);
+
+    if (isGuest) {
+        const note = document.createElement('p');
+        note.className = 'limit-note';
+        note.textContent = 'Mehr als 50 Pixel im Vorrat gibt es nur als Extra-Pixel im Shop.';
+        limitText.appendChild(note);
+        window.clearInterval(limitTimer);
+        limitModal.classList.remove('hidden');
+        return;
+    }
+    const endsAt = Date.now() + (payload.retry_after || 0) * 1000;
+    const tick = () => {
+        const remaining = (endsAt - Date.now()) / 1000;
+        limitCountdown.textContent = remaining > 0 ? formatDuration(remaining) : 'Jetzt wieder möglich – klicke erneut auf einen Pixel.';
+        if (remaining <= 0) {
+            window.clearInterval(limitTimer);
+        }
+    };
+    window.clearInterval(limitTimer);
+    tick();
+    limitTimer = window.setInterval(tick, 1000);
+    limitModal.classList.remove('hidden');
+}
+
+function shopProductCopy(product) {
+    if (product.type === 'extend') {
+        const direction = product.axis === 'x' ? 'rechts' : 'unten';
+        return {
+            title: `Wand nach ${direction} erweitern`,
+            badge: '🌍 Für die ganze Community',
+            text: `Die Pixelwand wächst um ${product.amount} Pixel nach ${direction}. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung – dein Beitrag für die Community.`,
+        };
+    }
+
+    if (product.amount >= 500) {
+        return {
+            title: `${product.amount} Extra-Pixel`,
+            badge: '💰 Spar-Paket: nur 0,03 € pro Pixel',
+            text: `${product.amount} Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Rund 40 % günstiger als das 100er-Paket.`,
+        };
+    }
+
+    return {
+        title: `${product.amount} Extra-Pixel`,
+        badge: '⚡ Beliebt',
+        text: `${product.amount} Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Perfekt zum Vergleichen und Ausprobieren.`,
+    };
+}
+
+function renderShop() {
+    shopProductsEl.replaceChildren();
+    shopProvidersEl.replaceChildren();
+    shopErrorEl.classList.add('hidden');
+
+    const order = { pixels: 0, extend: 1 };
+    [...shopData.products].sort((a, b) => order[a.type] - order[b.type]).forEach((product) => {
+        const copy = shopProductCopy(product);
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = `shop-product shop-product-${product.type}`;
+        card.dataset.product = product.id;
+        card.setAttribute('aria-pressed', String(product.id === shopSelected));
+
+        const badge = document.createElement('span');
+        badge.className = 'shop-badge';
+        badge.textContent = copy.badge;
+        const title = document.createElement('strong');
+        title.textContent = copy.title;
+        const text = document.createElement('span');
+        text.className = 'shop-product-text';
+        text.textContent = copy.text;
+        const price = document.createElement('span');
+        price.className = 'shop-price';
+        price.textContent = product.price;
+        card.append(badge, title, text, price);
+        card.addEventListener('click', () => {
+            shopSelected = product.id;
+            renderShop();
+        });
+        shopProductsEl.appendChild(card);
+    });
+
+    shopCreditsEl.textContent = shopData.authenticated ? `Dein Guthaben: ${shopData.credits} Extra-Pixel` : '';
+    shopCheckoutEl.classList.toggle('hidden', !(shopSelected && shopData.authenticated));
+    shopGuestNotice.classList.toggle('hidden', !(shopSelected && !shopData.authenticated));
+
+    shopData.providers.forEach((provider) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `shop-provider shop-provider-${provider.key}`;
+        const name = document.createElement('strong');
+        name.textContent = provider.label;
+        const mode = document.createElement('small');
+        mode.textContent = provider.mode;
+        button.append(name, mode);
+        button.addEventListener('click', () => startCheckout(provider.key, button));
+        shopProvidersEl.appendChild(button);
+    });
+
+    if (shopData.providers.length === 0) {
+        shopErrorEl.textContent = 'Zurzeit ist kein Zahlungsanbieter eingerichtet.';
+        shopErrorEl.classList.remove('hidden');
+    }
+}
+
+async function openShop(productId = null) {
+    if (!shopModal) {
+        return;
+    }
+
+    hideLimitModal();
+    shopSelected = productId;
+    shopModal.classList.remove('hidden');
+    try {
+        const response = await fetch('/api/shop', { headers: { Accept: 'application/json' } });
+        if (!response.ok) {
+            throw new Error('Shop konnte nicht geladen werden.');
+        }
+        shopData = await response.json();
+        renderShop();
+    } catch (error) {
+        console.error(error);
+        shopErrorEl.textContent = error.message;
+        shopErrorEl.classList.remove('hidden');
+    }
+}
+
+async function startCheckout(provider, button) {
+    shopErrorEl.classList.add('hidden');
+    shopProvidersEl.querySelectorAll('button').forEach((item) => { item.disabled = true; });
+    button.classList.add('is-loading');
+    try {
+        const response = await fetch('/shop/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+            body: JSON.stringify({ product: shopSelected, provider }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.redirect) {
+            throw new Error(payload.message || 'Die Zahlung konnte nicht gestartet werden.');
+        }
+        window.location.href = payload.redirect;
+    } catch (error) {
+        shopErrorEl.textContent = error.message;
+        shopErrorEl.classList.remove('hidden');
+        shopProvidersEl.querySelectorAll('button').forEach((item) => { item.disabled = false; });
+        button.classList.remove('is-loading');
+    }
+}
+
+document.getElementById('openShopBtn')?.addEventListener('click', () => openShop());
+document.getElementById('closeShopBtn')?.addEventListener('click', () => shopModal.classList.add('hidden'));
+document.getElementById('limitCloseBtn')?.addEventListener('click', hideLimitModal);
+limitBuyBtn?.addEventListener('click', () => openShop('pixels_100'));
+document.getElementById('purchaseBannerClose')?.addEventListener('click', () => {
+    document.getElementById('purchaseBanner')?.remove();
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        hideLimitModal();
+        shopModal?.classList.add('hidden');
+    }
+});

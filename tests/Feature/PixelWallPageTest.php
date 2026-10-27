@@ -6,6 +6,7 @@ use App\Models\Pixel;
 use App\Models\Snapshot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class PixelWallPageTest extends TestCase
@@ -61,7 +62,9 @@ class PixelWallPageTest extends TestCase
         $response = $this->actingAs($user)->get('/wall');
 
         $response->assertOk();
-        $response->assertSee('editorPopup');
+        $response->assertSee('id="colorBar"', false);
+        $response->assertSee('id="colorPicker"', false);
+        $response->assertDontSee('editorPopup');
         $response->assertSee('class="wall-page"', false);
         $response->assertDontSee('images/current-wall.png');
         $response->assertSee('id="wallBackground"', false);
@@ -89,8 +92,11 @@ class PixelWallPageTest extends TestCase
 
     public function test_snapshot_generation_creates_an_image_and_records_it(): void
     {
-        $staleTilePath = public_path('images/wall-tiles/3900-2100.png');
-        $previousStaleTile = file_exists($staleTilePath) ? file_get_contents($staleTilePath) : null;
+        $output = storage_path('framework/testing/wall-output');
+        File::deleteDirectory($output);
+        config(['wall.output_path' => $output]);
+        File::ensureDirectoryExists($output.'/images/wall-tiles');
+        $staleTilePath = $output.'/images/wall-tiles/3900-2100.png';
         file_put_contents($staleTilePath, 'stale');
 
         try {
@@ -109,19 +115,42 @@ class PixelWallPageTest extends TestCase
             $imagePath = Snapshot::latest()->value('image_path');
             $this->assertNotNull($imagePath);
             $this->assertStringStartsWith('images/snapshots/', $imagePath);
-            $this->assertFileExists(public_path($imagePath));
-            $this->assertFileExists(public_path('images/wall-tiles/0-0.png'));
-            $tileDimensions = getimagesize(public_path('images/wall-tiles/0-0.png'));
+            $this->assertFileExists($output.'/'.$imagePath);
+            $this->assertFileExists($output.'/images/wall-tiles/0-0.png');
+            $tileDimensions = getimagesize($output.'/images/wall-tiles/0-0.png');
             $this->assertSame([300, 300], [$tileDimensions[0], $tileDimensions[1]]);
             $this->assertFileDoesNotExist($staleTilePath);
         } finally {
-            if ($previousStaleTile === null) {
-                if (file_exists($staleTilePath)) {
-                    unlink($staleTilePath);
-                }
-            } else {
-                file_put_contents($staleTilePath, $previousStaleTile);
-            }
+            File::deleteDirectory($output);
+        }
+    }
+
+    public function test_tiles_are_regenerated_incrementally(): void
+    {
+        $output = storage_path('framework/testing/wall-output-tiles');
+        File::deleteDirectory($output);
+        config(['wall.output_path' => $output]);
+
+        try {
+            Pixel::query()->create(['x' => 0, 'y' => 0, 'color' => '#ff0000']);
+            $this->artisan('wall:tiles')->assertSuccessful();
+
+            $tile = $output.'/images/wall-tiles/0-0.png';
+            $this->assertFileExists($tile);
+            $untouched = $output.'/images/wall-tiles/300-0.png';
+            $this->assertFileExists($untouched);
+            $untouchedMtime = filemtime($untouched);
+            touch($untouched, $untouchedMtime - 100);
+
+            $this->travel(10)->minutes();
+            Pixel::query()->where('x', 0)->where('y', 0)->update(['color' => '#00ff00', 'updated_at' => now()]);
+            $this->artisan('wall:tiles')->assertSuccessful();
+
+            $image = imagecreatefrompng($tile);
+            $this->assertSame(0x00ff00, imagecolorat($image, 0, 0) & 0xFFFFFF);
+            $this->assertSame($untouchedMtime - 100, filemtime($untouched));
+        } finally {
+            File::deleteDirectory($output);
         }
     }
 
@@ -158,86 +187,55 @@ class PixelWallPageTest extends TestCase
         imagedestroy($image);
     }
 
-    public function test_authenticated_user_can_extend_wall_by_one_300_pixel_tile(): void
+    public function test_wall_cannot_be_extended_for_free(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/wall/extend', ['axis' => 'x']);
-
-        $response->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('width', 1324)
-            ->assertJsonPath('height', 1024);
-        $this->assertDatabaseCount('pixels', 307200);
-        $this->assertDatabaseHas('pixels', ['x' => 1024, 'y' => 0, 'color' => '#ffffff']);
-        $this->assertDatabaseHas('pixels', ['x' => 1323, 'y' => 1023, 'color' => '#ffffff']);
-
-        $tileResponse = $this->get('/api/wall/tile?x=900&y=0');
-        $tileResponse->assertOk();
-        $tile = imagecreatefromstring($tileResponse->getContent());
-        $this->assertSame(300, imagesx($tile));
-        $this->assertSame(300, imagesy($tile));
-        $this->assertSame(0xFFFFFF, imagecolorat($tile, 124, 0) & 0xFFFFFF);
-        imagedestroy($tile);
-    }
-
-    public function test_authenticated_user_can_extend_wall_down_by_one_300_pixel_tile(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->actingAs($user)->postJson('/api/wall/extend', ['axis' => 'y']);
-
-        $response->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('width', 1024)
-            ->assertJsonPath('height', 1324);
-        $this->assertDatabaseCount('pixels', 307200);
-        $this->assertDatabaseHas('pixels', ['x' => 0, 'y' => 1024, 'color' => '#ffffff']);
-        $this->assertDatabaseHas('pixels', ['x' => 1023, 'y' => 1323, 'color' => '#ffffff']);
-    }
-
-    public function test_wall_extension_requires_authentication(): void
-    {
-        $this->postJson('/api/wall/extend', ['axis' => 'y'])->assertUnauthorized();
+        $this->actingAs($user)->postJson('/api/wall/extend', ['axis' => 'x'])->assertNotFound();
         $this->assertDatabaseCount('pixels', 0);
     }
 
-    public function test_authenticated_user_can_update_multiple_pixels_in_one_request(): void
+    public function test_authenticated_user_cannot_update_multiple_pixels_in_one_request(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)->postJson('/api/pixels/lock', [
             'x' => 10,
             'y' => 10,
-            'width' => 5,
-            'height' => 5,
+            'width' => 1,
+            'height' => 1,
         ])->assertOk();
 
-        $response = $this->actingAs($user)->post('/api/pixels', [
+        $response = $this->actingAs($user)->postJson('/api/pixels', [
             'pixels' => [
                 ['x' => 10, 'y' => 10, 'color' => '#111111'],
                 ['x' => 11, 'y' => 10, 'color' => '#222222'],
             ],
         ]);
 
-        $response->assertOk();
-        $response->assertJsonPath('success', true);
-        $this->assertDatabaseHas('pixels', ['x' => 10, 'y' => 10, 'color' => '#111111']);
-        $this->assertDatabaseHas('pixels', ['x' => 11, 'y' => 10, 'color' => '#222222']);
+        $response->assertUnprocessable();
+        $this->assertDatabaseCount('pixels', 0);
     }
 
     public function test_user_locks_every_pixel_in_the_selected_area_without_creating_pixel_rows(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/pixels/lock', [
+        $this->actingAs($user)->postJson('/api/pixels/lock', [
             'x' => 10,
             'y' => 20,
             'width' => 5,
             'height' => 5,
+        ])->assertUnprocessable();
+
+        $response = $this->actingAs($user)->postJson('/api/pixels/lock', [
+            'x' => 10,
+            'y' => 20,
+            'width' => 1,
+            'height' => 1,
         ]);
 
-        $response->assertOk()->assertJsonPath('count', 25);
-        $this->assertDatabaseCount('pixel_edit_locks', 25);
+        $response->assertOk()->assertJsonPath('count', 1);
+        $this->assertDatabaseCount('pixel_edit_locks', 1);
         $this->assertDatabaseCount('pixels', 0);
     }
 
@@ -249,21 +247,21 @@ class PixelWallPageTest extends TestCase
         $this->actingAs($firstUser)->postJson('/api/pixels/lock', [
             'x' => 10,
             'y' => 10,
-            'width' => 5,
-            'height' => 5,
+            'width' => 1,
+            'height' => 1,
         ])->assertOk();
 
         $this->actingAs($secondUser)->postJson('/api/pixels/lock', [
-            'x' => 14,
-            'y' => 14,
-            'width' => 5,
-            'height' => 5,
+            'x' => 10,
+            'y' => 10,
+            'width' => 1,
+            'height' => 1,
         ])->assertStatus(423);
 
-        $this->assertDatabaseCount('pixel_edit_locks', 25);
+        $this->assertDatabaseCount('pixel_edit_locks', 1);
         $this->assertDatabaseHas('pixel_edit_locks', [
-            'x' => 14,
-            'y' => 14,
+            'x' => 10,
+            'y' => 10,
             'locked_by_user_id' => $firstUser->id,
         ]);
     }
@@ -271,7 +269,7 @@ class PixelWallPageTest extends TestCase
     public function test_user_can_release_all_locks_for_their_selection(): void
     {
         $user = User::factory()->create();
-        $area = ['x' => 10, 'y' => 20, 'width' => 5, 'height' => 5];
+        $area = ['x' => 10, 'y' => 20, 'width' => 1, 'height' => 1];
 
         $this->actingAs($user)->postJson('/api/pixels/lock', $area)->assertOk();
         $this->actingAs($user)->deleteJson('/api/pixels/lock', $area)->assertOk();
@@ -359,8 +357,8 @@ class PixelWallPageTest extends TestCase
         $this->actingAs($otherUser)->postJson('/api/pixels/lock', [
             'x' => 30,
             'y' => 40,
-            'width' => 5,
-            'height' => 5,
+            'width' => 1,
+            'height' => 1,
         ])->assertOk();
 
         $response = $this->actingAs($otherUser)->postJson('/api/pixels', [
@@ -373,7 +371,7 @@ class PixelWallPageTest extends TestCase
         $this->assertDatabaseHas('pixels', ['x' => 30, 'y' => 40, 'color' => '#ffffff']);
     }
 
-    public function test_locked_pixel_rejects_the_entire_selection_batch(): void
+    public function test_pixel_write_rejects_a_batch_containing_multiple_pixels(): void
     {
         $owner = User::factory()->create();
         $otherUser = User::factory()->create();
@@ -393,8 +391,39 @@ class PixelWallPageTest extends TestCase
             ],
         ]);
 
-        $response->assertStatus(423);
+        $response->assertUnprocessable();
         $this->assertDatabaseMissing('pixels', ['x' => 31, 'y' => 40]);
         $this->assertDatabaseHas('pixels', ['x' => 30, 'y' => 40, 'color' => '#111111']);
+    }
+
+    public function test_guest_has_a_pool_of_50_pixels(): void
+    {
+        for ($i = 0; $i < 50; $i++) {
+            $this->postJson('/api/pixels', ['x' => $i, 'y' => 20, 'color' => '#123456'])
+                ->assertOk()->assertJsonPath('count', 1);
+        }
+
+        $this->postJson('/api/pixels', ['x' => 60, 'y' => 20, 'color' => '#654321'])
+            ->assertStatus(429)->assertJsonPath('limit', 'guest');
+
+        $this->assertDatabaseMissing('pixels', ['x' => 60, 'y' => 20]);
+    }
+
+    public function test_guest_cannot_change_multiple_pixels_in_one_request(): void
+    {
+        $this->postJson('/api/pixels', [
+            'pixels' => [
+                ['x' => 10, 'y' => 20, 'color' => '#123456'],
+                ['x' => 11, 'y' => 20, 'color' => '#654321'],
+            ],
+        ])->assertUnprocessable();
+
+        $this->postJson('/api/pixels', [
+            'x' => 12,
+            'y' => 20,
+            'color' => '#abcdef',
+        ])->assertOk();
+
+        $this->assertDatabaseCount('pixels', 1);
     }
 }

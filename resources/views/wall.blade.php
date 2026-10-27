@@ -5,6 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>Pixel Chaos</title>
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Pixel Chaos – baut gemeinsam ein Bild oder führt Pixelkrieg">
+        <meta property="og:description" content="Schau dir diesen Ausschnitt der Pixelwand an und mach mit!">
+        <meta property="og:url" content="{{ url()->full() }}">
+        @if (! empty($shareImage))
+            <meta property="og:image" content="{{ $shareImage }}">
+            <meta name="twitter:card" content="summary_large_image">
+        @endif
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="wall-page">
@@ -22,7 +30,7 @@
                     <nav class="top-actions wall-menu-links" aria-label="Hauptnavigation">
                         @if (Route::has('login'))
                             @auth
-                                <a href="{{ route('dashboard') }}">Dashboard</a>
+                                <a href="{{ route('profile.edit') }}">Profil</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit">Abmelden</button>
@@ -36,6 +44,9 @@
                         @endif
                         <a href="{{ route('gallery') }}">Galerie</a>
                         <button type="button" class="secondary-button" id="openRulesBtn">Spielregeln</button>
+                        <button type="button" class="secondary-button" id="shareViewBtn">🔗 Ausschnitt teilen</button>
+                        <a class="secondary-button" id="shareFacebookLink" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener noreferrer">Auf Facebook teilen</a>
+                        <button type="button" class="primary-button" id="openShopBtn">Pixel kaufen</button>
                     </nav>
                     <details class="feedback-details">
                         <summary>Feedback senden</summary>
@@ -68,8 +79,14 @@
                         <button type="button" class="secondary-button wall-nav wall-nav-right" id="navigateRightBtn" aria-label="300 Pixel nach rechts">→</button>
                         <button type="button" class="secondary-button wall-nav wall-nav-down" id="navigateDownBtn" aria-label="300 Pixel nach unten">↓</button>
                         <button type="button" class="secondary-button wall-nav wall-nav-left" id="navigateLeftBtn" aria-label="300 Pixel nach links">←</button>
-                        <button type="button" class="wall-extension-zone wall-extension-zone-right hidden" id="extendWallRightBtn" aria-label="Pixelwand nach rechts erweitern">+</button>
-                        <button type="button" class="wall-extension-zone wall-extension-zone-bottom hidden" id="extendWallDownBtn" aria-label="Pixelwand nach unten erweitern">+</button>
+                        <button type="button" class="wall-extension-zone wall-extension-zone-right hidden" id="extendWallRightBtn" aria-label="Pixel kaufen: Pixelwand nach rechts erweitern">
+                            <span class="wall-extension-plus" aria-hidden="true">+</span>
+                            <span class="wall-extension-label"><strong>Pixel kaufen</strong><small>Wand nach rechts erweitern – für alle</small></span>
+                        </button>
+                        <button type="button" class="wall-extension-zone wall-extension-zone-bottom hidden" id="extendWallDownBtn" aria-label="Pixel kaufen: Pixelwand nach unten erweitern">
+                            <span class="wall-extension-plus" aria-hidden="true">+</span>
+                            <span class="wall-extension-label"><strong>Pixel kaufen</strong><small>Wand nach unten erweitern – für alle</small></span>
+                        </button>
                         <div class="wall-zoom-controls" role="group" aria-label="Leinwandzoom">
                             <button type="button" class="secondary-button" id="zoomOutBtn" aria-label="Verkleinern" disabled>−</button>
                             <button type="button" class="secondary-button" id="zoomResetBtn" aria-label="Zoom auf 100 Prozent zurücksetzen">100%</button>
@@ -88,48 +105,75 @@
 
         <p id="statusText" class="status-live-region" role="status" aria-live="polite"></p>
 
-        <div id="editorPopup" class="editor-popup hidden" aria-modal="true" role="dialog">
-            <div class="editor-card">
-                <div class="editor-header">
-                    <h3>Gestaltungsfläche bearbeiten</h3>
-                    <button type="button" id="closeEditorBtn" class="icon-button" aria-label="Popup schließen">×</button>
-                </div>
+        @if (session('purchase'))
+            <div class="purchase-banner purchase-{{ session('purchase.status') }}" role="status" id="purchaseBanner">
+                <span>{{ session('purchase.message') }}</span>
+                <button type="button" class="secondary-button" id="purchaseBannerClose">OK</button>
+            </div>
+        @endif
 
-                <div class="paint-toolbar">
-                    <span class="tool-label">Werkzeug</span>
-                    <div class="popup-color-row" id="popupColorPalette">
-                        @foreach (['#ff6b6b','#ffd93d','#48dbfb','#1dd1a1','#c56cf0','#ff9ff3','#2d3436','#ffffff'] as $color)
-                            <button class="color-button" type="button" data-color="{{ $color }}" style="background: {{ $color }};" aria-label="Farbe {{ $color }}"></button>
-                        @endforeach
-                    </div>
-                    <div class="current-color-row">
-                        <span class="active-color" id="activeColorLabel">#ff6b6b</span>
-                    </div>
+        <div id="limitModal" class="shop-modal hidden" role="dialog" aria-modal="true" aria-labelledby="limitTitle">
+            <div class="shop-card limit-card">
+                <h3 id="limitTitle">Nächstes Pixel noch nicht möglich</h3>
+                <p id="limitText"></p>
+                <p class="limit-countdown" id="limitCountdown" aria-live="off"></p>
+                <div class="limit-actions" id="limitGuestActions">
+                    <a href="{{ route('register') }}" class="primary-button">Kostenlos registrieren</a>
+                    <a href="{{ route('login') }}" class="secondary-button">Einloggen</a>
                 </div>
-
-                <div class="crop-preview-wrap">
-                    <div class="selection-preview-panel editor-panel">
-                        <div class="preview-label">Bearbeiten</div>
-                        <canvas id="selectionPreviewCanvas" width="240" height="240" aria-label="Bearbeitungsbereich"></canvas>
-                    </div>
-                    <div class="selection-preview-panel reference-panel">
-                        <div class="preview-label">Original</div>
-                        <canvas id="selectionOriginalCanvas" width="240" height="240" aria-label="Originalbereich"></canvas>
-                    </div>
+                <div class="limit-actions hidden" id="limitUserActions">
+                    <button type="button" class="primary-button" id="limitBuyBtn">100 Extra-Pixel kaufen</button>
                 </div>
-
-                <label class="upload-box wide">
-                    Bild in die Auswahl laden
-                    <input type="file" id="imageUpload" accept="image/*">
-                </label>
-
-                <div class="popup-actions">
-                    <button type="button" id="applySelectionBtn" class="primary-button">Übernehmen</button>
-                    <button type="button" id="clearSelectionBtn" class="secondary-button">Abbrechen</button>
-                </div>
+                <button type="button" class="secondary-button limit-close" id="limitCloseBtn">Okay, ich warte</button>
             </div>
         </div>
 
+        <div id="shopModal" class="shop-modal hidden" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+            <div class="shop-card">
+                <div class="editor-header">
+                    <h3 id="shopTitle">Pixel kaufen</h3>
+                    <button type="button" id="closeShopBtn" class="icon-button" aria-label="Shop schließen">×</button>
+                </div>
+                <p class="shop-credits" id="shopCredits"></p>
+                <div class="shop-products" id="shopProducts"></div>
+                <div class="shop-checkout hidden" id="shopCheckout">
+                    <h4>Bezahlen mit</h4>
+                    <div class="shop-providers" id="shopProviders"></div>
+                    <p class="shop-note">Du wirst zum Zahlungsanbieter weitergeleitet. Nach der Zahlung kommst du automatisch zurück.</p>
+                </div>
+                <div class="shop-checkout hidden" id="shopGuestNotice">
+                    <p>Zum Kaufen brauchst du ein kostenloses Konto – so landen deine Käufe sicher in deinem Profil.</p>
+                    <div class="limit-actions">
+                        <a href="{{ route('register') }}" class="primary-button">Kostenlos registrieren</a>
+                        <a href="{{ route('login') }}" class="secondary-button">Einloggen</a>
+                    </div>
+                </div>
+                <p class="shop-error hidden" id="shopError" role="alert"></p>
+            </div>
+        </div>
+
+        <div class="color-bar" id="colorBar" role="toolbar" aria-label="Farbauswahl">
+            <div class="neighborhood">
+                <canvas id="neighborhoodCanvas" width="54" height="54" aria-label="Umgebung des Pixels unter dem Cursor"></canvas>
+                <span class="neighborhood-label" id="neighborhoodLabel">–</span>
+            </div>
+            <div class="popup-color-row" id="popupColorPalette">
+                @foreach (['#ff6b6b','#ffd93d','#48dbfb','#1dd1a1','#c56cf0','#ff9ff3','#2d3436','#ffffff','#000000','#ff0000','#00aa00','#0044ff','#ff8800','#8b4513'] as $color)
+                    <button class="color-button" type="button" data-color="{{ $color }}" style="background: {{ $color }};" aria-label="Farbe {{ $color }}"></button>
+                @endforeach
+            </div>
+            <div class="color-picker-row">
+                <input type="color" id="colorPicker" class="color-picker" value="#ff6b6b" aria-label="Beliebige Farbe wählen">
+                <input type="text" id="colorHexInput" class="color-hex-input" value="#ff6b6b" maxlength="7" spellcheck="false" aria-label="Hex-Farbcode">
+                <span class="active-color" id="activeColorLabel">#ff6b6b</span>
+            </div>
+            <div class="pixel-counter" id="pixelCounter" aria-live="polite">
+                <strong id="pixelCounterValue">–</strong>
+                <span>Pixel übrig</span>
+                <small id="pixelCounterNote"></small>
+            </div>
+        </div>
+        <div id="cursorCoords" class="cursor-coords hidden" aria-hidden="true"></div>
         <span id="isAuthenticated" data-auth="{{ Auth::check() ? '1' : '0' }}" style="display:none;"></span>
 
         <footer class="site-footer">
@@ -149,7 +193,7 @@
             <div class="cookie-content">
                 <div>
                     <strong>Cookies & Spielregeln</strong>
-                    <p>Wir nutzen Cookies nur für die Sitzung und die erste Erklärung der Regeln. Deine Auswahl bleibt lokal im Browser gespeichert.</p>
+                    <p>Wir nutzen Cookies nur für die Sitzung und die erste Erklärung der Regeln. Deine Bestätigung bleibt lokal im Browser gespeichert.</p>
                 </div>
                 <button type="button" id="acceptCookiesBtn" class="primary-button">Akzeptieren</button>
             </div>
@@ -157,15 +201,16 @@
 
         <div id="rulesModal" class="rules-modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
             <div class="rules-card">
-                <h3 id="rulesTitle">So funktioniert Pixel Chaos</h3>
+                <h3 id="rulesTitle">Spielregeln: Pixelkrieg</h3>
                 <ul>
-                    <li>Jede Fläche beginnt als freie Leinwand.</li>
-                    <li>Mit einem Klick und Drag legst du eine Gestaltungsfläche mit Mindestgröße 5×5 px fest.</li>
-                    <li>Du kannst die Fläche beliebig erweitern oder neu positionieren.</li>
-                    <li>Im Editor färbst du einzelne Pixel per Klick.</li>
-                    <li>Alternativ kannst du ein Bild hochladen. Der Ausschnitt wird automatisch auf die gekaufte Fläche zugeschnitten.</li>
-                    <li>Die Wall lädt Bildausschnitte in 300-px-Schritten und lässt sich rechts und unten erweitern.</li>
-                    <li>Logge dich ein, um deine Änderungen dauerhaft zu speichern.</li>
+                    <li><strong>Die Wand gehört dem, der sie sich nimmt.</strong> Jeder Pixel kann von jedem überschrieben werden – auch deiner.</li>
+                    <li><strong>Bau mit anderen ein Bild</strong> – oder <strong>zerstöre das Werk deiner Gegner</strong> und führe deinen eigenen Pixelkrieg. Gemeinsam oder gegeneinander: du entscheidest.</li>
+                    <li>Wähle einen Pixel, färbe ihn in einer beliebigen Farbe (Farbwähler oder Hex-Code) und setze ihn.</li>
+                    <li>Als Gast hast du einmalig 50 Pixel. Danach brauchst du ein kostenloses Konto (E-Mail, Google oder Facebook).</li>
+                    <li>Mit Konto wächst alle 30 Sekunden ein Pixel nach – maximal 50 im Vorrat. Wer wartet, schlägt später härter zu.</li>
+                    <li>Frisch gesetzte Pixel sind kurz gesperrt (10 Minuten) – verteidige, was du gebaut hast, und hol dir zurück, was dir genommen wurde.</li>
+                    <li>Keine Hassbilder, keine verbotenen Symbole, keine Beleidigungen von Personen. Verstöße werden gelöscht.</li>
+                    <li>Die Wall lässt sich bis 800 % zoomen – für den Feinschliff und für den Angriff auf einzelne Pixel.</li>
                 </ul>
                 <button type="button" id="closeRulesBtn" class="primary-button">Verstanden</button>
             </div>

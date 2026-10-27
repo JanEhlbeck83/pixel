@@ -6,18 +6,19 @@ use App\Models\Activity;
 use App\Models\Pixel;
 use App\Models\PixelEditLock;
 use App\Models\Snapshot;
-use App\Models\User;
+use App\Services\Wall\PixelQuota;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class WallController extends Controller
 {
+    public function __construct(private PixelQuota $quota) {}
+
     private const WALL_SIZE = 1024;
 
     private const WALL_TILE_SIZE = 300;
-
-    private const WALL_EXTENSION_SIZE = 300;
 
     private const PIXEL_LOCK_MINUTES = 10;
 
@@ -29,7 +30,9 @@ class WallController extends Controller
 
     public function index()
     {
-        return view('wall');
+        return view('wall', [
+            'shareImage' => ($path = \App\Models\Snapshot::latest()->value('image_path')) ? asset($path) : null,
+        ]);
     }
 
     public function bootstrapDemoData(): void
@@ -127,71 +130,19 @@ class WallController extends Controller
         ]);
     }
 
-    public function extend(Request $request)
+    public function pixelStatus(Request $request)
     {
-        $data = $request->validate([
-            'axis' => ['required', 'in:x,y'],
-        ]);
+        return response()->json($this->quota->status($request));
+    }
 
-        $dimensions = DB::transaction(function () use ($data) {
-            $wall = DB::table('wall_dimensions')->where('id', 1)->lockForUpdate()->first();
-            $width = (int) $wall->width;
-            $height = (int) $wall->height;
-            if (
-                ($data['axis'] === 'x' && $width > 4294966995)
-                || ($data['axis'] === 'y' && $height > 4294966995)
-            ) {
-                throw new HttpResponseException(response()->json([
-                    'success' => false,
-                    'message' => 'Die Pixelwand hat die maximale Koordinatengröße erreicht.',
-                ], 422));
-            }
-            $now = now();
-            $rows = [];
-
-            if ($data['axis'] === 'x') {
-                for ($y = 0; $y < $height; $y++) {
-                    for ($x = $width; $x < $width + self::WALL_EXTENSION_SIZE; $x++) {
-                        $rows[] = $this->whitePixelRow($x, $y, $now);
-                    }
-                    if (count($rows) >= 2000) {
-                        Pixel::query()->insert($rows);
-                        $rows = [];
-                    }
-                }
-                $width += self::WALL_EXTENSION_SIZE;
-            } else {
-                for ($y = $height; $y < $height + self::WALL_EXTENSION_SIZE; $y++) {
-                    for ($x = 0; $x < $width; $x++) {
-                        $rows[] = $this->whitePixelRow($x, $y, $now);
-                    }
-                    if (count($rows) >= 2000) {
-                        Pixel::query()->insert($rows);
-                        $rows = [];
-                    }
-                }
-                $height += self::WALL_EXTENSION_SIZE;
-            }
-
-            if ($rows !== []) {
-                Pixel::query()->insert($rows);
-            }
-
-            DB::table('wall_dimensions')->where('id', 1)->update([
-                'width' => $width,
-                'height' => $height,
-                'updated_at' => $now,
-            ]);
-
-            return (object) ['width' => $width, 'height' => $height];
-        });
-
-        return response()->json([
-            'success' => true,
-            'width' => $dimensions->width,
-            'height' => $dimensions->height,
-            'axis' => $data['axis'],
-        ]);
+    private function quotaDenied(array $status)
+    {
+        return response()->json($status + [
+            'success' => false,
+            'message' => $status['limit'] === 'guest'
+                ? 'Dein Gast-Vorrat von '.$status['max_free'].' Pixeln ist aufgebraucht. Melde dich an, um alle '.$this->quota->regenSeconds().' Sekunden ein Pixel zu setzen.'
+                : 'Dein Vorrat ist leer. Alle '.$this->quota->regenSeconds().' Sekunden wächst ein Pixel nach (maximal '.$status['max_free'].'). Mit Extra-Pixeln geht es sofort weiter.',
+        ], 429);
     }
 
     public function pixelLocks(Request $request)
@@ -231,13 +182,18 @@ class WallController extends Controller
         $area = $request->validate([
             'x' => ['required', 'integer', 'min:0'],
             'y' => ['required', 'integer', 'min:0'],
-            'width' => ['required', 'integer', 'min:5', 'max:1024'],
-            'height' => ['required', 'integer', 'min:5', 'max:1024'],
+            'width' => ['required', 'integer', 'size:1'],
+            'height' => ['required', 'integer', 'size:1'],
         ]);
         $dimensions = $this->wallDimensions();
 
         if ($dimensions->width < $area['x'] + $area['width'] || $dimensions->height < $area['y'] + $area['height']) {
             return response()->json(['message' => 'Die Auswahl liegt außerhalb der Pixelwand.'], 422);
+        }
+
+        $quotaStatus = $this->quota->status($request);
+        if (! $quotaStatus['can_edit']) {
+            return $this->quotaDenied($quotaStatus);
         }
 
         return DB::transaction(function () use ($request, $area) {
@@ -329,8 +285,8 @@ class WallController extends Controller
         $area = $request->validate([
             'x' => ['required', 'integer', 'min:0'],
             'y' => ['required', 'integer', 'min:0'],
-            'width' => ['required', 'integer', 'min:5', 'max:1024'],
-            'height' => ['required', 'integer', 'min:5', 'max:1024'],
+            'width' => ['required', 'integer', 'size:1'],
+            'height' => ['required', 'integer', 'size:1'],
         ]);
         $dimensions = $this->wallDimensions();
 
@@ -363,12 +319,10 @@ class WallController extends Controller
 
     public function store(Request $request)
     {
-        $batchPixels = $request->input('pixels');
-        $isBatch = is_array($batchPixels) && count($batchPixels) > 0;
-
+        $isBatch = array_key_exists('pixels', $request->all());
         if ($isBatch) {
             $validatedPixels = $request->validate([
-                'pixels' => ['required', 'array'],
+                'pixels' => ['required', 'array', 'size:1'],
                 'pixels.*.x' => ['required', 'integer', 'min:0'],
                 'pixels.*.y' => ['required', 'integer', 'min:0'],
                 'pixels.*.color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -388,83 +342,117 @@ class WallController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($request, $validatedPixels, $isBatch) {
-            $coordinates = collect($validatedPixels)->unique(fn ($pixel) => $pixel['x'].':'.$pixel['y']);
-            $lockedPixels = Pixel::query()
-                ->whereNotNull('updated_by_user_id')
-                ->where('updated_at', '>', now()->subMinutes(self::PIXEL_LOCK_MINUTES))
-                ->where(function ($query) use ($coordinates) {
-                    foreach ($coordinates as $pixel) {
-                        $query->orWhere(function ($query) use ($pixel) {
-                            $query->where('x', $pixel['x'])->where('y', $pixel['y']);
-                        });
+        $user = $request->user();
+        $savePixels = function () use ($validatedPixels, $isBatch, $user) {
+            return DB::transaction(function () use ($validatedPixels, $isBatch, $user) {
+                $coordinates = collect($validatedPixels)->unique(fn ($pixel) => $pixel['x'].':'.$pixel['y']);
+                $lockedPixels = Pixel::query()
+                    ->whereNotNull('updated_by_user_id')
+                    ->where('updated_at', '>', now()->subMinutes(self::PIXEL_LOCK_MINUTES))
+                    ->where(function ($query) use ($coordinates) {
+                        foreach ($coordinates as $pixel) {
+                            $query->orWhere(function ($query) use ($pixel) {
+                                $query->where('x', $pixel['x'])->where('y', $pixel['y']);
+                            });
+                        }
+                    })
+                    ->lockForUpdate()
+                    ->get(['x', 'y', 'updated_at'])
+                    ->map(function ($pixel) {
+                        return [
+                            'x' => (int) $pixel->x,
+                            'y' => (int) $pixel->y,
+                            'locked_until' => $pixel->updated_at->copy()->addMinutes(self::PIXEL_LOCK_MINUTES)->toIso8601String(),
+                        ];
+                    })
+                    ->values();
+
+                if ($lockedPixels->isNotEmpty()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Mindestens ein Pixel ist bereits bearbeitet und noch gesperrt.',
+                        'locked_pixels' => $lockedPixels,
+                    ], 423);
+                }
+
+                if ($user !== null) {
+                    $ownedLocks = PixelEditLock::query()
+                        ->where('locked_by_user_id', $user->id)
+                        ->where('expires_at', '>', now())
+                        ->where(function ($query) use ($coordinates) {
+                            foreach ($coordinates as $pixel) {
+                                $query->orWhere(function ($query) use ($pixel) {
+                                    $query->where('x', $pixel['x'])->where('y', $pixel['y']);
+                                });
+                            }
+                        })
+                        ->lockForUpdate()
+                        ->get(['x', 'y'])
+                        ->keyBy(fn ($pixel) => $pixel->x.':'.$pixel->y);
+
+                    $missingLocks = $coordinates->filter(fn ($pixel) => ! $ownedLocks->has($pixel['x'].':'.$pixel['y']));
+                    if ($missingLocks->isNotEmpty()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Die Bearbeitungsreservierung fehlt oder ist abgelaufen. Bitte wähle den Pixel erneut.',
+                        ], 423);
                     }
-                })
-                ->lockForUpdate()
-                ->get(['x', 'y', 'updated_at'])
-                ->map(function ($pixel) {
-                    return [
-                        'x' => (int) $pixel->x,
-                        'y' => (int) $pixel->y,
-                        'locked_until' => $pixel->updated_at->copy()->addMinutes(self::PIXEL_LOCK_MINUTES)->toIso8601String(),
-                    ];
-                })
-                ->values();
+                }
 
-            if ($lockedPixels->isNotEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Mindestens ein Pixel ist bereits bearbeitet und noch gesperrt.',
-                    'locked_pixels' => $lockedPixels,
-                ], 423);
-            }
-
-            $ownedLocks = PixelEditLock::query()
-                ->where('locked_by_user_id', $request->user()->id)
-                ->where('expires_at', '>', now())
-                ->where(function ($query) use ($coordinates) {
-                    foreach ($coordinates as $pixel) {
-                        $query->orWhere(function ($query) use ($pixel) {
-                            $query->where('x', $pixel['x'])->where('y', $pixel['y']);
-                        });
+                if ($user !== null) {
+                    $denied = $this->quota->consume($user);
+                    if ($denied !== null) {
+                        return $this->quotaDenied($denied);
                     }
-                })
-                ->lockForUpdate()
-                ->get(['x', 'y'])
-                ->keyBy(fn ($pixel) => $pixel->x.':'.$pixel->y);
+                }
 
-            $missingLocks = $coordinates->filter(fn ($pixel) => ! $ownedLocks->has($pixel['x'].':'.$pixel['y']));
-            if ($missingLocks->isNotEmpty()) {
+                foreach ($validatedPixels as $pixelData) {
+                    Pixel::updateOrCreate(
+                        ['x' => $pixelData['x'], 'y' => $pixelData['y']],
+                        [
+                            'color' => $pixelData['color'],
+                            'owner_user_id' => $user?->id,
+                            'updated_by_user_id' => $user?->id,
+                        ]
+                    );
+                }
+
+                if ($user !== null && ! $isBatch) {
+                    Activity::create([
+                        'user_id' => $user->id,
+                        'action' => 'painted',
+                        'description' => $user->name.' hat ein Pixel gesetzt.',
+                    ]);
+                }
+
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Die Bearbeitungsreservierung fehlt oder ist abgelaufen. Bitte wähle den Bereich erneut.',
-                ], 423);
-            }
-
-            foreach ($validatedPixels as $pixelData) {
-                Pixel::updateOrCreate(
-                    ['x' => $pixelData['x'], 'y' => $pixelData['y']],
-                    [
-                        'color' => $pixelData['color'],
-                        'owner_user_id' => $request->user()->id,
-                        'updated_by_user_id' => $request->user()->id,
-                    ]
-                );
-            }
-
-            if (! $isBatch) {
-                Activity::create([
-                    'user_id' => $request->user()->id,
-                    'action' => 'painted',
-                    'description' => $request->user()->name.' hat ein Pixel gesetzt.',
+                    'success' => true,
+                    'count' => count($validatedPixels),
+                    'locked_until' => $user !== null
+                        ? now()->addMinutes(self::PIXEL_LOCK_MINUTES)->toIso8601String()
+                        : null,
                 ]);
+            });
+        };
+
+        if ($user !== null) {
+            return $savePixels();
+        }
+
+        $rateLimitKey = $this->quota->guestKey($request);
+
+        return Cache::lock($rateLimitKey.':lock', 10)->block(5, function () use ($savePixels, $request) {
+            $status = $this->quota->status($request);
+            if (! $status['can_edit']) {
+                return $this->quotaDenied($status);
             }
 
-            return response()->json([
-                'success' => true,
-                'count' => count($validatedPixels),
-                'locked_until' => now()->addMinutes(self::PIXEL_LOCK_MINUTES)->toIso8601String(),
-            ]);
+            $response = $savePixels();
+            if ($response->isSuccessful()) {
+                $this->quota->recordGuestPixel($request);
+            }
+
+            return $response;
         });
     }
 
@@ -655,19 +643,6 @@ class WallController extends Controller
     private function wallDimensions(): object
     {
         return DB::table('wall_dimensions')->where('id', 1)->first();
-    }
-
-    private function whitePixelRow(int $x, int $y, $timestamp): array
-    {
-        return [
-            'x' => $x,
-            'y' => $y,
-            'color' => '#ffffff',
-            'owner_user_id' => null,
-            'updated_by_user_id' => null,
-            'created_at' => $timestamp,
-            'updated_at' => $timestamp,
-        ];
     }
 
     private function seedDailySnapshot(): void

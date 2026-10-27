@@ -12,10 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('snapshot:generate')->everyTenMinutes();
+        $schedule->command('wall:tiles')->everyTenMinutes()->withoutOverlapping(30);
+        $schedule->command('snapshot:generate')->cron('0 */12 * * *')->withoutOverlapping(60);
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

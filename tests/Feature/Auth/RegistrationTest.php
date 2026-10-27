@@ -14,6 +14,8 @@ class RegistrationTest extends TestCase
         $response = $this->get('/register');
 
         $response->assertStatus(200);
+        $response->assertDontSee('auth-showcase');
+        $response->assertSee('auth-mobile-brand');
     }
 
     public function test_new_users_can_register(): void

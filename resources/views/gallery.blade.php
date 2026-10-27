@@ -26,7 +26,9 @@
                         @forelse ($snapshots as $snapshot)
                             <article class="gallery-item">
                                 @if (!empty($snapshot->image_path))
-                                    <img src="{{ asset($snapshot->image_path) }}" alt="{{ $snapshot->label }}" class="snapshot-image">
+                                    <a href="{{ asset($snapshot->image_path) }}" target="_blank" rel="noopener">
+                                        <img src="{{ asset($snapshot->image_path) }}" alt="{{ $snapshot->label }}" class="snapshot-image" loading="lazy">
+                                    </a>
                                 @else
                                     <div class="mini-wall" aria-label="Schnappschuss Vorschau">
                                         <span></span>
@@ -45,6 +47,9 @@
                                         vor {{ $minutesAgo }} Minuten
                                     @endif
                                 </p>
+                                @if (!empty($snapshot->image_path))
+                                    <a class="primary-button snapshot-download" href="{{ asset($snapshot->image_path) }}" download="pixel-chaos-{{ basename($snapshot->image_path) }}">⬇ Als PNG herunterladen @if (!empty($snapshot->summary['width']))({{ $snapshot->summary['width'] }} × {{ $snapshot->summary['height'] }} px)@endif</a>
+                                @endif
                             </article>
                         @empty
                             <p>Keine Schnappschüsse vorhanden.</p>
