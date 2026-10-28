@@ -130,6 +130,8 @@ class SimulatePixelChangesCommand extends Command
                 Activity::query()->create([
                     'user_id' => $user->id,
                     'action' => 'painted',
+                    'type' => 'pixels_simulated',
+                    'params' => ['name' => $user->name],
                     'description' => $user->name.' hat 100 Pixel im Simulationslauf gesetzt.',
                 ]);
 
@@ -318,6 +320,8 @@ class SimulatePixelChangesCommand extends Command
                 Activity::query()->create([
                     'user_id' => $user->id,
                     'action' => 'painted',
+                    'type' => 'pixels_scattered',
+                    'params' => ['name' => $user->name, 'count' => $count],
                     'description' => $user->name.' hat '.$count.' zufällig verteilte Pixel geändert.',
                 ]);
 

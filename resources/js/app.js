@@ -1,6 +1,8 @@
 import './bootstrap';
 
 import Alpine from 'alpinejs';
+import { t, localizedUrl, apiFetch, locale } from './i18n';
+window.pixelI18n = { t, localizedUrl, apiFetch, locale };
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -61,7 +63,6 @@ const neighborhoodCanvas = document.getElementById('neighborhoodCanvas');
 const neighborhoodLabel = document.getElementById('neighborhoodLabel');
 const pixelCounter = document.getElementById('pixelCounter');
 const pixelCounterValue = document.getElementById('pixelCounterValue');
-const pixelCounterNote = document.getElementById('pixelCounterNote');
 const authFlag = document.getElementById('isAuthenticated');
 const isAuthenticated = authFlag ? authFlag.dataset.auth === '1' : false;
 
@@ -161,7 +162,7 @@ function getActivePixelLock(x, y) {
 
 async function refreshPixelLocks() {
     try {
-        const response = await fetch('/api/pixels/locks', { headers: { Accept: 'application/json' } });
+        const response = await apiFetch('/api/pixels/locks', { headers: { Accept: 'application/json' } });
         if (!response.ok) {
             return;
         }
@@ -186,8 +187,7 @@ function updatePixelLockTooltip(event) {
     }
 
     const minutesRemaining = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
-    const minuteLabel = minutesRemaining === 1 ? 'Minute' : 'Minuten';
-    pixelLockTooltip.textContent = `Bereits bearbeitet. Bearbeitung in ${minutesRemaining} ${minuteLabel} wieder möglich.`;
+    pixelLockTooltip.textContent = t(minutesRemaining === 1 ? 'Bereits bearbeitet. Bearbeitung in :minutes Minute wieder möglich.' : 'Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining });
 
     const shellRect = canvas.parentElement.getBoundingClientRect();
     pixelLockTooltip.style.left = `${clamp(event.clientX - shellRect.left + 12, 8, shellRect.width - 288)}px`;
@@ -217,7 +217,7 @@ async function requestPixelAreaLock(area, method = 'POST') {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     try {
-        const response = await fetch('/api/pixels/lock', {
+        const response = await apiFetch('/api/pixels/lock', {
             method,
             headers: {
                 'Content-Type': 'application/json',
@@ -234,14 +234,14 @@ async function requestPixelAreaLock(area, method = 'POST') {
                 return false;
             }
             payload.locked_pixels?.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
-            setStatus(payload.message || 'Der Bereich konnte nicht reserviert werden.');
+            setStatus(payload.message || t('Der Bereich konnte nicht reserviert werden.'));
             return false;
         }
 
         return true;
     } catch (error) {
         console.error('Failed to update pixel area lock:', error);
-        setStatus('Die Flächensperre konnte nicht mit dem Server synchronisiert werden.');
+        setStatus(t('Die Flächensperre konnte nicht mit dem Server synchronisiert werden.'));
         return false;
     }
 }
@@ -410,7 +410,7 @@ function changeZoom(zoom) {
     zoomOutBtn.disabled = zoomLevels.indexOf(displayScale) === 0;
     zoomInBtn.disabled = zoomLevels.indexOf(displayScale) === zoomLevels.length - 1;
     zoomResetBtn.textContent = `${Math.round(displayScale * 100)}%`;
-    zoomResetBtn.setAttribute('aria-label', `Zoom auf 100 Prozent zurücksetzen; aktuell ${Math.round(displayScale * 100)} Prozent`);
+    zoomResetBtn.setAttribute('aria-label', t('Zoom auf 100 Prozent zurücksetzen; aktuell :percent Prozent', { percent: Math.round(displayScale * 100).toLocaleString(locale) }));
 }
 
 function loadWallTile(x, y) {
@@ -427,7 +427,7 @@ function loadWallTile(x, y) {
             pixelCanvas.height = image.naturalHeight;
             const pixelContext = pixelCanvas.getContext('2d');
             if (!pixelContext) {
-                reject(new Error(`Pixel-Daten für Bildkachel ${x}:${y} konnten nicht gelesen werden.`));
+                reject(new Error(t('Pixel-Daten für Bildkachel :x::y konnten nicht gelesen werden.', { x, y })));
                 return;
             }
             pixelContext.drawImage(image, 0, 0);
@@ -444,7 +444,7 @@ function loadWallTile(x, y) {
         };
         image.onerror = () => {
             wallTileLoads.delete(key);
-            reject(new Error(`Bildkachel ${x}:${y} konnte nicht geladen werden.`));
+            reject(new Error(t('Bildkachel :x::y konnte nicht geladen werden.', { x, y })));
         };
         image.src = `/images/wall-tiles/${x}-${y}.png?v=${Date.now()}`;
     });
@@ -474,7 +474,7 @@ async function loadWallTiles() {
         await Promise.all(pending);
     } catch (error) {
         console.error('Failed to load wall image tiles:', error);
-        setStatus('Ein Bildausschnitt der Wall konnte nicht geladen werden.');
+        setStatus(t('Ein Bildausschnitt der Wall konnte nicht geladen werden.'));
         throw error;
     }
 }
@@ -500,9 +500,9 @@ function invalidateExpandedEdgeTiles(axis, previousWidth, previousHeight) {
 }
 
 async function loadWallDimensions() {
-    const response = await fetch('/api/wall', { headers: { Accept: 'application/json' } });
+    const response = await apiFetch('/api/wall', { headers: { Accept: 'application/json' } });
     if (!response.ok) {
-        throw new Error('Die Größe der Pixelwand konnte nicht geladen werden.');
+        throw new Error(t('Die Größe der Pixelwand konnte nicht geladen werden.'));
     }
 
     const dimensions = await response.json();
@@ -571,9 +571,9 @@ shareViewBtn?.addEventListener('click', async () => {
     }
     try {
         await navigator.clipboard.writeText(url);
-        setStatus(`Link kopiert: ${url}`);
+        setStatus(t('Link kopiert: :url', { url }));
     } catch (error) {
-        window.prompt('Link zum Teilen:', url);
+        window.prompt(t('Link zum Teilen:'), url);
     }
 });
 
@@ -617,17 +617,17 @@ function showInitialViewportLoadFailure() {
         reservationLoadingSpinner.hidden = true;
     }
     if (reservationLoadingMessage) {
-        reservationLoadingMessage.textContent = 'Der Viewport konnte nicht vollständig geladen werden.';
+        reservationLoadingMessage.textContent = t('Der Viewport konnte nicht vollständig geladen werden.');
     }
     reservationLoadingRetry?.classList.remove('hidden');
-    reservationLoadingOverlay?.setAttribute('aria-label', 'Viewport konnte nicht geladen werden');
+    reservationLoadingOverlay?.setAttribute('aria-label', t('Viewport konnte nicht geladen werden'));
 }
 
 async function refreshWallDimensions() {
     try {
-        const response = await fetch('/api/wall', { headers: { Accept: 'application/json' } });
+        const response = await apiFetch('/api/wall', { headers: { Accept: 'application/json' } });
         if (!response.ok) {
-            throw new Error('Die Größe der Pixelwand konnte nicht aktualisiert werden.');
+            throw new Error(t('Die Größe der Pixelwand konnte nicht aktualisiert werden.'));
         }
 
         const dimensions = await response.json();
@@ -655,7 +655,7 @@ async function refreshWallDimensions() {
         renderCanvas();
     } catch (error) {
         console.error('Failed to refresh wall dimensions:', error);
-        setStatus(error.message || 'Die Größe der Pixelwand konnte nicht aktualisiert werden.');
+        setStatus(error.message || t('Die Größe der Pixelwand konnte nicht aktualisiert werden.'));
     }
 }
 
@@ -695,10 +695,10 @@ async function navigateWall(direction) {
         updateCanvasDisplaySize();
         await loadWallTiles();
         renderCanvas();
-        setStatus(`300 px nach ${direction === 'left' ? 'links' : direction === 'right' ? 'rechts' : direction === 'up' ? 'oben' : 'unten'} navigiert.`);
+        setStatus(t('300 px nach :direction navigiert.', { direction: t(({ left: 'links', right: 'rechts', up: 'oben', down: 'unten' })[direction]) }));
     } catch (error) {
         console.error(error);
-        setStatus(error.message || 'Die Wall konnte nicht erweitert werden.');
+        setStatus(error.message || t('Die Wall konnte nicht erweitert werden.'));
     } finally {
         button.disabled = false;
         wallNavigationInProgress = false;
@@ -715,9 +715,9 @@ async function loadPixelsForSelection(area = selection) {
     }
 
     try {
-        const response = await fetch(`/api/pixels?x=${area.x}&y=${area.y}&width=${area.width}&height=${area.height}`);
+        const response = await apiFetch(`/api/pixels?x=${area.x}&y=${area.y}&width=${area.width}&height=${area.height}`);
         if (!response.ok) {
-            throw new Error('Die Pixelwerte konnten nicht geladen werden.');
+            throw new Error(t('Die Pixelwerte konnten nicht geladen werden.'));
         }
         const payload = await response.json();
         const nextPixels = new Map();
@@ -736,7 +736,7 @@ async function loadPixelsForSelection(area = selection) {
         const ny = Math.max(0, area.y - 1);
         const nw = Math.min(wallWidth, area.x + area.width + 1) - nx;
         const nh = Math.min(wallHeight, area.y + area.height + 1) - ny;
-        const neighborResponse = await fetch(`/api/pixels?x=${nx}&y=${ny}&width=${nw}&height=${nh}`);
+        const neighborResponse = await apiFetch(`/api/pixels?x=${nx}&y=${ny}&width=${nw}&height=${nh}`);
         if (neighborResponse.ok) {
             ((await neighborResponse.json()).pixels || []).forEach((pixel) => {
                 pixels.set(keyFor(pixel.x, pixel.y), pixel.color);
@@ -756,14 +756,14 @@ async function loadPixelsForSelection(area = selection) {
         }
     } catch (error) {
         console.error('Failed to load pixels for selection:', error);
-        setStatus(error.message || 'Die Pixelwerte konnten nicht geladen werden.');
+        setStatus(error.message || t('Die Pixelwerte konnten nicht geladen werden.'));
     }
 }
 
 function savePixel(x, y, color) {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-    return fetch('/api/pixels', {
+    return apiFetch('/api/pixels', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -773,7 +773,7 @@ function savePixel(x, y, color) {
         body: JSON.stringify({ x, y, color }),
     }).then((response) => response.json().then((payload) => {
         if (!response.ok || !payload.success) {
-            const error = new Error(payload.message || 'Could not save pixel');
+            const error = new Error(payload.message || t('Pixel konnte nicht gespeichert werden.'));
             error.payload = payload;
             throw error;
         }
@@ -787,7 +787,7 @@ function savePixel(x, y, color) {
             pixelLocks.set(key, { x, y, locked_until: payload.locked_until });
         }
         renderCanvas();
-        fetchPixelStatus().then((status) => setStatus(`Pixel ${x}:${y} gespeichert. ${describeQuota(status)}`));
+        fetchPixelStatus().then((status) => setStatus(t('Pixel :x::y gespeichert. :quota', { x, y, quota: describeQuota(status) })));
     }).catch((error) => {
         console.error(error);
         if (error.payload?.limit) {
@@ -796,11 +796,11 @@ function savePixel(x, y, color) {
         }
         if (error.payload?.locked_pixels?.length) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
-            setStatus('Bereits bearbeitet. Bearbeitung in 10 Minuten wieder möglich.');
+            setStatus(t('Bereits bearbeitet. Bearbeitung in 10 Minuten wieder möglich.'));
             return false;
         }
 
-        setStatus(error.message || 'Das Pixel konnte nicht gespeichert werden.');
+        setStatus(error.message || t('Das Pixel konnte nicht gespeichert werden.'));
         return false;
     });
 }
@@ -812,7 +812,7 @@ function savePixels(changedPixels) {
 
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-    return fetch('/api/pixels', {
+    return apiFetch('/api/pixels', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -822,7 +822,7 @@ function savePixels(changedPixels) {
         body: JSON.stringify({ pixels: changedPixels }),
     }).then((response) => response.json().then((payload) => {
         if (!response.ok || !payload.success) {
-            const error = new Error(payload.message || 'Could not save batch of pixels');
+            const error = new Error(payload.message || t('Pixel konnten nicht gespeichert werden.'));
             error.payload = payload;
             throw error;
         }
@@ -838,7 +838,7 @@ function savePixels(changedPixels) {
             }
         });
         renderCanvas();
-        fetchPixelStatus().then((status) => setStatus(`Pixel gespeichert: ${changedPixels[0].x}:${changedPixels[0].y}. ${describeQuota(status)}`));
+        fetchPixelStatus().then((status) => setStatus(t('Pixel gespeichert: :x::y. :quota', { x: changedPixels[0].x, y: changedPixels[0].y, quota: describeQuota(status) })));
         return payload;
     }).catch((error) => {
         console.error(error);
@@ -850,19 +850,19 @@ function savePixels(changedPixels) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
             const firstLock = error.payload.locked_pixels[0];
             const minutesRemaining = Math.max(1, Math.ceil((Date.parse(firstLock.locked_until) - Date.now()) / 60000));
-            setStatus(`Bereits bearbeitet. Bearbeitung in ${minutesRemaining} Minuten wieder möglich.`);
+            setStatus(t('Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining }));
             refreshPixelLocks();
             return false;
         }
 
-        setStatus(error.message || 'Speichern fehlgeschlagen. Die Wand wurde nicht geändert.');
+        setStatus(error.message || t('Speichern fehlgeschlagen. Die Wand wurde nicht geändert.'));
         return false;
     });
 }
 
 function paintCell(x, y) {
     if (!selection) {
-        setStatus('Wähle zuerst einen Pixel aus.');
+        setStatus(t('Wähle zuerst einen Pixel aus.'));
         return;
     }
 
@@ -898,14 +898,14 @@ function paintPopupCell(event) {
     const lock = getActivePixelLock(globalX, globalY);
     if (lock) {
         const minutesRemaining = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
-        setStatus(`Bereits bearbeitet. Bearbeitung in ${minutesRemaining} Minuten wieder möglich.`);
+        setStatus(t('Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining }));
         return;
     }
 
     const key = keyFor(globalX, globalY);
     selectionPixels.set(key, activeColor);
     renderSelectionPreview();
-    setStatus('Pixel in der Vorschau geändert. Klicke auf „Übernehmen“, um ihn zu speichern.');
+    setStatus(t('Pixel in der Vorschau geändert. Klicke auf „Übernehmen“, um ihn zu speichern.'));
 }
 
 function createSelectionAtCell(x, y) {
@@ -917,7 +917,7 @@ function createSelectionAtCell(x, y) {
     };
 
     renderCanvas();
-    setStatus(`Pixel ${selection.x}:${selection.y} ausgewählt.`);
+    setStatus(t('Pixel :x::y ausgewählt.', { x: selection.x, y: selection.y }));
 }
 
 const pendingPaints = new Set();
@@ -969,7 +969,7 @@ function handlePointerDown(event) {
 
     if (getActivePixelLock(cell.x, cell.y)) {
         updatePixelLockTooltip(event);
-        setStatus('Bereits bearbeitet. Bearbeitung in 10 Minuten wieder möglich.');
+        setStatus(t('Bereits bearbeitet. Bearbeitung in 10 Minuten wieder möglich.'));
         return;
     }
 
@@ -1002,7 +1002,7 @@ function handlePointerMove(event) {
     }
 
     updateSelection(cell.x, cell.y);
-    setStatus(`Pixel ${selection.x}:${selection.y} ausgewählt.`);
+    setStatus(t('Pixel :x::y ausgewählt.', { x: selection.x, y: selection.y }));
 }
 
 function handlePointerUp() {
@@ -1019,11 +1019,11 @@ function handlePointerUp() {
         if (lockedPixel) {
             selection = null;
             renderCanvas();
-            setStatus('Dieser Pixel wurde gerade bearbeitet. Wähle einen anderen Pixel.');
+            setStatus(t('Dieser Pixel wurde gerade bearbeitet. Wähle einen anderen Pixel.'));
             return;
         }
 
-        setStatus(`Pixel ${selection.x}:${selection.y} ausgewählt. Editor öffnet gleich.`);
+        setStatus(t('Pixel :x::y ausgewählt. Editor öffnet gleich.', { x: selection.x, y: selection.y }));
         loadPixelsForSelection({ ...selection });
         selectionPopupTimer = window.setTimeout(() => {
             selectionPopupTimer = null;
@@ -1043,7 +1043,7 @@ function handlePointerCancel() {
     dragOrigin = null;
     selection = null;
     renderCanvas();
-    setStatus('Pixel-Auswahl abgebrochen. Klicke erneut auf einen Pixel.');
+    setStatus(t('Pixel-Auswahl abgebrochen. Klicke erneut auf einen Pixel.'));
 }
 
 function renderSelectionPreview() {
@@ -1134,19 +1134,19 @@ async function openEditorPopup() {
         renderSelectionPreview();
         renderOriginalSelectionPreview();
         editorPopup?.classList.remove('hidden');
-        setStatus(`Wähle eine Farbe und übernimm deinen Pixel. ${describeQuota(status)}`);
+        setStatus(t('Wähle eine Farbe und übernimm deinen Pixel. :quota', { quota: describeQuota(status) }));
         return;
     }
 
     const area = { ...selection };
     if (reservationLoadingMessage) {
-        reservationLoadingMessage.textContent = 'Bereich wird reserviert …';
+        reservationLoadingMessage.textContent = t('Bereich wird reserviert …');
     }
     if (reservationLoadingSpinner) {
         reservationLoadingSpinner.hidden = false;
     }
     reservationLoadingRetry?.classList.add('hidden');
-    reservationLoadingOverlay?.setAttribute('aria-label', 'Bereich wird reserviert');
+    reservationLoadingOverlay?.setAttribute('aria-label', t('Bereich wird reserviert'));
     reservationLoadingOverlay?.classList.remove('hidden');
     let acquired;
     try {
@@ -1178,14 +1178,14 @@ function closeEditorPopup() {
     selectionPixels.clear();
     selectionOriginalPixels.clear();
     renderCanvas();
-    setStatus('Pixel-Bearbeitung beendet. Klicke erneut auf einen Pixel.');
+    setStatus(t('Pixel-Bearbeitung beendet. Klicke erneut auf einen Pixel.'));
 }
 
 function clearSelection() {
     selection = null;
     closeEditorPopup();
     renderCanvas();
-    setStatus('Pixel-Auswahl gelöscht. Klicke erneut auf einen Pixel.');
+    setStatus(t('Pixel-Auswahl gelöscht. Klicke erneut auf einen Pixel.'));
 }
 
 function rgbToHex(r, g, b) {
@@ -1214,7 +1214,7 @@ function persistSelectionToDatabase() {
         return Promise.resolve();
     }
 
-    setStatus(`Pixel ${changedPixels[0].x}:${changedPixels[0].y} wird übernommen.`);
+    setStatus(t('Pixel :x::y wird übernommen.', { x: changedPixels[0].x, y: changedPixels[0].y }));
 
     return savePixels(changedPixels);
 }
@@ -1258,7 +1258,7 @@ function setActiveColor(color) {
     if (colorHexInput && document.activeElement !== colorHexInput) {
         colorHexInput.value = activeColor;
     }
-    setStatus(`Farbe ausgewählt: ${activeColor}`);
+    setStatus(t('Farbe ausgewählt: :color', { color: activeColor }));
 }
 
 colorPicker?.addEventListener('input', () => setActiveColor(colorPicker.value));
@@ -1306,11 +1306,11 @@ document.addEventListener('keydown', (event) => {
 feedbackForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     feedbackSubmitBtn.disabled = true;
-    feedbackStatus.textContent = 'Feedback wird gesendet ...';
+    feedbackStatus.textContent = t('Feedback wird gesendet ...');
 
     try {
         const formData = new FormData(feedbackForm);
-        const response = await fetch('/feedback', {
+        const response = await apiFetch('/feedback', {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -1327,15 +1327,15 @@ feedbackForm?.addEventListener('submit', async (event) => {
         if (!response.ok) {
             const message = payload.errors
                 ? Object.values(payload.errors).flat()[0]
-                : payload.message || 'Feedback konnte nicht gesendet werden.';
+                : payload.message || t('Feedback konnte nicht gesendet werden.');
             throw new Error(message);
         }
 
         feedbackForm.reset();
-        feedbackStatus.textContent = 'Vielen Dank! Dein Feedback wurde gespeichert.';
+        feedbackStatus.textContent = t('Vielen Dank! Dein Feedback wurde gespeichert.');
     } catch (error) {
         console.error('Failed to submit feedback:', error);
-        feedbackStatus.textContent = error.message || 'Feedback konnte nicht gesendet werden.';
+        feedbackStatus.textContent = error.message || t('Feedback konnte nicht gesendet werden.');
     } finally {
         feedbackSubmitBtn.disabled = false;
     }
@@ -1446,10 +1446,10 @@ window.addEventListener('resize', () => {
     renderCanvas();
 });
 renderCanvas();
-setStatus('Klicke auf einen Pixel, um ihn auszuwählen und zu bearbeiten.');
+setStatus(t('Klicke auf einen Pixel, um ihn auszuwählen und zu bearbeiten.'));
 loadWallDimensions().catch((error) => {
     console.error(error);
-    setStatus(error.message || 'Die Pixelwand konnte nicht geladen werden.');
+    setStatus(error.message || t('Die Pixelwand konnte nicht geladen werden.'));
     showInitialViewportLoadFailure();
 });
 window.setInterval(refreshWallDimensions, 15000);
@@ -1482,7 +1482,7 @@ function formatDuration(totalSeconds) {
     const s = seconds % 60;
     const pad = (value) => String(value).padStart(2, '0');
 
-    return h > 0 ? `${h}:${pad(m)}:${pad(s)} Std.` : `${pad(m)}:${pad(s)} Min.`;
+    return h > 0 ? `${h}:${pad(m)}:${pad(s)} ${t('Std.')}` : `${pad(m)}:${pad(s)} ${t('Min.')}`;
 }
 
 let latestPixelStatus = null;
@@ -1493,16 +1493,13 @@ function updatePixelCounter(status) {
     }
     latestPixelStatus = status;
     const total = status.free + (status.credits || 0);
-    pixelCounterValue.textContent = String(total);
-    pixelCounterNote.textContent = !status.authenticated
-        ? `Gast-Vorrat (von ${status.max_free})`
-        : (status.credits > 0 ? `${status.free} frei + ${status.credits} gekauft` : `von ${status.max_free} (+1 alle 30 s)`);
+    pixelCounterValue.textContent = `${total.toLocaleString(locale)} /${status.max_free.toLocaleString(locale)}`;
     pixelCounter.classList.toggle('empty', total === 0);
 }
 
 async function fetchPixelStatus() {
     try {
-        const response = await fetch('/api/pixels/status', { headers: { Accept: 'application/json' } });
+        const response = await apiFetch('/api/pixels/status', { headers: { Accept: 'application/json' } });
         const status = response.ok ? await response.json() : null;
         updatePixelCounter(status);
 
@@ -1555,11 +1552,11 @@ function describeQuota(status) {
         return '';
     }
     if (!status.authenticated) {
-        return `Gast-Vorrat: noch ${status.free} von ${status.max_free} Pixeln – danach mit kostenlosem Konto weiter.`;
+        return t('Gast-Vorrat: noch :free von :max Pixeln – danach mit kostenlosem Konto weiter.', { free: status.free.toLocaleString(locale), max: status.max_free.toLocaleString(locale) });
     }
-    const extra = status.credits > 0 ? ` + ${status.credits} Extra-Pixel` : '';
+    const extra = status.credits > 0 ? ` + ${t(':credits Extra-Pixel', { credits: status.credits.toLocaleString(locale) })}` : '';
 
-    return `Vorrat: ${status.free} / ${status.max_free}${extra}.`;
+    return t('Vorrat: :free / :max:extra.', { free: status.free.toLocaleString(locale), max: status.max_free.toLocaleString(locale), extra });
 }
 
 function hideLimitModal() {
@@ -1574,10 +1571,10 @@ function showLimitModal(payload) {
     }
 
     const isGuest = payload.limit === 'guest';
-    limitTitle.textContent = isGuest ? `Dein Gast-Vorrat von ${payload.max_free} Pixeln ist aufgebraucht` : 'Vorrat leer';
+    limitTitle.textContent = isGuest ? t('Dein Gast-Vorrat von :max Pixeln ist aufgebraucht', { max: payload.max_free.toLocaleString(locale) }) : t('Vorrat leer');
     limitText.textContent = isGuest
-        ? 'Melde dich kostenlos an oder registriere dich. Dann bekommst du alle 30 Sekunden ein neues Pixel (bis zu 50 im Vorrat).'
-        : 'Alle 30 Sekunden wächst ein Pixel nach (maximal 50 im Vorrat). Das nächste Pixel ist verfügbar in:';
+        ? t('Melde dich kostenlos an oder registriere dich. Dann bekommst du alle 30 Sekunden ein neues Pixel (bis zu 50 im Vorrat).')
+        : t('Alle 30 Sekunden wächst ein Pixel nach (maximal 50 im Vorrat). Das nächste Pixel ist verfügbar in:');
     limitGuestActions.classList.toggle('hidden', !isGuest);
     limitUserActions.classList.toggle('hidden', isGuest);
     limitCountdown.classList.toggle('hidden', isGuest);
@@ -1585,7 +1582,7 @@ function showLimitModal(payload) {
     if (isGuest) {
         const note = document.createElement('p');
         note.className = 'limit-note';
-        note.textContent = 'Mehr als 50 Pixel im Vorrat gibt es nur als Extra-Pixel im Shop.';
+        note.textContent = t('Mehr als 50 Pixel im Vorrat gibt es nur als Extra-Pixel im Shop.');
         limitText.appendChild(note);
         window.clearInterval(limitTimer);
         limitModal.classList.remove('hidden');
@@ -1594,7 +1591,7 @@ function showLimitModal(payload) {
     const endsAt = Date.now() + (payload.retry_after || 0) * 1000;
     const tick = () => {
         const remaining = (endsAt - Date.now()) / 1000;
-        limitCountdown.textContent = remaining > 0 ? formatDuration(remaining) : 'Jetzt wieder möglich – klicke erneut auf einen Pixel.';
+        limitCountdown.textContent = remaining > 0 ? formatDuration(remaining) : t('Jetzt wieder möglich – klicke erneut auf einen Pixel.');
         if (remaining <= 0) {
             window.clearInterval(limitTimer);
         }
@@ -1609,24 +1606,24 @@ function shopProductCopy(product) {
     if (product.type === 'extend') {
         const direction = product.axis === 'x' ? 'rechts' : 'unten';
         return {
-            title: `Wand nach ${direction} erweitern`,
-            badge: '🌍 Für die ganze Community',
-            text: `Die Pixelwand wächst um ${product.amount} Pixel nach ${direction}. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung – dein Beitrag für die Community.`,
+            title: t('Wand nach :direction erweitern', { direction: t(direction) }),
+            badge: t('🌍 Für die ganze Community'),
+            text: t('Die Pixelwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung – dein Beitrag für die Community.', { amount: product.amount.toLocaleString(locale), direction: t(direction) }),
         };
     }
 
     if (product.amount >= 500) {
         return {
-            title: `${product.amount} Extra-Pixel`,
-            badge: '💰 Spar-Paket: nur 0,03 € pro Pixel',
-            text: `${product.amount} Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Rund 40 % günstiger als das 100er-Paket.`,
+            title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
+            badge: t('💰 Spar-Paket: nur 0,03 € pro Pixel'),
+            text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Rund 40 % günstiger als das 100er-Paket.', { amount: product.amount.toLocaleString(locale) }),
         };
     }
 
     return {
-        title: `${product.amount} Extra-Pixel`,
-        badge: '⚡ Beliebt',
-        text: `${product.amount} Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Perfekt zum Vergleichen und Ausprobieren.`,
+        title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
+        badge: t('⚡ Beliebt'),
+        text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Perfekt zum Vergleichen und Ausprobieren.', { amount: product.amount.toLocaleString(locale) }),
     };
 }
 
@@ -1663,7 +1660,7 @@ function renderShop() {
         shopProductsEl.appendChild(card);
     });
 
-    shopCreditsEl.textContent = shopData.authenticated ? `Dein Guthaben: ${shopData.credits} Extra-Pixel` : '';
+    shopCreditsEl.textContent = shopData.authenticated ? t('Dein Guthaben: :credits Extra-Pixel', { credits: shopData.credits.toLocaleString(locale) }) : '';
     shopCheckoutEl.classList.toggle('hidden', !(shopSelected && shopData.authenticated));
     shopGuestNotice.classList.toggle('hidden', !(shopSelected && !shopData.authenticated));
 
@@ -1681,7 +1678,7 @@ function renderShop() {
     });
 
     if (shopData.providers.length === 0) {
-        shopErrorEl.textContent = 'Zurzeit ist kein Zahlungsanbieter eingerichtet.';
+        shopErrorEl.textContent = t('Zurzeit ist kein Zahlungsanbieter eingerichtet.');
         shopErrorEl.classList.remove('hidden');
     }
 }
@@ -1695,9 +1692,9 @@ async function openShop(productId = null) {
     shopSelected = productId;
     shopModal.classList.remove('hidden');
     try {
-        const response = await fetch('/api/shop', { headers: { Accept: 'application/json' } });
+        const response = await apiFetch('/api/shop', { headers: { Accept: 'application/json' } });
         if (!response.ok) {
-            throw new Error('Shop konnte nicht geladen werden.');
+            throw new Error(t('Shop konnte nicht geladen werden.'));
         }
         shopData = await response.json();
         renderShop();
@@ -1713,7 +1710,7 @@ async function startCheckout(provider, button) {
     shopProvidersEl.querySelectorAll('button').forEach((item) => { item.disabled = true; });
     button.classList.add('is-loading');
     try {
-        const response = await fetch('/shop/checkout', {
+        const response = await apiFetch('/shop/checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1724,7 +1721,7 @@ async function startCheckout(provider, button) {
         });
         const payload = await response.json();
         if (!response.ok || !payload.redirect) {
-            throw new Error(payload.message || 'Die Zahlung konnte nicht gestartet werden.');
+            throw new Error(payload.message || t('Die Zahlung konnte nicht gestartet werden.'));
         }
         window.location.href = payload.redirect;
     } catch (error) {

@@ -44,14 +44,18 @@ class Order extends Model
         $product = config('payments.products.'.$this->product, []);
 
         return match ($product['type'] ?? null) {
-            'extend' => 'Pixelwand nach '.(($product['axis'] ?? 'x') === 'x' ? 'rechts' : 'unten').' erweitern (+'.($product['amount'] ?? 0).' px)',
-            'pixels' => ($product['amount'] ?? 0).' Extra-Pixel',
+            'extend' => ($product['axis'] ?? 'x') === 'x'
+                ? __('Pixelwand nach rechts erweitern (+:amount px)', ['amount' => $product['amount'] ?? 0])
+                : __('Pixelwand nach unten erweitern (+:amount px)', ['amount' => $product['amount'] ?? 0]),
+            'pixels' => __(':amount Extra-Pixel', ['amount' => $product['amount'] ?? 0]),
             default => $this->product,
         };
     }
 
     public function priceFormatted(): string
     {
-        return number_format($this->amount_cents / 100, 2, ',', '.').' €';
+        return app()->getLocale() === 'en'
+            ? '€'.number_format($this->amount_cents / 100, 2, '.', ',')
+            : number_format($this->amount_cents / 100, 2, ',', '.').' €';
     }
 }

@@ -23,7 +23,7 @@ class WallExtender
             if (($axis === 'x' && $width > self::MAX_COORDINATE) || ($axis === 'y' && $height > self::MAX_COORDINATE)) {
                 throw new HttpResponseException(response()->json([
                     'success' => false,
-                    'message' => 'Die Pixelwand hat die maximale Koordinatengröße erreicht.',
+                    'message' => __('Die Pixelwand hat die maximale Koordinatengröße erreicht.'),
                 ], 422));
             }
 

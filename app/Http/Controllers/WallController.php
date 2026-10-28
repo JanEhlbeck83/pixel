@@ -100,7 +100,7 @@ class WallController extends Controller
             || $x >= $dimensions->width
             || $y >= $dimensions->height
         ) {
-            return response()->json(['message' => 'Ungültige Bildkachel.'], 422);
+            return response()->json(['message' => __('Ungültige Bildkachel.')], 422);
         }
 
         $width = min(self::WALL_TILE_SIZE, (int) $dimensions->width - $x);
@@ -140,8 +140,8 @@ class WallController extends Controller
         return response()->json($status + [
             'success' => false,
             'message' => $status['limit'] === 'guest'
-                ? 'Dein Gast-Vorrat von '.$status['max_free'].' Pixeln ist aufgebraucht. Melde dich an, um alle '.$this->quota->regenSeconds().' Sekunden ein Pixel zu setzen.'
-                : 'Dein Vorrat ist leer. Alle '.$this->quota->regenSeconds().' Sekunden wächst ein Pixel nach (maximal '.$status['max_free'].'). Mit Extra-Pixeln geht es sofort weiter.',
+                ? __('Dein Gast-Vorrat von :max Pixeln ist aufgebraucht. Melde dich an, um alle :seconds Sekunden ein Pixel zu setzen.', ['max' => $status['max_free'], 'seconds' => $this->quota->regenSeconds()])
+                : __('Dein Vorrat ist leer. Alle :seconds Sekunden wächst ein Pixel nach (maximal :max). Mit Extra-Pixeln geht es sofort weiter.', ['seconds' => $this->quota->regenSeconds(), 'max' => $status['max_free']]),
         ], 429);
     }
 
@@ -188,7 +188,7 @@ class WallController extends Controller
         $dimensions = $this->wallDimensions();
 
         if ($dimensions->width < $area['x'] + $area['width'] || $dimensions->height < $area['y'] + $area['height']) {
-            return response()->json(['message' => 'Die Auswahl liegt außerhalb der Pixelwand.'], 422);
+            return response()->json(['message' => __('Die Auswahl liegt außerhalb der Pixelwand.')], 422);
         }
 
         $quotaStatus = $this->quota->status($request);
@@ -216,7 +216,7 @@ class WallController extends Controller
             if ($recentlyEdited->isNotEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Mindestens ein Pixel ist nach einer Bearbeitung noch gesperrt.',
+                    'message' => __('Mindestens ein Pixel ist nach einer Bearbeitung noch gesperrt.'),
                     'locked_pixels' => $recentlyEdited->values(),
                 ], 423);
             }
@@ -261,7 +261,7 @@ class WallController extends Controller
             if ($foreignLocks->isNotEmpty()) {
                 throw new HttpResponseException(response()->json([
                     'success' => false,
-                    'message' => 'Ein Teil der Auswahl wird gerade bearbeitet.',
+                    'message' => __('Ein Teil der Auswahl wird gerade bearbeitet.'),
                     'locked_pixels' => $foreignLocks,
                 ], 423));
             }
@@ -291,7 +291,7 @@ class WallController extends Controller
         $dimensions = $this->wallDimensions();
 
         if ($dimensions->width < $area['x'] + $area['width'] || $dimensions->height < $area['y'] + $area['height']) {
-            return response()->json(['message' => 'Die Auswahl liegt außerhalb der Pixelwand.'], 422);
+            return response()->json(['message' => __('Die Auswahl liegt außerhalb der Pixelwand.')], 422);
         }
 
         PixelEditLock::query()
@@ -309,9 +309,9 @@ class WallController extends Controller
             'activity' => Activity::with('user')->latest()->limit(8)->get()->map(function ($entry) {
                 return [
                     'id' => $entry->id,
-                    'user' => $entry->user?->name ?? 'System',
-                    'description' => $entry->description,
-                    'created_at' => $entry->created_at->diffForHumans(),
+                    'user' => $entry->user?->name ?? __('System'),
+                    'description' => $entry->localizedDescription(),
+                    'created_at' => $entry->created_at->locale(app()->getLocale())->diffForHumans(),
                 ];
             }),
         ]);
@@ -338,7 +338,7 @@ class WallController extends Controller
         $dimensions = $this->wallDimensions();
         foreach ($validatedPixels as $pixelData) {
             if ($pixelData['x'] >= $dimensions->width || $pixelData['y'] >= $dimensions->height) {
-                return response()->json(['message' => 'Das Pixel liegt außerhalb der Pixelwand.'], 422);
+                return response()->json(['message' => __('Das Pixel liegt außerhalb der Pixelwand.')], 422);
             }
         }
 
@@ -370,7 +370,7 @@ class WallController extends Controller
                 if ($lockedPixels->isNotEmpty()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Mindestens ein Pixel ist bereits bearbeitet und noch gesperrt.',
+                        'message' => __('Mindestens ein Pixel ist bereits bearbeitet und noch gesperrt.'),
                         'locked_pixels' => $lockedPixels,
                     ], 423);
                 }
@@ -394,7 +394,7 @@ class WallController extends Controller
                     if ($missingLocks->isNotEmpty()) {
                         return response()->json([
                             'success' => false,
-                            'message' => 'Die Bearbeitungsreservierung fehlt oder ist abgelaufen. Bitte wähle den Pixel erneut.',
+                            'message' => __('Die Bearbeitungsreservierung fehlt oder ist abgelaufen. Bitte wähle den Pixel erneut.'),
                         ], 423);
                     }
                 }
@@ -421,6 +421,8 @@ class WallController extends Controller
                     Activity::create([
                         'user_id' => $user->id,
                         'action' => 'painted',
+                        'type' => 'pixel_set',
+                        'params' => ['name' => $user->name],
                         'description' => $user->name.' hat ein Pixel gesetzt.',
                     ]);
                 }
@@ -464,7 +466,7 @@ class WallController extends Controller
             $content = explode(',', $data, 2)[1] ?? null;
 
             if ($content === null) {
-                return response()->json(['success' => false, 'message' => 'Invalid image payload.'], 422);
+                return response()->json(['success' => false, 'message' => __('Ungültige Bilddaten.')], 422);
             }
 
             $path = public_path(self::CURRENT_BACKGROUND_IMAGE_PATH);

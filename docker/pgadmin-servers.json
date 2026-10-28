@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Pixel lokal",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "pixel",
+      "Username": "pixel",
+      "SSLMode": "prefer"
+    }
+  }
+}

@@ -18,12 +18,12 @@ class PayPalProvider implements PaymentProvider
 
     public function label(): string
     {
-        return config('payments.providers.paypal.label');
+        return __(config('payments.providers.paypal.label'));
     }
 
     public function modeLabel(): string
     {
-        return $this->isLive() ? 'Live' : 'Sandbox';
+        return $this->isLive() ? 'Live' : __('Sandbox');
     }
 
     public function isEnabled(): bool
@@ -49,7 +49,7 @@ class PayPalProvider implements PaymentProvider
                 ]],
                 'payment_source' => ['paypal' => ['experience_context' => [
                     'brand_name' => config('app.name'),
-                    'locale' => 'de-DE',
+                    'locale' => ['en' => 'en-US', 'es' => 'es-ES'][app()->getLocale()] ?? 'de-DE',
                     'shipping_preference' => 'NO_SHIPPING',
                     'user_action' => 'PAY_NOW',
                     'return_url' => route('shop.return', $order),

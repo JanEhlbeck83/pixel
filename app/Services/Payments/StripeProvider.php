@@ -16,12 +16,12 @@ class StripeProvider implements PaymentProvider
 
     public function label(): string
     {
-        return config('payments.providers.stripe.label');
+        return __(config('payments.providers.stripe.label'));
     }
 
     public function modeLabel(): string
     {
-        return str_starts_with((string) config('payments.providers.stripe.secret_key'), 'sk_live') ? 'Live' : 'Sandbox';
+        return str_starts_with((string) config('payments.providers.stripe.secret_key'), 'sk_live') ? 'Live' : __('Sandbox');
     }
 
     public function isEnabled(): bool
@@ -33,7 +33,7 @@ class StripeProvider implements PaymentProvider
     {
         $response = $this->http()->asForm()->post('/v1/checkout/sessions', [
             'mode' => 'payment',
-            'locale' => 'de',
+            'locale' => app()->getLocale(),
             'client_reference_id' => $order->uuid,
             'metadata' => ['order_uuid' => $order->uuid],
             'success_url' => route('shop.return', $order),

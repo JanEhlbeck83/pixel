@@ -58,7 +58,7 @@ class ShopController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Der Zahlungsanbieter ist gerade nicht erreichbar oder falsch konfiguriert. Bitte versuche es mit einem anderen Anbieter.',
+                'message' => __('Der Zahlungsanbieter ist gerade nicht erreichbar oder falsch konfiguriert. Bitte versuche es mit einem anderen Anbieter.'),
             ], 502);
         }
 
@@ -76,9 +76,9 @@ class ShopController extends Controller
         }
 
         $flash = match ($order->status) {
-            Order::PAID => ['ok', 'Danke! Zahlung erhalten – „'.$order->title().'“ ist freigeschaltet.'],
-            Order::PENDING => ['pending', 'Deine Zahlung wird noch verarbeitet. Sobald sie bestätigt ist, wird sie freigeschaltet (siehe Profil).'],
-            default => ['error', 'Die Zahlung wurde nicht abgeschlossen. Es wurde nichts berechnet.'],
+            Order::PAID => ['ok', __('Danke! Zahlung erhalten – „:item“ ist freigeschaltet.', ['item' => $order->title()])],
+            Order::PENDING => ['pending', __('Deine Zahlung wird noch verarbeitet. Sobald sie bestätigt ist, wird sie freigeschaltet (siehe Profil).')],
+            default => ['error', __('Die Zahlung wurde nicht abgeschlossen. Es wurde nichts berechnet.')],
         };
 
         return redirect()->route('wall')->with('purchase', ['status' => $flash[0], 'message' => $flash[1]]);
@@ -91,7 +91,7 @@ class ShopController extends Controller
 
         return redirect()->route('wall')->with('purchase', [
             'status' => 'error',
-            'message' => 'Zahlung abgebrochen. Es wurde nichts berechnet.',
+            'message' => __('Zahlung abgebrochen. Es wurde nichts berechnet.'),
         ]);
     }
 
@@ -179,6 +179,8 @@ class ShopController extends Controller
 
     private function euro(int $cents): string
     {
-        return number_format($cents / 100, 2, ',', '.').' €';
+        return app()->getLocale() === 'en'
+            ? '€'.number_format($cents / 100, 2, '.', ',')
+            : number_format($cents / 100, 2, ',', '.').' €';
     }
 }

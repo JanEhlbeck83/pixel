@@ -1,0 +1,12 @@
+{
+    "Sprache wählen": "Choose language",
+    "Impressum": "Legal notice",
+    "Datenschutz": "Privacy policy",
+    "Nutzungsbedingungen": "Terms of use",
+    "Daten löschen": "Delete data",
+    "Zurück zur Wand": "Back to the wall",
+    "Stand": "Last updated",
+    "Die Anmeldung über :provider ist fehlgeschlagen.": "Signing in with :provider failed.",
+    ":provider hat keine E-Mail-Adresse übermittelt. Bitte registriere dich per E-Mail.": ":provider did not provide an email address. Please sign up with email.",
+    "Diese E-Mail ist bereits registriert. Bitte melde dich mit Passwort an.": "This email is already registered. Please sign in with your password."
+}

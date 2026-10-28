@@ -18,12 +18,12 @@ class FakeProvider implements PaymentProvider
 
     public function label(): string
     {
-        return config('payments.providers.fake.label');
+        return __(config('payments.providers.fake.label'));
     }
 
     public function modeLabel(): string
     {
-        return 'Simulation';
+        return __('Simulation');
     }
 
     public function isEnabled(): bool

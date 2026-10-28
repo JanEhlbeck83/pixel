@@ -72,7 +72,7 @@ class ShopTest extends TestCase
         $this->assertSame(500, $order->amount_cents);
         $this->assertSame(route('shop.fake', $order), $redirect);
 
-        $this->actingAs($user)->get($redirect)->assertOk()->assertSee('5,00 €');
+        $this->actingAs($user)->withHeader('X-App-Locale', 'de')->get($redirect)->assertOk()->assertSee('5,00 €');
 
         $this->actingAs($user)->post(route('shop.fake.pay', $order), ['result' => 'paid'])
             ->assertRedirect(route('shop.return', $order));
@@ -269,7 +269,7 @@ class ShopTest extends TestCase
         $user = User::factory()->create(['pixel_credits' => 42]);
         $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake']);
 
-        $this->actingAs($user)->get('/profile')
+        $this->actingAs($user)->get('/de/profile')
             ->assertOk()
             ->assertSee('Käufe &amp; Zahlungen', false)
             ->assertSee('100 Extra-Pixel')

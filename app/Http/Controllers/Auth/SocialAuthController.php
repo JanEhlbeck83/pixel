@@ -21,9 +21,12 @@ class SocialAuthController extends Controller
 
         if (! config("services.$provider.client_id") || ! config("services.$provider.client_secret")) {
             return redirect()->route('login')->withErrors([
-                'email' => ucfirst($provider).'-Login ist noch nicht eingerichtet (Zugangsdaten in .env fehlen).',
+                'email' => __(':provider-Login ist noch nicht eingerichtet (Zugangsdaten in .env fehlen).', ['provider' => ucfirst($provider)]),
             ]);
         }
+
+        // Die Callback-URL ist bei Facebook/Google fest hinterlegt (ohne Sprach-Prefix); die Sprache merkt sich die Session.
+        request()->session()->put('locale', app()->getLocale());
 
         return Socialite::driver($provider)->redirect();
     }
@@ -37,7 +40,7 @@ class SocialAuthController extends Controller
         } catch (Throwable $e) {
             report($e);
 
-            return redirect()->route('login')->withErrors(['email' => 'Die Anmeldung über '.ucfirst($provider).' ist fehlgeschlagen.']);
+            return redirect()->route('login')->withErrors(['email' => __('Die Anmeldung über :provider ist fehlgeschlagen.', ['provider' => ucfirst($provider)])]);
         }
 
         $user = User::where('provider', $provider)->where('provider_id', $social->getId())->first();
@@ -45,13 +48,13 @@ class SocialAuthController extends Controller
         if (! $user) {
             $email = $social->getEmail();
             if (! $email) {
-                return redirect()->route('login')->withErrors(['email' => ucfirst($provider).' hat keine E-Mail-Adresse übermittelt. Bitte registriere dich per E-Mail.']);
+                return redirect()->route('login')->withErrors(['email' => __(':provider hat keine E-Mail-Adresse übermittelt. Bitte registriere dich per E-Mail.', ['provider' => ucfirst($provider)])]);
             }
 
             $existing = User::where('email', $email)->first();
             if ($existing && $existing->provider === null) {
                 // Bestehendes Konto nicht automatisch übernehmen (Account-Takeover-Schutz).
-                return redirect()->route('login')->withErrors(['email' => 'Diese E-Mail ist bereits registriert. Bitte melde dich mit Passwort an.']);
+                return redirect()->route('login')->withErrors(['email' => __('Diese E-Mail ist bereits registriert. Bitte melde dich mit Passwort an.')]);
             }
 
             // Erstmaliger Login = automatische Registrierung.
@@ -70,6 +73,6 @@ class SocialAuthController extends Controller
         Auth::login($user, true);
         request()->session()->regenerate();
 
-        return redirect()->intended('/');
+        return redirect()->intended(route('home'));
     }
 }

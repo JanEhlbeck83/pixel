@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Activity;
 use App\Models\Order;
 use App\Services\Payments\Shop;
 use App\Services\Wall\PixelQuota;
@@ -67,6 +68,9 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Der Name steht im Klartext in der Beschreibung und muss mit dem Konto verschwinden.
+        Activity::where('user_id', $user->id)->update(['type' => 'user_deleted', 'params' => null, 'description' => 'Ein gelöschter Nutzer hat Pixel gesetzt.']);
 
         Auth::logout();
 

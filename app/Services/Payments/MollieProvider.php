@@ -16,12 +16,12 @@ class MollieProvider implements PaymentProvider
 
     public function label(): string
     {
-        return config('payments.providers.mollie.label');
+        return __(config('payments.providers.mollie.label'));
     }
 
     public function modeLabel(): string
     {
-        return str_starts_with((string) config('payments.providers.mollie.api_key'), 'live_') ? 'Live' : 'Sandbox';
+        return str_starts_with((string) config('payments.providers.mollie.api_key'), 'live_') ? 'Live' : __('Sandbox');
     }
 
     public function isEnabled(): bool
@@ -39,7 +39,7 @@ class MollieProvider implements PaymentProvider
             'description' => $order->title(),
             'redirectUrl' => route('shop.return', $order),
             'cancelUrl' => route('shop.cancel', $order),
-            'locale' => 'de_DE',
+            'locale' => ['en' => 'en_GB', 'es' => 'es_ES'][app()->getLocale()] ?? 'de_DE',
             'metadata' => ['order_uuid' => $order->uuid],
         ];
 

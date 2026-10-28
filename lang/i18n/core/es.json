@@ -1,0 +1,12 @@
+{
+    "Sprache wählen": "Elegir idioma",
+    "Impressum": "Aviso legal",
+    "Datenschutz": "Política de privacidad",
+    "Nutzungsbedingungen": "Condiciones de uso",
+    "Daten löschen": "Eliminar datos",
+    "Zurück zur Wand": "Volver al muro",
+    "Stand": "Última actualización",
+    "Die Anmeldung über :provider ist fehlgeschlagen.": "Error al iniciar sesión con :provider.",
+    ":provider hat keine E-Mail-Adresse übermittelt. Bitte registriere dich per E-Mail.": ":provider no ha facilitado ninguna dirección de correo. Regístrate con tu correo electrónico.",
+    "Diese E-Mail ist bereits registriert. Bitte melde dich mit Passwort an.": "Este correo ya está registrado. Inicia sesión con tu contraseña."
+}
