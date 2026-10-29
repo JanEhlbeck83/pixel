@@ -1493,7 +1493,7 @@ function updatePixelCounter(status) {
     }
     latestPixelStatus = status;
     const total = status.free + (status.credits || 0);
-    pixelCounterValue.textContent = `${total.toLocaleString(locale)} /${status.max_free.toLocaleString(locale)}`;
+    pixelCounterValue.textContent = `${total.toLocaleString(locale)}/${status.max_free.toLocaleString(locale)}`.replace(/\s*\/\s*/g, '/');
     pixelCounter.classList.toggle('empty', total === 0);
 }
 

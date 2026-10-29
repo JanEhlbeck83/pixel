@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+/docker-compose.local-backup.yml
+
+pixel-backup.dump

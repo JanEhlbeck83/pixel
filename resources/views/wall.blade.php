@@ -171,7 +171,7 @@
                 <span class="active-color" id="activeColorLabel">#ff6b6b</span>
             </div>
             <div class="pixel-counter" id="pixelCounter" aria-live="polite">
-                <strong id="pixelCounterValue">–</strong>
+                <strong id="pixelCounterValue">0/50</strong>
             </div>
         </div>
         <div id="cursorCoords" class="cursor-coords hidden" aria-hidden="true"></div>
