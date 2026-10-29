@@ -24,5 +24,9 @@ Homestead.yaml
 Thumbs.db
 
 /docker-compose.local-backup.yml
+/pixel-start.dump
 
 pixel-backup.dump
+
+/public/images/wall-tiles/
+/public/images/snapshots/
