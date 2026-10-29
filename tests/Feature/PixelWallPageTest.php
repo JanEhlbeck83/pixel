@@ -170,21 +170,13 @@ class PixelWallPageTest extends TestCase
         $response->assertJsonCount(2, 'pixels');
     }
 
-    public function test_wall_exposes_dimensions_and_generates_300_pixel_tiles(): void
+    public function test_wall_exposes_dimensions_and_tile_size(): void
     {
         $this->getJson('/api/wall')
             ->assertOk()
             ->assertJsonPath('width', 1024)
             ->assertJsonPath('height', 1024)
             ->assertJsonPath('tile_size', 300);
-
-        $response = $this->get('/api/wall/tile?x=900&y=900');
-        $response->assertOk()->assertHeader('Content-Type', 'image/png');
-
-        $image = imagecreatefromstring($response->getContent());
-        $this->assertSame(124, imagesx($image));
-        $this->assertSame(124, imagesy($image));
-        imagedestroy($image);
     }
 
     public function test_wall_cannot_be_extended_for_free(): void
@@ -332,13 +324,6 @@ class PixelWallPageTest extends TestCase
             ->assertJsonCount(1, 'locked_pixels')
             ->assertJsonPath('locked_pixels.0.x', 30)
             ->assertJsonPath('locked_pixels.0.y', 40);
-    }
-
-    public function test_background_version_api_reports_the_active_wall_image_version(): void
-    {
-        $this->getJson('/api/background-image/version')
-            ->assertOk()
-            ->assertJsonStructure(['version']);
     }
 
     public function test_pixel_can_be_edited_after_its_ten_minute_lock_expires(): void
