@@ -16,29 +16,17 @@ class WallController extends Controller
 {
     public function __construct(private PixelQuota $quota) {}
 
-    private const WALL_SIZE = 1024;
-
     private const WALL_TILE_SIZE = 300;
 
     private const PIXEL_LOCK_MINUTES = 10;
 
     private const EDIT_LOCK_MINUTES = 2;
 
-    private const REFERENCE_IMAGE_PATH = 'images/current-wall.png';
-
-    private const CURRENT_BACKGROUND_IMAGE_PATH = 'images/current-wall.png';
-
     public function index()
     {
         return view('wall', [
-            'shareImage' => ($path = \App\Models\Snapshot::latest()->value('image_path')) ? asset($path) : null,
+            'shareImage' => ($path = Snapshot::latest()->value('image_path')) ? asset($path) : null,
         ]);
-    }
-
-    public function bootstrapDemoData(): void
-    {
-        $this->seedReferencePixels();
-        $this->seedDailySnapshot();
     }
 
     public function pixels(Request $request)
@@ -81,52 +69,6 @@ class WallController extends Controller
             'width' => (int) $dimensions->width,
             'height' => (int) $dimensions->height,
             'tile_size' => self::WALL_TILE_SIZE,
-        ]);
-    }
-
-    public function tile(Request $request)
-    {
-        $tile = $request->validate([
-            'x' => ['required', 'integer', 'min:0'],
-            'y' => ['required', 'integer', 'min:0'],
-        ]);
-        $dimensions = $this->wallDimensions();
-        $x = (int) $tile['x'];
-        $y = (int) $tile['y'];
-
-        if (
-            $x % self::WALL_TILE_SIZE !== 0
-            || $y % self::WALL_TILE_SIZE !== 0
-            || $x >= $dimensions->width
-            || $y >= $dimensions->height
-        ) {
-            return response()->json(['message' => __('Ungültige Bildkachel.')], 422);
-        }
-
-        $width = min(self::WALL_TILE_SIZE, (int) $dimensions->width - $x);
-        $height = min(self::WALL_TILE_SIZE, (int) $dimensions->height - $y);
-        $canvas = imagecreatetruecolor($width, $height);
-        $white = imagecolorallocate($canvas, 255, 255, 255);
-        imagefill($canvas, 0, 0, $white);
-
-        Pixel::query()
-            ->whereBetween('x', [$x, $x + $width - 1])
-            ->whereBetween('y', [$y, $y + $height - 1])
-            ->cursor(['x', 'y', 'color'])
-            ->each(function ($pixel) use ($canvas, $x, $y) {
-                $rgb = $this->hexToRgb($pixel->color);
-                $color = imagecolorallocate($canvas, $rgb['r'], $rgb['g'], $rgb['b']);
-                imagesetpixel($canvas, (int) $pixel->x - $x, (int) $pixel->y - $y, $color);
-            });
-
-        ob_start();
-        imagepng($canvas);
-        $image = ob_get_clean();
-        imagedestroy($canvas);
-
-        return response($image, 200, [
-            'Content-Type' => 'image/png',
-            'Cache-Control' => 'no-store, no-cache, must-revalidate',
         ]);
     }
 
@@ -458,208 +400,8 @@ class WallController extends Controller
         });
     }
 
-    public function backgroundImage(Request $request)
-    {
-        $data = $request->input('image');
-
-        if (! empty($data) && is_string($data) && str_contains($data, 'data:image/')) {
-            $content = explode(',', $data, 2)[1] ?? null;
-
-            if ($content === null) {
-                return response()->json(['success' => false, 'message' => __('Ungültige Bilddaten.')], 422);
-            }
-
-            $path = public_path(self::CURRENT_BACKGROUND_IMAGE_PATH);
-
-            if (! is_dir(dirname($path))) {
-                mkdir(dirname($path), 0777, true);
-            }
-
-            file_put_contents($path, base64_decode($content));
-
-            return response()->json([
-                'success' => true,
-                'url' => '/'.self::CURRENT_BACKGROUND_IMAGE_PATH,
-            ]);
-        }
-
-        $dimensions = $this->wallDimensions();
-        $width = min(1600, (int) $dimensions->width);
-        $height = min(1600, (int) $dimensions->height);
-        $pixels = Pixel::query()
-            ->where('x', '<', $width)
-            ->where('y', '<', $height)
-            ->orderBy('y')
-            ->orderBy('x')
-            ->get();
-        $canvas = imagecreatetruecolor($width, $height);
-        $background = imagecolorallocate($canvas, 255, 255, 255);
-        imagefill($canvas, 0, 0, $background);
-
-        foreach ($pixels as $pixel) {
-            $color = $this->hexToRgb($pixel->color);
-            $paint = imagecolorallocate($canvas, $color['r'], $color['g'], $color['b']);
-            imagesetpixel($canvas, (int) $pixel->x, (int) $pixel->y, $paint);
-        }
-
-        $path = public_path(self::CURRENT_BACKGROUND_IMAGE_PATH);
-        imagepng($canvas, $path);
-        imagedestroy($canvas);
-
-        return response()->json([
-            'success' => true,
-            'url' => '/'.self::CURRENT_BACKGROUND_IMAGE_PATH,
-        ]);
-    }
-
-    public function backgroundImageVersion()
-    {
-        $path = public_path(self::CURRENT_BACKGROUND_IMAGE_PATH);
-
-        return response()->json([
-            'version' => file_exists($path) ? filemtime($path) : null,
-        ]);
-    }
-
-    private function seedReferencePixels(): void
-    {
-        if (Pixel::count() > 0) {
-            return;
-        }
-
-        $referencePath = public_path(self::REFERENCE_IMAGE_PATH);
-        if (! file_exists($referencePath)) {
-            $fallbackPath = public_path('images/trump-portrait-2025.jpg');
-            if (! file_exists($fallbackPath)) {
-                return;
-            }
-            $referencePath = $fallbackPath;
-        }
-
-        $imageData = @file_get_contents($referencePath);
-        if ($imageData === false) {
-            return;
-        }
-
-        $image = @imagecreatefromstring($imageData);
-        if ($image === false) {
-            return;
-        }
-
-        $sourceWidth = imagesx($image);
-        $sourceHeight = imagesy($image);
-        $scaledHeight = (int) round($sourceHeight * (self::WALL_SIZE / $sourceWidth));
-
-        $scaled = imagecreatetruecolor(self::WALL_SIZE, $scaledHeight);
-        imagealphablending($scaled, false);
-        imagesavealpha($scaled, true);
-        imagecopyresampled(
-            $scaled,
-            $image,
-            0,
-            0,
-            0,
-            0,
-            self::WALL_SIZE,
-            $scaledHeight,
-            $sourceWidth,
-            $sourceHeight
-        );
-
-        $cropped = imagecreatetruecolor(self::WALL_SIZE, self::WALL_SIZE);
-        imagealphablending($cropped, false);
-        imagesavealpha($cropped, true);
-        imagecopy(
-            $cropped,
-            $scaled,
-            0,
-            0,
-            0,
-            0,
-            self::WALL_SIZE,
-            min(self::WALL_SIZE, imagesy($scaled))
-        );
-
-        $batch = [];
-        $timestamp = now();
-        for ($y = 0; $y < self::WALL_SIZE; $y++) {
-            for ($x = 0; $x < self::WALL_SIZE; $x++) {
-                $rgba = imagecolorat($cropped, $x, $y);
-                $alpha = ($rgba >> 24) & 0x7F;
-                $red = ($rgba >> 16) & 0xFF;
-                $green = ($rgba >> 8) & 0xFF;
-                $blue = $rgba & 0xFF;
-
-                if ($alpha > 0 && $alpha < 127) {
-                    $red = (int) (($red * (127 - $alpha)) / 127);
-                    $green = (int) (($green * (127 - $alpha)) / 127);
-                    $blue = (int) (($blue * (127 - $alpha)) / 127);
-                }
-
-                $batch[] = [
-                    'x' => $x,
-                    'y' => $y,
-                    'color' => $this->rgbToHex($red, $green, $blue),
-                    'owner_user_id' => null,
-                    'updated_by_user_id' => null,
-                    'created_at' => $timestamp,
-                    'updated_at' => $timestamp,
-                ];
-
-                if (count($batch) >= 2000) {
-                    Pixel::query()->insert($batch);
-                    $batch = [];
-                    gc_collect_cycles();
-                }
-            }
-        }
-
-        if (! empty($batch)) {
-            Pixel::query()->insert($batch);
-        }
-
-        imagedestroy($image);
-        imagedestroy($scaled);
-        imagedestroy($cropped);
-    }
-
-    private function hexToRgb(string $hex): array
-    {
-        $hex = ltrim($hex, '#');
-        if (strlen($hex) === 3) {
-            $hex = preg_replace('/(.)/', '$1$1', $hex);
-        }
-
-        return [
-            'r' => hexdec(substr($hex, 0, 2)),
-            'g' => hexdec(substr($hex, 2, 2)),
-            'b' => hexdec(substr($hex, 4, 2)),
-        ];
-    }
-
-    private function rgbToHex(int $r, int $g, int $b): string
-    {
-        return sprintf('#%02x%02x%02x', $r, $g, $b);
-    }
-
     private function wallDimensions(): object
     {
         return DB::table('wall_dimensions')->where('id', 1)->first();
-    }
-
-    private function seedDailySnapshot(): void
-    {
-        if (Snapshot::whereDate('created_at', today())->exists()) {
-            return;
-        }
-
-        Snapshot::create([
-            'label' => 'Daily Snapshot',
-            'summary' => [
-                'painted_pixels' => Pixel::count(),
-                'changes_today' => Activity::whereDate('created_at', today())->count(),
-            ],
-            'image_path' => null,
-        ]);
     }
 }
