@@ -1,19 +1,16 @@
-﻿FROM node:22-alpine AS assets
+FROM node:22-alpine AS assets
 
 WORKDIR /app
-
 COPY package.json package-lock.json ./
 RUN npm ci
-
 COPY . .
 RUN npm run build
 
 
 FROM php:8.3-fpm-bookworm AS app
 
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git unzip libpq-dev libzip-dev libicu-dev \
+    unzip libpq-dev libzip-dev libicu-dev \
     libcurl4-openssl-dev libpng-dev libjpeg62-turbo-dev \
     libfreetype6-dev libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -27,7 +24,6 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
-
 RUN composer install \
     --no-dev \
     --no-interaction \
@@ -36,14 +32,21 @@ RUN composer install \
     --no-scripts
 
 COPY . .
-
 COPY --from=assets /app/public/build ./public/build
 
 RUN composer dump-autoload --optimize \
     && mkdir -p storage/framework/cache storage/framework/sessions \
        storage/framework/views storage/logs bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+       public/images/wall-tiles public/images/snapshots \
+    && chown -R www-data:www-data \
+       storage bootstrap/cache public/images/wall-tiles public/images/snapshots
 
 EXPOSE 9000
 
 CMD ["php-fpm"]
+
+
+FROM nginx:alpine AS web
+
+COPY --from=app /var/www/html/public /var/www/html/public
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
