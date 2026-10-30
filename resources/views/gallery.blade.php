@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ __('Pixel Chaos | Galerie') }}</title>
+        <title>{{ __('PixRiot | Galerie') }}</title>
+        <x-favicons />
         <x-locale-head />
         <x-i18n-script />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -13,7 +14,7 @@
             <header class="pixel-topbar">
                 <div class="brand">
                     <small>{{ __('Archive') }}</small>
-                    <strong>PIXEL CHAOS</strong>
+                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                 </div>
                 <div class="top-actions">
                     <a href="{{ route('wall') }}">{{ __('Zur Wand') }}</a>
@@ -50,7 +51,7 @@
                                     @endif
                                 </p>
                                 @if (!empty($snapshot->image_path))
-                                    <a class="primary-button snapshot-download" href="{{ asset($snapshot->image_path) }}" download="pixel-chaos-{{ basename($snapshot->image_path) }}">{{ __('⬇ Als PNG herunterladen') }} @if (!empty($snapshot->summary['width']))({{ $snapshot->summary['width'] }} × {{ $snapshot->summary['height'] }} px)@endif</a>
+                                    <a class="primary-button snapshot-download" href="{{ asset($snapshot->image_path) }}" download="pixriot-{{ basename($snapshot->image_path) }}">{{ __('⬇ Als PNG herunterladen') }} @if (!empty($snapshot->summary['width']))({{ $snapshot->summary['width'] }} × {{ $snapshot->summary['height'] }} px)@endif</a>
                                 @endif
                             </article>
                         @empty

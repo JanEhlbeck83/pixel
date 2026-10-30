@@ -12,7 +12,7 @@
 
     <h2>2. Überblick</h2>
     <p>
-        Pixel Chaos ist eine gemeinsame Pixelwand. Wir verarbeiten personenbezogene Daten nur, soweit das für
+        PixRiot ist eine gemeinsame Pixelwand. Wir verarbeiten personenbezogene Daten nur, soweit das für
         Betrieb, Konto, Zahlungen und Sicherheit nötig ist. Rechtsgrundlage ist die DSGVO.
     </p>
 
@@ -57,7 +57,7 @@
     <p>
         Anbieter von Facebook Login ist Meta Platforms Ireland Limited, Merrion Road, Dublin 4, D04 X2K5,
         Irland. Wenn du „Facebook“ wählst, leitet dich dein Browser zu Facebook weiter. Dabei erhält Meta
-        technische Daten (u. a. deine IP-Adresse) und die Information, dass du dich bei Pixel Chaos anmelden
+        technische Daten (u. a. deine IP-Adresse) und die Information, dass du dich bei PixRiot anmelden
         willst. Nach deiner Zustimmung übermittelt Facebook uns deine <strong>Facebook-ID</strong>, deinen
         <strong>Namen</strong> und deine <strong>E-Mail-Adresse</strong>. Wir speichern diese Angaben
         (ID, Name, E-Mail), um dein Konto zu führen. Wir veröffentlichen nichts auf Facebook und lesen keine
@@ -96,8 +96,7 @@
 
     <h2>9. Feedback</h2>
     <p>
-        Im Feedback-Formular speichern wir deine Nachricht, deine optionale E-Mail-Adresse und, wenn du
-        angemeldet bist, dein Konto. Wir nutzen das nur zur Bearbeitung deiner Nachricht
+        Im Feedback-Formular speichern wir deine Nachricht und die E-Mail-Adresse deines Kontos bzw. die von dir angegebene E-Mail-Adresse (Pflichtangabe für Gäste), damit wir wissen, von wem das Feedback stammt und antworten können. Wir nutzen das nur zur Bearbeitung deiner Nachricht
         (Art. 6 Abs. 1 lit. f DSGVO).
     </p>
 
@@ -152,7 +151,7 @@
 
     <h2>15. Sprachwahl, automatische Weiterleitung und Sprach-Cookie</h2>
     <p>
-        Pixel Chaos gibt es auf Englisch (ohne Pfad-Präfix, z. B. „/“), Deutsch („/de“) und Spanisch („/es“).
+        PixRiot gibt es auf Englisch (ohne Pfad-Präfix, z. B. „/“), Deutsch („/de“) und Spanisch („/es“).
         Die Sprache wird über die Adresse (URL) bestimmt.
     </p>
     <p>

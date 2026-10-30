@@ -12,7 +12,7 @@
 
     <h2>2. Resumen</h2>
     <p>
-        Pixel Chaos es un muro de píxeles compartido. Tratamos datos personales solo en la medida necesaria para
+        PixRiot es un muro de píxeles compartido. Tratamos datos personales solo en la medida necesaria para
         el funcionamiento, las cuentas, los pagos y la seguridad. La base jurídica es el RGPD.
     </p>
 
@@ -57,7 +57,7 @@
     <p>
         El proveedor de Facebook Login es Meta Platforms Ireland Limited, Merrion Road, Dublin 4, D04 X2K5,
         Irlanda. Si eliges «Facebook», tu navegador te redirige a Facebook. Con ello, Meta recibe datos técnicos
-        (entre ellos tu dirección IP) y la información de que quieres iniciar sesión en Pixel Chaos. Tras tu
+        (entre ellos tu dirección IP) y la información de que quieres iniciar sesión en PixRiot. Tras tu
         consentimiento, Facebook nos transmite tu <strong>ID de Facebook</strong>, tu <strong>nombre</strong> y
         tu <strong>correo electrónico</strong>. Almacenamos estos datos (ID, nombre, correo) para gestionar tu
         cuenta. No publicamos nada en Facebook y no leemos listas de amigos, publicaciones ni otros contenidos.
@@ -95,8 +95,8 @@
 
     <h2>9. Comentarios</h2>
     <p>
-        En el formulario de comentarios almacenamos tu mensaje, tu correo electrónico opcional y, si has iniciado
-        sesión, tu cuenta. Lo utilizamos únicamente para tramitar tu mensaje (art. 6, apdo. 1, letra f RGPD).
+        En el formulario de comentarios almacenamos tu mensaje y el correo electrónico de tu cuenta o el que indiques
+        (obligatorio para invitados), para saber quién envía el comentario y poder responder. Lo utilizamos únicamente para tramitar tu mensaje (art. 6, apdo. 1, letra f RGPD).
     </p>
 
     <h2>10. Compras y pagos</h2>
@@ -151,7 +151,7 @@
 
     <h2>15. Selección de idioma, redirección automática y cookie de idioma</h2>
     <p>
-        Pixel Chaos está disponible en inglés (sin prefijo de ruta, p. ej., «/»), alemán («/de») y español
+        PixRiot está disponible en inglés (sin prefijo de ruta, p. ej., «/»), alemán («/de») y español
         («/es»). El idioma se determina mediante la dirección (URL).
     </p>
     <p>

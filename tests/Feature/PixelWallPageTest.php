@@ -20,10 +20,10 @@ class PixelWallPageTest extends TestCase
         $response = $this->actingAs($user)->get('/wall');
 
         $response->assertOk();
-        $response->assertSee('PIXEL CHAOS');
+        $response->assertSee('PixRiot');
     }
 
-    public function test_pixelchaos_wall_reset_requires_confirmation_before_deleting_pixels(): void
+    public function test_pixriot_wall_reset_requires_confirmation_before_deleting_pixels(): void
     {
         Pixel::query()->create([
             'x' => 10,
@@ -33,7 +33,7 @@ class PixelWallPageTest extends TestCase
             'updated_by_user_id' => null,
         ]);
 
-        $this->artisan('wall:reset-pixelchaos')
+        $this->artisan('wall:reset-pixriot')
             ->expectsConfirmation(
                 'This will delete all current wall pixels and locks, reset its dimensions, and generate new tiles. Continue?',
                 'no'
@@ -75,13 +75,13 @@ class PixelWallPageTest extends TestCase
         $response->assertSee('id="feedbackForm"', false);
         $response->assertSee('id="reservationLoadingOverlay"', false);
         $response->assertSee('class="reservation-loading-spinner"', false);
-        $response->assertSee('Viewport wird geladen …');
+        $response->assertSee('Loading viewport …');
         $response->assertDontSee('reservation-loading-overlay hidden', false);
         $response->assertSee('class="status-live-region"', false);
-        $response->assertSee('aria-label="300 Pixel nach oben"', false);
-        $response->assertSee('aria-label="300 Pixel nach rechts"', false);
-        $response->assertSee('aria-label="300 Pixel nach unten"', false);
-        $response->assertSee('aria-label="300 Pixel nach links"', false);
+        $response->assertSee('aria-label="300 pixels up"', false);
+        $response->assertSee('aria-label="300 pixels right"', false);
+        $response->assertSee('aria-label="300 pixels down"', false);
+        $response->assertSee('aria-label="300 pixels left"', false);
         $response->assertSee('id="extendWallRightBtn"', false);
         $response->assertSee('id="extendWallDownBtn"', false);
         $response->assertDontSee('id="extendRightBtn"', false);

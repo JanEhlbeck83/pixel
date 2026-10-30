@@ -5,7 +5,7 @@
 @section('content')
     <h2>1. Ámbito de aplicación</h2>
     <p>
-        Estas condiciones se aplican al uso de Pixel Chaos, operado por <x-legal-value key="name" />. El uso del
+        Estas condiciones se aplican al uso de PixRiot, operado por <x-legal-value key="name" />. El uso del
         muro es gratuito. Los servicios adicionales (paquetes de píxeles, ampliación del muro) son de pago.
     </p>
 

@@ -69,16 +69,28 @@ class FeedbackTest extends TestCase
     {
         foreach (range(1, 3) as $submission) {
             $this->postJson('/feedback', [
+                'email' => 'guest@example.com',
                 'message' => "Feedback submission {$submission}.",
                 'website' => '',
             ])->assertCreated();
         }
 
         $this->postJson('/feedback', [
+            'email' => 'guest@example.com',
             'message' => 'One submission too many.',
             'website' => '',
         ])->assertTooManyRequests();
 
         $this->assertDatabaseCount('feedback', 3);
+    }
+
+    public function test_guest_feedback_requires_email(): void
+    {
+        $this->postJson('/feedback', [
+            'message' => 'Missing email address.',
+            'website' => '',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['email']);
+
+        $this->assertDatabaseCount('feedback', 0);
     }
 }

@@ -42,10 +42,10 @@
     <ol>
         <li>On Facebook, open <em>Settings &amp; privacy → Settings</em>.</li>
         <li>Choose <em>Apps and websites</em> (or “Your activity off Meta technologies”).</li>
-        <li>Select “Pixel Chaos” and click <em>Remove</em>.</li>
+        <li>Select “PixRiot” and click <em>Remove</em>.</li>
     </ol>
     <p>
-        Pixel Chaos can then no longer receive any further data from Facebook. You can remove data already
+        PixRiot can then no longer receive any further data from Facebook. You can remove data already
         stored as described above. Further information: <a href="{{ route('legal.privacy') }}">Privacy Policy</a>.
     </p>
 @endsection

@@ -5,7 +5,7 @@
 @section('content')
     <h2>1. Geltungsbereich</h2>
     <p>
-        Diese Bedingungen gelten für die Nutzung von Pixel Chaos, betrieben von
+        Diese Bedingungen gelten für die Nutzung von PixRiot, betrieben von
         <x-legal-value key="name" />. Die Nutzung der Wand ist kostenlos. Zusätzliche Leistungen
         (Pixel-Pakete, Wandvergrößerung) sind kostenpflichtig.
     </p>

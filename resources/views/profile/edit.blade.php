@@ -4,7 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Pixel Chaos | {{ __('Mein Profil') }}</title>
+        <title>PixRiot | {{ __('Mein Profil') }}</title>
+        <x-favicons />
         <x-locale-head />
         @vite(['resources/css/app.css'])
     </head>
@@ -13,7 +14,7 @@
             <header class="pixel-topbar">
                 <div class="brand">
                     <small>{{ __('Mein Konto') }}</small>
-                    <strong>PIXEL CHAOS</strong>
+                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                 </div>
                 <div class="top-actions">
                     <a href="{{ route('wall') }}">{{ __('Zur Wand') }}</a>

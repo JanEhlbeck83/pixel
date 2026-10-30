@@ -12,7 +12,7 @@
 
     <h2>2. Overview</h2>
     <p>
-        Pixel Chaos is a shared pixel wall. We process personal data only to the extent necessary for operation,
+        PixRiot is a shared pixel wall. We process personal data only to the extent necessary for operation,
         accounts, payments and security. The legal basis is the GDPR.
     </p>
 
@@ -56,7 +56,7 @@
     <p>
         The provider of Facebook Login is Meta Platforms Ireland Limited, Merrion Road, Dublin 4, D04 X2K5,
         Ireland. If you choose “Facebook”, your browser redirects you to Facebook. In doing so, Meta receives
-        technical data (including your IP address) and the information that you wish to log in to Pixel Chaos.
+        technical data (including your IP address) and the information that you wish to log in to PixRiot.
         After your consent, Facebook transmits to us your <strong>Facebook ID</strong>, your <strong>name</strong>
         and your <strong>email address</strong>. We store this information (ID, name, email) to maintain your
         account. We do not publish anything on Facebook and do not read friends lists, posts or other content.
@@ -92,8 +92,7 @@
 
     <h2>9. Feedback</h2>
     <p>
-        In the feedback form we store your message, your optional email address and, if you are logged in, your
-        account. We use this only to handle your message (Art. 6(1)(f) GDPR).
+        In the feedback form we store your message and either the email address of your account or the email address you enter (required for guests), so that we know who sent the feedback and can reply. We use this only to handle your message (Art. 6(1)(f) GDPR).
     </p>
 
     <h2>10. Purchases and payments</h2>
@@ -147,7 +146,7 @@
 
     <h2>15. Language selection, automatic redirection and language cookie</h2>
     <p>
-        Pixel Chaos is available in English (without a path prefix, e.g. “/”), German (“/de”) and Spanish
+        PixRiot is available in English (without a path prefix, e.g. “/”), German (“/de”) and Spanish
         (“/es”). The language is determined by the address (URL).
     </p>
     <p>

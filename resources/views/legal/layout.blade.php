@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Pixel Chaos | @yield('title')</title>
+        <title>PixRiot | @yield('title')</title>
+        <x-favicons />
         <meta name="robots" content="index,follow">
         <x-locale-head />
         @vite(['resources/css/app.css'])

@@ -462,11 +462,25 @@ async function loadWallTiles() {
 
     for (let y = top; y < bottom; y += wallTileSize) {
         for (let x = left; x < right; x += wallTileSize) {
-            const key = keyFor(x, y);
-            if (wallBackgroundTiles.has(key)) {
+            if (wallBackgroundTiles.has(keyFor(x, y))) {
                 continue;
             }
             pending.push(loadWallTile(x, y));
+        }
+    }
+
+    // Ring von einem Tile um den Viewport wird im Hintergrund vorgeladen.
+    const prefetchLeft = Math.max(0, left - wallTileSize);
+    const prefetchTop = Math.max(0, top - wallTileSize);
+    const prefetchRight = Math.min(wallWidth, right + wallTileSize);
+    const prefetchBottom = Math.min(wallHeight, bottom + wallTileSize);
+    for (let y = prefetchTop; y < prefetchBottom; y += wallTileSize) {
+        for (let x = prefetchLeft; x < prefetchRight; x += wallTileSize) {
+            const inViewport = x >= left && x < right && y >= top && y < bottom;
+            if (inViewport || wallBackgroundTiles.has(keyFor(x, y))) {
+                continue;
+            }
+            loadWallTile(x, y).catch(() => {});
         }
     }
 
@@ -561,7 +575,7 @@ shareViewBtn?.addEventListener('click', async () => {
     const url = buildShareUrl();
     if (navigator.share) {
         try {
-            await navigator.share({ title: 'Pixel Chaos', text: 'Schau dir diesen Ausschnitt an!', url });
+            await navigator.share({ title: 'PixRiot', text: 'Schau dir diesen Ausschnitt an!', url });
             return;
         } catch (error) {
             if (error?.name === 'AbortError') {
@@ -1220,8 +1234,8 @@ function persistSelectionToDatabase() {
 }
 
 function initCookieAndRules() {
-    const cookieKey = 'pixel-chaos-cookie-accepted';
-    const rulesKey = 'pixel-chaos-rules-seen';
+    const cookieKey = 'pixriot-cookie-accepted';
+    const rulesKey = 'pixriot-rules-seen';
 
     if (!localStorage.getItem(cookieKey)) {
         cookieBanner.classList.add('visible');

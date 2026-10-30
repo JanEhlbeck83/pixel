@@ -5,7 +5,7 @@
 @section('content')
     <h2>1. Scope</h2>
     <p>
-        These terms apply to the use of Pixel Chaos, operated by <x-legal-value key="name" />. Using the wall is
+        These terms apply to the use of PixRiot, operated by <x-legal-value key="name" />. Using the wall is
         free of charge. Additional services (pixel packs, wall expansion) are chargeable.
     </p>
 

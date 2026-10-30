@@ -4,17 +4,16 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Pixel Chaos</title>
+        <title>PixRiot</title>
+        <x-favicons />
         <meta property="og:type" content="website">
-        <meta property="og:title" content="{{ __('Pixel Chaos – baut gemeinsam ein Bild oder führt Pixelkrieg') }}">
+        <meta property="og:title" content="{{ __('PixRiot – baut gemeinsam ein Bild oder führt Pixelkrieg') }}">
         <meta property="og:description" content="{{ __('Schau dir diesen Ausschnitt der Pixelwand an und mach mit!') }}">
         <meta property="og:url" content="{{ url()->full() }}">
         <x-locale-head />
         <x-i18n-script />
-        @if (! empty($shareImage))
-            <meta property="og:image" content="{{ $shareImage }}">
-            <meta name="twitter:card" content="summary_large_image">
-        @endif
+        <meta property="og:image" content="{{ ! empty($shareImage) ? $shareImage : asset('images/og-image.png') }}">
+        <meta name="twitter:card" content="summary_large_image">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="wall-page">
@@ -26,8 +25,7 @@
                 </button>
                 <div class="wall-menu-panel hidden" id="wallMenuPanel">
                     <div class="brand">
-                        <small>{{ __('Live World') }}</small>
-                        <strong>PIXEL CHAOS</strong>
+                        <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                     </div>
                     <nav class="top-actions wall-menu-links" aria-label="{{ __('Hauptnavigation') }}">
                         @if (Route::has('login'))
@@ -55,8 +53,10 @@
                         <summary>{{ __('Feedback senden') }}</summary>
                         <form id="feedbackForm" class="feedback-form">
                             @csrf
-                            <label for="feedbackEmail">{{ __('E-Mail (optional)') }}</label>
-                            <input id="feedbackEmail" name="email" type="email" maxlength="255" autocomplete="email">
+                            @guest
+                                <label for="feedbackEmail">{{ __('Deine E-Mail-Adresse') }}</label>
+                                <input id="feedbackEmail" name="email" type="email" maxlength="255" autocomplete="email" required>
+                            @endguest
                             <label for="feedbackMessage">{{ __('Dein Feedback') }}</label>
                             <textarea id="feedbackMessage" name="message" rows="4" maxlength="2000" required></textarea>
                             <div class="feedback-honeypot" aria-hidden="true">
@@ -134,7 +134,7 @@
         <div id="shopModal" class="shop-modal hidden" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
             <div class="shop-card">
                 <div class="editor-header">
-                    <h3 id="shopTitle">{{ __('Pixel kaufen') }}</h3>
+                    <h3 id="shopTitle"><span class="brand-wordmark">Pix<span>Riot</span></span> · {{ __('Pixel kaufen') }}</h3>
                     <button type="button" id="closeShopBtn" class="icon-button" aria-label="{{ __('Shop schließen') }}">×</button>
                 </div>
                 <p class="shop-credits" id="shopCredits"></p>

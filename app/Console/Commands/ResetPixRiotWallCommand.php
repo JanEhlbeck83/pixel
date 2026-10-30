@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class ResetPixelChaosWallCommand extends Command
+class ResetPixRiotWallCommand extends Command
 {
     private const WALL_WIDTH = 3840;
 
@@ -14,27 +14,23 @@ class ResetPixelChaosWallCommand extends Command
     private const BATCH_SIZE = 2000;
 
     private const FONT = [
-        'A' => ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
-        'C' => ['01111', '10000', '10000', '10000', '10000', '10000', '01111'],
-        'E' => ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
-        'H' => ['10001', '10001', '10001', '11111', '10001', '10001', '10001'],
         'I' => ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
-        'L' => ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
         'O' => ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
         'P' => ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
-        'S' => ['01111', '10000', '10000', '01110', '00001', '00001', '11110'],
+        'R' => ['11110', '10001', '10001', '11110', '10100', '10010', '10001'],
+        'T' => ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
         'X' => ['10001', '10001', '01010', '00100', '01010', '10001', '10001'],
     ];
 
-    protected $signature = 'wall:reset-pixelchaos
+    protected $signature = 'wall:reset-pixriot
                             {--force : Skip the confirmation prompt}';
 
-    protected $description = 'Replace the current wall with a 3840 × 2160 PixelChaos logo artwork';
+    protected $description = 'Replace the current wall with a 3840 × 2160 PixRiot logo artwork';
 
     public function handle(): int
     {
         if (! function_exists('imagecreatetruecolor')) {
-            $this->error('The GD extension is required to generate the PixelChaos artwork.');
+            $this->error('The GD extension is required to generate the PixRiot artwork.');
 
             return self::FAILURE;
         }
@@ -108,7 +104,7 @@ class ResetPixelChaosWallCommand extends Command
         }
 
         $this->info(sprintf(
-            'PixelChaos wall reset to %d × %d with %d artwork pixels. Previous pixel edits and locks were removed; historical snapshots were kept.',
+            'PixRiot wall reset to %d × %d with %d artwork pixels. Previous pixel edits and locks were removed; historical snapshots were kept.',
             self::WALL_WIDTH,
             self::WALL_HEIGHT,
             $paintedPixels
@@ -132,7 +128,7 @@ class ResetPixelChaosWallCommand extends Command
         $scale = 72;
         $letterGap = 22;
         $lineGap = 58;
-        $lineWidth = 5 * 5 * $scale + 4 * $letterGap;
+        $wordWidth = fn (string $word): int => strlen($word) * 5 * $scale + (strlen($word) - 1) * $letterGap;
         $lineHeight = 7 * $scale;
         $artworkHeight = 300 + 76 + ($lineHeight * 2) + $lineGap + 44;
         $top = intdiv(self::WALL_HEIGHT - $artworkHeight, 2);
@@ -140,8 +136,8 @@ class ResetPixelChaosWallCommand extends Command
 
         $this->drawLogoMark($image, $centerX, $top + 150, $palette);
 
-        $this->drawWord($image, 'PIXEL', intdiv(self::WALL_WIDTH - $lineWidth, 2), $top + 376, $scale, $letterGap, $palette['navy']);
-        $this->drawWord($image, 'CHAOS', intdiv(self::WALL_WIDTH - $lineWidth, 2), $top + 376 + $lineHeight + $lineGap, $scale, $letterGap, $palette['navy']);
+        $this->drawWord($image, 'PIX', intdiv(self::WALL_WIDTH - $wordWidth('PIX'), 2), $top + 376, $scale, $letterGap, $palette['navy']);
+        $this->drawWord($image, 'RIOT', intdiv(self::WALL_WIDTH - $wordWidth('RIOT'), 2), $top + 376 + $lineHeight + $lineGap, $scale, $letterGap, $palette['navy']);
 
         $barY = $top + $artworkHeight - 24;
         $barWidth = 420;

@@ -5,7 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Pixel Chaos | {{ request()->routeIs('register') ? __('Registrieren') : __('Anmelden') }}</title>
+        <title>PixRiot | {{ request()->routeIs('register') ? __('Registrieren') : __('Anmelden') }}</title>
+        <x-favicons />
         <x-locale-head />
 
         <!-- Fonts -->
@@ -21,11 +22,8 @@
         <div class="auth-layout">
             <main class="auth-main">
                 <div class="auth-mobile-brand">
-                    <a class="auth-brand" href="{{ route('wall') }}" aria-label="{{ __('Pixel Chaos – zur Wand') }}">
-                        <span class="auth-brand-mark" aria-hidden="true">
-                            <i></i><i></i><i></i><i></i>
-                        </span>
-                        <span>PIXEL<span class="auth-brand-accent">CHAOS</span></span>
+                    <a class="auth-brand" href="{{ route('wall') }}" aria-label="{{ __('PixRiot – zur Wand') }}">
+                        <span class="brand-wordmark">Pix<span>Riot</span></span>
                     </a>
                 </div>
 

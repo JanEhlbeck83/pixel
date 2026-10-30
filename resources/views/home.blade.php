@@ -4,7 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Pixel Chaos</title>
+        <title>PixRiot</title>
+        <x-favicons />
         <x-locale-head />
         <x-i18n-script />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -13,8 +14,7 @@
         <div class="pixel-shell">
             <header class="pixel-topbar">
                 <div class="brand">
-                    <small>{{ __('Live World') }}</small>
-                    <strong>PIXEL CHAOS</strong>
+                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                 </div>
                 <div class="top-actions">
                     @if (Route::has('login'))

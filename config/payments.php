@@ -2,7 +2,7 @@
 
 /*
 |--------------------------------------------------------------------------
-| Pixel Chaos – Zahlungen & Shop
+| PixRiot – Zahlungen & Shop
 |--------------------------------------------------------------------------
 |
 | ALLE Zugangsdaten und Preise stehen hier bzw. in der .env (siehe
