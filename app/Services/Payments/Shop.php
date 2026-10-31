@@ -71,14 +71,28 @@ class Shop
         return $order->fresh();
     }
 
-    public function settle(Order $order, string $status): void
-    {
-        if ($status === Order::PAID) {
-            $this->fulfill($order);
-        } elseif ($status === Order::FAILED && $order->status === Order::PENDING) {
-            $order->update(['status' => Order::FAILED]);
-        }
+public function settle(Order $order, string $status): void
+{
+    if ($status === Order::PAID) {
+        $this->fulfill($order);
+    } elseif ($status === Order::FAILED) {
+        DB::transaction(function () use ($order) {
+            $locked = Order::query()->lockForUpdate()->find($order->id);
+
+            if (
+                ! $locked
+                || $locked->status !== Order::PENDING
+                || $locked->fulfilled_at !== null
+            ) {
+                return;
+            }
+
+            $locked->update([
+                'status' => Order::FAILED,
+            ]);
+        });
     }
+}
 
     public function fulfill(Order $order): void
     {
@@ -86,9 +100,12 @@ class Shop
 
         DB::transaction(function () use ($order) {
             $locked = Order::query()->lockForUpdate()->find($order->id);
-            if (! $locked || $locked->fulfilled_at !== null) {
-                return;
-            }
+            if (! $locked
+    || $locked->status !== Order::PENDING
+    || $locked->fulfilled_at !== null
+) {
+    return;
+}
 
             $product = config('payments.products.'.$locked->product);
             if (($product['type'] ?? null) === 'extend') {
@@ -106,9 +123,21 @@ class Shop
     }
 
     public function cancel(Order $order): void
-    {
-        if ($order->status === Order::PENDING) {
-            $order->update(['status' => Order::CANCELLED]);
+{
+    DB::transaction(function () use ($order) {
+        $locked = Order::query()->lockForUpdate()->find($order->id);
+
+        if (
+            ! $locked
+            || $locked->status !== Order::PENDING
+            || $locked->fulfilled_at !== null
+        ) {
+            return;
         }
-    }
+
+        $locked->update([
+            'status' => Order::CANCELLED,
+        ]);
+    });
+}
 }

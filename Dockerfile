@@ -46,6 +46,22 @@ EXPOSE 9000
 CMD ["php-fpm"]
 
 
+FROM app AS test
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsqlite3-dev \
+    && docker-php-ext-install pdo_sqlite \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN composer install \
+    --no-interaction \
+    --prefer-dist \
+    --no-progress \
+    --no-scripts
+
+RUN composer dump-autoload
+
 FROM nginx:alpine AS web
 
 COPY --from=app /var/www/html/public /var/www/html/public

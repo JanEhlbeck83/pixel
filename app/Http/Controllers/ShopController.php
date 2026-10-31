@@ -152,20 +152,46 @@ class ShopController extends Controller
         }
     }
 
-    private function validStripeSignature(Request $request, string $secret): bool
-    {
-        $header = (string) $request->header('Stripe-Signature');
-        parse_str(str_replace(',', '&', $header), $parts);
-        $timestamp = $parts['t'] ?? null;
-        $signature = $parts['v1'] ?? null;
+private function validStripeSignature(Request $request, string $secret): bool
+{
+    $header = (string) $request->header('Stripe-Signature');
+    $parts = [];
 
-        if (! $timestamp || ! $signature || abs(time() - (int) $timestamp) > 300) {
-            return false;
+    foreach (explode(',', $header) as $part) {
+        $pair = explode('=', trim($part), 2);
+
+        if (count($pair) === 2) {
+            $parts[$pair[0]][] = $pair[1];
         }
-
-        return hash_equals(hash_hmac('sha256', $timestamp.'.'.$request->getContent(), $secret), $signature);
     }
 
+    $timestamps = $parts['t'] ?? [];
+    $signatures = $parts['v1'] ?? [];
+
+    if (count($timestamps) !== 1 || ! ctype_digit($timestamps[0]) || $signatures === []) {
+        return false;
+    }
+
+    $timestamp = $timestamps[0];
+
+    if (abs(time() - (int) $timestamp) > 300) {
+        return false;
+    }
+
+    $expected = hash_hmac(
+        'sha256',
+        $timestamp.'.'.$request->getContent(),
+        $secret
+    );
+
+    foreach ($signatures as $signature) {
+        if (preg_match('/^[a-f0-9]{64}$/i', $signature) && hash_equals($expected, $signature)) {
+            return true;
+        }
+    }
+
+    return false;
+}
     private function authorizeOrder(Request $request, Order $order): void
     {
         abort_unless($order->user_id === $request->user()->id, 403);

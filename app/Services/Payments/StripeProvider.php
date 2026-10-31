@@ -67,13 +67,21 @@ class StripeProvider implements PaymentProvider
         if (! $response->successful()) {
             return Order::PENDING;
         }
+	$session = $response->json() ?? [];
+        $expectedLiveMode = str_starts_with(
+    (string) config('payments.providers.stripe.secret_key'),
+    'sk_live_'
+);
 
-        $session = $response->json();
-        if (($session['client_reference_id'] ?? null) !== $order->uuid
-            || (int) ($session['amount_total'] ?? -1) !== $order->amount_cents
-            || strtoupper((string) ($session['currency'] ?? '')) !== $order->currency) {
-            return Order::FAILED;
-        }
+if (($session['client_reference_id'] ?? null) !== $order->uuid
+    || (int) ($session['amount_total'] ?? -1) !== $order->amount_cents
+    || strtoupper((string) ($session['currency'] ?? '')) !== $order->currency
+    || ($session['livemode'] ?? null) !== $expectedLiveMode
+    || ($session['mode'] ?? null) !== 'payment'
+    || ($session['metadata']['order_uuid'] ?? null) !== $order->uuid)
+{
+    return Order::FAILED;
+}
 
         if (($session['payment_status'] ?? null) === 'paid') {
             return Order::PAID;
