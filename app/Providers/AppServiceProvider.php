@@ -29,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Alle generierten URLs (Routen, Assets, Vite) per https ausliefern, sobald APP_URL https nutzt.
+        if (str_starts_with((string) config('app.url'), 'https://')) {
+            $this->app['url']->forceScheme('https');
+        }
+
         // Uebersetzungen liegen je Bereich in lang/i18n/<bereich>/{en,es}.json (Schluessel = deutscher Text).
         foreach (glob(lang_path('i18n/*'), GLOB_ONLYDIR) ?: [] as $directory) {
             $this->app['translator']->addJsonPath($directory);
