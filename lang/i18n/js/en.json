@@ -16,7 +16,7 @@
     "rechts": "right",
     "oben": "up",
     "unten": "down",
-    "Die Wall konnte nicht erweitert werden.": "The wall could not be expanded.",
+    "Die Leinwand konnte nicht erweitert werden.": "The canvas could not be expanded.",
     "Die Pixelwerte konnten nicht geladen werden.": "Pixel values could not be loaded.",
     "Pixel konnte nicht gespeichert werden.": "Could not save pixel.",
     "Pixel :x::y gespeichert. :quota": "Pixel :x::y saved. :quota",
@@ -59,9 +59,9 @@
     "Alle 30 Sekunden wächst ein Pixel nach (maximal 50 im Vorrat). Das nächste Pixel ist verfügbar in:": "A pixel is added every 30 seconds (up to 50 in reserve). The next pixel is available in:",
     "Mehr als 50 Pixel im Vorrat gibt es nur als Extra-Pixel im Shop.": "More than 50 pixels in reserve are only available as extra pixels in the shop.",
     "Jetzt wieder möglich – klicke erneut auf einen Pixel.": "Available again now – click a pixel again.",
-    "Wand nach :direction erweitern": "Expand wall to the :direction",
+    "Leinwand nach :direction erweitern": "Expand canvas to the :direction",
     "🌍 Für die ganze Community": "🌍 For the whole community",
-    "Die Pixelwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung (im Hintergrundbild erscheint er nach bis zu 10 Minuten) – dein Beitrag für die Community.": "The pixel wall grows by :amount pixels to the :direction. The new space is available to all players immediately (it appears in the background image after up to 10 minutes) – your contribution to the community.",
+    "Die Leinwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung (im Hintergrundbild erscheint er nach bis zu 10 Minuten) – dein Beitrag für die Community.": "The canvas grows by :amount pixels to the :direction. The new space is available to all players immediately (it appears in the background image after up to 10 minutes) – your contribution to the community.",
     ":amount Extra-Pixel": ":amount extra pixels",
     "🏆 Bestpreis": "🏆 Best price",
     ":amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Der günstigste Preis pro Pixel.": ":amount pixels to place right away, with no waiting and beyond the 50-pixel reserve. The lowest price per pixel.",
@@ -80,5 +80,6 @@
     "Zu viele Meldungen. Bitte versuche es später erneut.": "Too many reports. Please try again later.",
     "Meldung konnte nicht gesendet werden.": "The report could not be sent.",
     "Danke! Deine Meldung wurde gespeichert und wird geprüft.": "Thank you! Your report was saved and will be reviewed.",
-    "Bitte bestätige zuerst deine E-Mail-Adresse.": "Please confirm your email address first."
+    "Bitte bestätige zuerst deine E-Mail-Adresse.": "Please confirm your email address first.",
+    "Leinwand um :amount Pixel nach :direction erweitern": "Expand canvas by :amount pixels to the :direction"
 }

@@ -32,6 +32,19 @@ return [
             'amount' => 1,
             'price_cents' => (int)             env('PRICE_EXTEND_CENTS', 300),
         ],
+        // Paket: 5 Pixel auf einmal (günstiger als 5 Einzelkäufe).
+        'extend_x_5' => [
+            'type' => 'extend',
+            'axis' => 'x',
+            'amount' => 5,
+            'price_cents' => (int) env('PRICE_EXTEND_5_CENTS', 1200),
+        ],
+        'extend_y_5' => [
+            'type' => 'extend',
+            'axis' => 'y',
+            'amount' => 5,
+            'price_cents' => (int) env('PRICE_EXTEND_5_CENTS', 1200),
+        ],
         // Der Schlüssel 'pixels_100' ist die ursprüngliche Paket-ID (bestehende Bestellungen), enthält jetzt 250 Pixel.
         'pixels_100' => [
             'type' => 'pixels',

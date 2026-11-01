@@ -108,7 +108,7 @@ public function settle(Order $order, string $status): void
 
             $product = config('payments.products.'.$locked->product);
             if (($product['type'] ?? null) === 'extend') {
-                $this->extender->extend($product['axis']);
+                $this->extender->extend($product['axis'], (int) ($product['amount'] ?? 1));
             } elseif (($product['type'] ?? null) === 'pixels') {
                 User::query()->whereKey($locked->user_id)->increment('pixel_credits', (int) $product['amount']);
             }

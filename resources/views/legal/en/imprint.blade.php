@@ -36,6 +36,11 @@
         @endif
     </p>
 
+    <h2>Advertising space</h2>
+    <p>
+        Interested in buying advertising space or in permanently locking pixels so that users can no longer change them? Please contact us at <a href="mailto:contact@pixriot.online">contact@pixriot.online</a>.
+    </p>
+
     <h2>User content</h2>
     <p>
         The pixels on the wall are placed by users. We are responsible for such content only from the moment we

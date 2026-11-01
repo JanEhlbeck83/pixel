@@ -29,12 +29,13 @@ class ShopTest extends TestCase
         $response = $this->getJson('/api/shop')
             ->assertOk()
             ->assertJsonPath('authenticated', false)
-            ->assertJsonCount(5, 'products')
+            ->assertJsonCount(7, 'products')
             ->assertJsonPath('providers.0.key', 'fake');
 
         $products = collect($response->json('products'))->keyBy('id');
         $this->assertSame(300, $products['extend_x']['price_cents']);
         $this->assertSame(300, $products['extend_y']['price_cents']);
+        $this->assertSame([1200, 5], [$products['extend_x_5']['price_cents'], $products['extend_x_5']['amount']]);
         $this->assertSame(500, $products['pixels_100']['price_cents']);
         $this->assertSame(250, $products['pixels_100']['amount']);
         $this->assertSame(1000, $products['pixels_600']['price_cents']);
@@ -120,6 +121,20 @@ class ShopTest extends TestCase
 
         $this->actingAs($user)->get(route('shop.return', $order));
         $this->getJson('/api/wall')->assertJsonPath('width', 1025);
+    }
+
+    public function test_buying_five_pixels_of_extension_at_once_costs_twelve_euro(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'extend_y_5', 'provider' => 'fake'])->assertOk();
+        $order = Order::firstOrFail();
+        $this->assertSame(1200, $order->amount_cents);
+
+        $this->actingAs($user)->post(route('shop.fake.pay', $order), ['result' => 'paid']);
+
+        $this->getJson('/api/wall')->assertJsonPath('width', 1024)->assertJsonPath('height', 1029);
+        $this->assertDatabaseCount('pixels', 1024 * 5);
+        $this->assertDatabaseHas('pixels', ['x' => 1023, 'y' => 1028, 'color' => '#ffffff']);
     }
 
     public function test_cancelled_payment_gives_nothing(): void

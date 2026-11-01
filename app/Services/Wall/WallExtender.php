@@ -13,14 +13,16 @@ class WallExtender
     private const MAX_COORDINATE = 2147483000;
 
     /** @return array{width:int,height:int} */
-    public function extend(string $axis): array
+    public function extend(string $axis, int $size = self::EXTENSION_SIZE): array
     {
-        return DB::transaction(function () use ($axis) {
+        $size = max(1, $size);
+
+        return DB::transaction(function () use ($axis, $size) {
             $wall = DB::table('wall_dimensions')->where('id', 1)->lockForUpdate()->first();
             $width = (int) $wall->width;
             $height = (int) $wall->height;
 
-            if (($axis === 'x' && $width > self::MAX_COORDINATE) || ($axis === 'y' && $height > self::MAX_COORDINATE)) {
+            if (($axis === 'x' && $width > self::MAX_COORDINATE - $size) || ($axis === 'y' && $height > self::MAX_COORDINATE - $size)) {
                 throw new HttpResponseException(response()->json([
                     'success' => false,
                     'message' => __('Die Pixelwand hat die maximale Koordinatengröße erreicht.'),
@@ -38,16 +40,16 @@ class WallExtender
 
             if ($axis === 'x') {
                 for ($y = 0; $y < $height; $y++) {
-                    for ($x = $width; $x < $width + self::EXTENSION_SIZE; $x++) {
+                    for ($x = $width; $x < $width + $size; $x++) {
                         $rows[] = $this->whiteRow($x, $y, $now);
                     }
                     if (count($rows) >= 2000) {
                         $flush();
                     }
                 }
-                $width += self::EXTENSION_SIZE;
+                $width += $size;
             } else {
-                for ($y = $height; $y < $height + self::EXTENSION_SIZE; $y++) {
+                for ($y = $height; $y < $height + $size; $y++) {
                     for ($x = 0; $x < $width; $x++) {
                         $rows[] = $this->whiteRow($x, $y, $now);
                         if (count($rows) >= 2000) {
@@ -55,7 +57,7 @@ class WallExtender
                         }
                     }
                 }
-                $height += self::EXTENSION_SIZE;
+                $height += $size;
             }
             $flush();
 

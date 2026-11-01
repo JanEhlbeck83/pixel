@@ -56,7 +56,7 @@
                 <section class="profile-card" aria-labelledby="ordersTitle">
                     <h2 id="ordersTitle">{{ __('Käufe & Zahlungen') }}</h2>
                     @if ($orders->isEmpty())
-                        <p class="profile-muted">{{ __('Noch keine Käufe. Auf der Wand findest du Extra-Pixel und die Wand-Erweiterung.') }}</p>
+                        <p class="profile-muted">{{ __('Noch keine Käufe. Auf der Wand findest du Extra-Pixel und die Leinwand-Erweiterung.') }}</p>
                     @else
                         <div class="profile-table-wrap">
                             <table class="profile-table">

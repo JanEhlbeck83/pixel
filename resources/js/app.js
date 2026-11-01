@@ -854,7 +854,7 @@ async function navigateWall(direction) {
         setStatus(t('300 px nach :direction navigiert.', { direction: t(({ left: 'links', right: 'rechts', up: 'oben', down: 'unten' })[direction]) }));
     } catch (error) {
         console.error(error);
-        setStatus(error.message || t('Die Wall konnte nicht erweitert werden.'));
+        setStatus(error.message || t('Die Leinwand konnte nicht erweitert werden.'));
     } finally {
         button.disabled = false;
         wallNavigationInProgress = false;
@@ -1960,9 +1960,11 @@ function shopProductCopy(product) {
     if (product.type === 'extend') {
         const direction = product.axis === 'x' ? 'rechts' : 'unten';
         return {
-            title: t('Wand nach :direction erweitern', { direction: t(direction) }),
+            title: product.amount > 1
+                ? t('Leinwand um :amount Pixel nach :direction erweitern', { amount: product.amount.toLocaleString(locale), direction: t(direction) })
+                : t('Leinwand nach :direction erweitern', { direction: t(direction) }),
             badge: t('🌍 Für die ganze Community'),
-            text: t('Die Pixelwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung (im Hintergrundbild erscheint er nach bis zu 10 Minuten) – dein Beitrag für die Community.', { amount: product.amount.toLocaleString(locale), direction: t(direction) }),
+            text: t('Die Leinwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung (im Hintergrundbild erscheint er nach bis zu 10 Minuten) – dein Beitrag für die Community.', { amount: product.amount.toLocaleString(locale), direction: t(direction) }),
         };
     }
 

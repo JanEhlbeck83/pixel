@@ -12,7 +12,6 @@
     "🔗 Ausschnitt teilen": "🔗 Share this view",
     "Auf Facebook teilen": "Share on Facebook",
     "Pixel kaufen": "Buy pixels",
-    "Leinwand kaufen": "Buy wall",
     "Erweiterung kaufen": "Buy expansion",
     "Löschung bestätigt": "Deletion confirmed",
     "Deine Anfrage zur Datenlöschung wurde bearbeitet. Konto und personenbezogene Daten sind bei PixRiot gelöscht.": "Your data deletion request has been processed. Your account and personal data have been deleted from PixRiot.",
@@ -27,10 +26,8 @@
     "300 Pixel nach rechts": "300 pixels right",
     "300 Pixel nach unten": "300 pixels down",
     "300 Pixel nach links": "300 pixels left",
-    "Pixel kaufen: Pixelwand nach rechts erweitern": "Buy pixels: expand the wall to the right",
-    "Leinwand nach rechts erweitern – für alle": "Expand the wall to the right – for everyone",
-    "Pixel kaufen: Pixelwand nach unten erweitern": "Buy pixels: expand the wall downwards",
-    "Leinwand nach unten erweitern – für alle": "Expand the wall downwards – for everyone",
+    "Leinwand nach rechts erweitern – für alle": "Expand the canvas to the right – for everyone",
+    "Leinwand nach unten erweitern – für alle": "Expand the canvas downwards – for everyone",
     "Zoom auf 100 Prozent zurücksetzen": "Reset zoom to 100 percent",
     "Vergrößern": "Zoom in",
     "Verkleinern": "Zoom out",
@@ -130,5 +127,8 @@
     "Wenn du dich nicht registriert hast, ist keine weitere Aktion erforderlich.": "If you did not register, no further action is required.",
     "Danke für deine Registrierung! Bevor es losgeht: Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade geschickt haben. Falls du keine E-Mail erhalten hast, senden wir dir gern eine neue.": "Thanks for signing up! Before you start, please confirm your email address using the link we just sent you. If you did not receive the email, we will gladly send you another one.",
     "Ein neuer Bestätigungslink wurde an die bei der Registrierung angegebene E-Mail-Adresse gesendet.": "A new confirmation link has been sent to the email address you provided during registration.",
-    "Bestätigungs-E-Mail erneut senden": "Resend confirmation email"
+    "Bestätigungs-E-Mail erneut senden": "Resend confirmation email",
+    "Leinwand erweitern": "Expand canvas",
+    "Leinwand erweitern: nach rechts": "Expand canvas to the right",
+    "Leinwand erweitern: nach unten": "Expand canvas downwards"
 }

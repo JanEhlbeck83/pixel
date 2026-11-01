@@ -12,7 +12,6 @@
     "🔗 Ausschnitt teilen": "🔗 Compartir esta vista",
     "Auf Facebook teilen": "Compartir en Facebook",
     "Pixel kaufen": "Comprar píxeles",
-    "Leinwand kaufen": "Comprar el lienzo",
     "Erweiterung kaufen": "Comprar ampliación",
     "Löschung bestätigt": "Eliminación confirmada",
     "Deine Anfrage zur Datenlöschung wurde bearbeitet. Konto und personenbezogene Daten sind bei PixRiot gelöscht.": "Tu solicitud de eliminación de datos ha sido procesada. Tu cuenta y tus datos personales se han eliminado de PixRiot.",
@@ -27,10 +26,7 @@
     "300 Pixel nach rechts": "300 píxeles a la derecha",
     "300 Pixel nach unten": "300 píxeles hacia abajo",
     "300 Pixel nach links": "300 píxeles a la izquierda",
-    "Pixel kaufen: Pixelwand nach rechts erweitern": "Comprar píxeles: ampliar el muro hacia la derecha",
-    "Leinwand nach rechts erweitern – für alle": "Ampliar el lienzo hacia la derecha para todos",
-    "Pixel kaufen: Pixelwand nach unten erweitern": "Comprar píxeles: ampliar el lienzo hacia abajo",
-    "Leinwandwand nach unten erweitern – für alle": "Ampliar el lienzo hacia abajo para todos",
+    "Leinwand nach rechts erweitern – für alle": "Ampliar el lienzo hacia la derecha – para todos",
     "Zoom auf 100 Prozent zurücksetzen": "Restablecer zoom al 100 %",
     "Vergrößern": "Ampliar",
     "Verkleinern": "Reducir",
@@ -131,5 +127,9 @@
     "Wenn du dich nicht registriert hast, ist keine weitere Aktion erforderlich.": "Si no te registraste, no es necesario que hagas nada más.",
     "Danke für deine Registrierung! Bevor es losgeht: Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade geschickt haben. Falls du keine E-Mail erhalten hast, senden wir dir gern eine neue.": "¡Gracias por registrarte! Antes de empezar, confirma tu dirección de correo con el enlace que acabamos de enviarte. Si no recibiste el correo, con gusto te enviamos otro.",
     "Ein neuer Bestätigungslink wurde an die bei der Registrierung angegebene E-Mail-Adresse gesendet.": "Se ha enviado un nuevo enlace de confirmación a la dirección de correo indicada en el registro.",
-    "Bestätigungs-E-Mail erneut senden": "Reenviar correo de confirmación"
+    "Bestätigungs-E-Mail erneut senden": "Reenviar correo de confirmación",
+    "Leinwand erweitern": "Ampliar lienzo",
+    "Leinwand erweitern: nach rechts": "Ampliar el lienzo hacia la derecha",
+    "Leinwand erweitern: nach unten": "Ampliar el lienzo hacia abajo",
+    "Leinwand nach unten erweitern – für alle": "Ampliar el lienzo hacia abajo – para todos"
 }
