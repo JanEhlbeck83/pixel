@@ -245,7 +245,12 @@ async function requestPixelAreaLock(area, method = 'POST') {
                 showLimitModal(payload);
                 return false;
             }
+            if (response.status === 409) {
+                setStatus(t('Bitte bestätige zuerst deine E-Mail-Adresse.'));
+                return false;
+            }
             payload.locked_pixels?.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
+            setStatus(payload.message || t('Der Bereich konnte nicht reserviert werden.'));
             setStatus(payload.message || t('Der Bereich konnte nicht reserviert werden.'));
             return false;
         }

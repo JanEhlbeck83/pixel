@@ -36,7 +36,7 @@ return [
         'pixels_100' => [
             'type' => 'pixels',
             'amount' => 250,
-            'price_cents' => (int) env('PRICE_PIXELS_100_CENTS', 500),
+            'price_cents' => (int) env('PRICE_PIXELS_250_CENTS', 500),
         ],
         'pixels_600' => [
             'type' => 'pixels',

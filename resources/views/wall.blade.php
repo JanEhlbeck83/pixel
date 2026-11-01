@@ -33,11 +33,11 @@
                         <button type="button" class="secondary-button wall-nav wall-nav-left" id="navigateLeftBtn" aria-label="{{ __('300 Pixel nach links') }}">←</button>
                         <button type="button" class="wall-extension-zone wall-extension-zone-right hidden" id="extendWallRightBtn" aria-label="{{ __('Pixel kaufen: Pixelwand nach rechts erweitern') }}">
                             <span class="wall-extension-plus" aria-hidden="true">+</span>
-                            <span class="wall-extension-label"><strong>{{ __('Pixel kaufen') }}</strong><small>{{ __('Wand nach rechts erweitern – für alle') }}</small></span>
+                            <span class="wall-extension-label"><strong>{{ __('Leinwand kaufen') }}</strong><small>{{ __('Leinwand nach rechts erweitern – für alle') }}</small></span>
                         </button>
                         <button type="button" class="wall-extension-zone wall-extension-zone-bottom hidden" id="extendWallDownBtn" aria-label="{{ __('Pixel kaufen: Pixelwand nach unten erweitern') }}">
                             <span class="wall-extension-plus" aria-hidden="true">+</span>
-                            <span class="wall-extension-label"><strong>{{ __('Pixel kaufen') }}</strong><small>{{ __('Wand nach unten erweitern – für alle') }}</small></span>
+                            <span class="wall-extension-label"><strong>{{ __('Leinwand kaufen') }}</strong><small>{{ __('Leinwand nach unten erweitern – für alle') }}</small></span>
                         </button>
                         <div class="wall-zoom-controls" role="group" aria-label="{{ __('Leinwandzoom') }}">
                             <button type="button" class="secondary-button" id="zoomOutBtn" aria-label="{{ __('Verkleinern') }}" disabled><span class="zoom-sign">−</span></button>

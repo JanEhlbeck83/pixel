@@ -79,5 +79,6 @@
     "Meldung wird gesendet ...": "Sending report ...",
     "Zu viele Meldungen. Bitte versuche es später erneut.": "Too many reports. Please try again later.",
     "Meldung konnte nicht gesendet werden.": "The report could not be sent.",
-    "Danke! Deine Meldung wurde gespeichert und wird geprüft.": "Thank you! Your report was saved and will be reviewed."
+    "Danke! Deine Meldung wurde gespeichert und wird geprüft.": "Thank you! Your report was saved and will be reviewed.",
+    "Bitte bestätige zuerst deine E-Mail-Adresse.": "Please confirm your email address first."
 }
