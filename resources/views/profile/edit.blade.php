@@ -9,20 +9,13 @@
         <x-locale-head />
         @vite(['resources/css/app.css'])
     </head>
-    <body class="profile-page">
+    <body class="profile-page menu-page">
         <div class="pixel-shell">
-            <header class="pixel-topbar">
+            @include('partials.site-menu')
+            <header class="page-heading">
                 <div class="brand">
                     <small>{{ __('Mein Konto') }}</small>
                     <strong class="brand-wordmark">Pix<span>Riot</span></strong>
-                </div>
-                <div class="top-actions">
-                    <a href="{{ route('home') }}">{{ __('Zur Wand') }}</a>
-                    <a href="{{ route('gallery') }}">{{ __('Galerie') }}</a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit">{{ __('Abmelden') }}</button>
-                    </form>
                 </div>
             </header>
 
@@ -152,7 +145,13 @@
                         </form>
                     </details>
                 </section>
+
+                <form method="POST" action="{{ route('logout') }}" class="profile-logout">
+                    @csrf
+                    <button type="submit" class="secondary-button">{{ __('Abmelden') }}</button>
+                </form>
             </main>
+            @include('legal.partials.links')
         </div>
     </body>
 </html>

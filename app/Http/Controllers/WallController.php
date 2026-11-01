@@ -7,6 +7,7 @@ use App\Models\Pixel;
 use App\Models\PixelEditLock;
 use App\Models\Snapshot;
 use App\Services\Wall\PixelQuota;
+use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -63,15 +64,88 @@ class WallController extends Controller
         ]);
     }
 
+    // Pixel, die jünger sind als der letzte Kachel-Lauf und daher noch nicht im Hintergrundbild stecken.
+    // Mit ?since=<ISO-Zeitpunkt> kommen nur Änderungen seit dem letzten Abruf (Polling).
+    public function recentPixels(Request $request)
+    {
+        $stateFile = rtrim((string) config('wall.output_path', public_path()), '\\/').'/images/wall-tiles/.last-run';
+        $since = now()->subMinutes(15);
+        if (is_file($stateFile) && ($lastRun = trim((string) file_get_contents($stateFile))) !== '') {
+            try {
+                $since = Carbon::parse($lastRun)->subMinute();
+            } catch (\Throwable) {
+            }
+        }
+
+        $serverTime = now();
+        if (is_string($request->query('since')) && $request->query('since') !== '') {
+            try {
+                $requested = Carbon::parse($request->query('since'))->setTimezone(config('app.timezone'));
+                if ($requested->greaterThan($since)) {
+                    $since = $requested;
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        // Zeitpunkt auf 5-Sekunden-Raster abrunden: Clients teilen sich so dieselbe gecachte Antwort (Überlappung ist unkritisch).
+        $since = Carbon::createFromTimestamp(intdiv($since->getTimestamp(), 5) * 5, config('app.timezone'));
+
+        // Optionaler Ausschnitt: nur Pixel der sichtbaren Kacheln laden.
+        $area = $request->query();
+        $box = null;
+        if (isset($area['x'], $area['y'], $area['width'], $area['height'])) {
+            $box = [(int) $area['x'], (int) $area['y'], max(1, (int) $area['width']), max(1, (int) $area['height'])];
+        }
+
+        $key = 'wall-recent:'.$since->getTimestamp().':'.($box ? implode('x', $box) : 'all');
+        $payload = Cache::remember($key, 3, function () use ($since, $box, $serverTime) {
+            $query = Pixel::query()->where('updated_at', '>=', $since);
+            if ($box) {
+                $query->whereBetween('x', [$box[0], $box[0] + $box[2] - 1])
+                    ->whereBetween('y', [$box[1], $box[1] + $box[3] - 1]);
+            }
+
+            return [
+                'pixels' => $query
+                    ->limit(20000)
+                    ->get(['x', 'y', 'color'])
+                    ->map(fn ($pixel) => ['x' => (int) $pixel->x, 'y' => (int) $pixel->y, 'color' => $pixel->color])
+                    ->all(),
+                'server_time' => $serverTime->toIso8601String(),
+            ];
+        });
+
+        return response()->json($payload);
+    }
+
     public function dimensions()
     {
-        $dimensions = $this->wallDimensions();
+        return response()->json(Cache::remember('wall-dimensions-response', 3, function () {
+            $dimensions = $this->wallDimensions();
 
-        return response()->json([
-            'width' => (int) $dimensions->width,
-            'height' => (int) $dimensions->height,
-            'tile_size' => self::WALL_TILE_SIZE,
-        ]);
+            return [
+                'width' => (int) $dimensions->width,
+                'height' => (int) $dimensions->height,
+                'tile_size' => self::WALL_TILE_SIZE,
+                'tiles_version' => $this->tilesVersion(),
+            ];
+        }));
+    }
+
+    // Neuester Änderungszeitpunkt aller fertig gerenderten Hintergrundkacheln.
+    private function tilesVersion(): int
+    {
+        $directory = rtrim((string) config('wall.output_path', public_path()), '\\/').'/images/wall-tiles';
+
+        return Cache::remember('wall-tiles-version', 5, function () use ($directory) {
+            $latest = 0;
+            foreach (glob($directory.'/*.png') ?: [] as $file) {
+                $latest = max($latest, (int) filemtime($file));
+            }
+
+            return $latest;
+        });
     }
 
     public function pixelStatus(Request $request)
@@ -91,37 +165,45 @@ class WallController extends Controller
 
     public function pixelLocks(Request $request)
     {
-        $editedLocks = Pixel::query()
-            ->whereNotNull('updated_by_user_id')
-            ->when($request->user(), fn ($query, $user) => $query->where('updated_by_user_id', '!=', $user->id))
-            ->where('updated_at', '>', now()->subMinutes(self::PIXEL_LOCK_MINUTES))
-            ->get(['x', 'y', 'updated_at'])
-            ->map(function ($pixel) {
-                return [
+        // Alle Sperren kurz gecacht; der Filter auf den eigenen Nutzer passiert erst danach.
+        $all = Cache::remember('wall-locks', 2, function () {
+            $edited = Pixel::query()
+                ->whereNotNull('updated_by_user_id')
+                ->where('updated_at', '>', now()->subMinutes(self::PIXEL_LOCK_MINUTES))
+                ->get(['x', 'y', 'updated_at', 'updated_by_user_id'])
+                ->map(fn ($pixel) => [
                     'x' => (int) $pixel->x,
                     'y' => (int) $pixel->y,
+                    'user' => (int) $pixel->updated_by_user_id,
                     'locked_until' => $pixel->updated_at->copy()->addMinutes(self::PIXEL_LOCK_MINUTES)->toIso8601String(),
-                ];
-            })
-            ->values();
+                ])
+                ->all();
 
-        $selectionLocks = PixelEditLock::query()
-            ->where('expires_at', '>', now())
-            ->when($request->user(), fn ($query, $user) => $query->where('locked_by_user_id', '!=', $user->id))
-            ->get(['x', 'y', 'expires_at'])
-            ->map(fn ($lock) => [
-                'x' => (int) $lock->x,
-                'y' => (int) $lock->y,
-                'locked_until' => $lock->expires_at->toIso8601String(),
-            ]);
+            $selection = PixelEditLock::query()
+                ->where('expires_at', '>', now())
+                ->get(['x', 'y', 'expires_at', 'locked_by_user_id'])
+                ->map(fn ($lock) => [
+                    'x' => (int) $lock->x,
+                    'y' => (int) $lock->y,
+                    'user' => (int) $lock->locked_by_user_id,
+                    'locked_until' => $lock->expires_at->toIso8601String(),
+                ])
+                ->all();
 
-        $lockedPixels = $editedLocks->merge($selectionLocks)
+            return ['edited' => $edited, 'selection' => $selection];
+        });
+
+        $userId = $request->user()?->id;
+        $others = fn (array $rows) => array_filter($rows, fn ($row) => $userId === null || $row['user'] !== (int) $userId);
+
+        $lockedPixels = collect($others($all['edited']))
+            ->merge($others($all['selection']))
+            ->map(fn ($row) => ['x' => $row['x'], 'y' => $row['y'], 'locked_until' => $row['locked_until']])
             ->unique(fn ($pixel) => $pixel['x'].':'.$pixel['y'])
             ->values();
 
         return response()->json(['locked_pixels' => $lockedPixels]);
     }
-
     public function lockPixelArea(Request $request)
     {
         $area = $request->validate([
@@ -289,6 +371,9 @@ class WallController extends Controller
         }
 
         $user = $request->user();
+        if ($user?->isBanned()) {
+            return response()->json(['message' => __('Dein Konto wurde gesperrt. Du kannst keine Pixel mehr setzen.')], 403);
+        }
         $savePixels = function () use ($validatedPixels, $isBatch, $user) {
             return DB::transaction(function () use ($validatedPixels, $isBatch, $user) {
                 $coordinates = collect($validatedPixels)->unique(fn ($pixel) => $pixel['x'].':'.$pixel['y']);

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Pixel;
 use App\Models\Snapshot;
+use App\Services\Wall\SnapshotThumbnail;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -60,7 +61,9 @@ class GenerateSnapshotCommand extends Command
             'image_path' => 'images/snapshots/'.$filename,
         ]);
 
-        $this->info('Snapshot generated: '.$snapshotPath);
+        $thumbnail = SnapshotThumbnail::ensure('images/snapshots/'.$filename, $outputPath);
+
+        $this->info('Snapshot generated: '.$snapshotPath.($thumbnail ? ' (thumbnail: '.$thumbnail.')' : ''));
 
         return self::SUCCESS;
     }

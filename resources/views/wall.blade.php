@@ -18,64 +18,7 @@
     </head>
     <body class="wall-page">
         <div class="pixel-shell wall-shell">
-            <header class="pixel-topbar minimal wall-menu">
-                <button type="button" class="wall-menu-toggle secondary-button" id="wallMenuToggle" aria-expanded="false" aria-controls="wallMenuPanel">
-                    <span class="wall-menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-                    <span>{{ __('Menü') }}</span>
-                </button>
-                <div class="wall-menu-panel hidden" id="wallMenuPanel">
-                    <div class="brand">
-                        <strong class="brand-wordmark">Pix<span>Riot</span></strong>
-                    </div>
-                    <nav class="top-actions wall-menu-links" aria-label="{{ __('Hauptnavigation') }}">
-                        @if (Route::has('login'))
-                            @auth
-                                <a href="{{ route('profile.edit') }}"><x-icon name="user" />{{ __('Profil') }}</a>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit"><x-icon name="logout" />{{ __('Abmelden') }}</button>
-                                </form>
-                            @else
-                                <a href="{{ route('login') }}"><x-icon name="login" />{{ __('Anmelden') }}</a>
-                                @if (Route::has('register'))
-                                    <a href="{{ route('register') }}"><x-icon name="signup" />{{ __('Registrieren') }}</a>
-                                @endif
-                            @endauth
-                        @endif
-                        <hr class="wall-menu-divider">
-                        <button type="button" id="openShopBtn"><x-icon name="shop" />{{ __('Pixel kaufen') }}</button>
-                        <button type="button" id="openExtensionShopBtn"><x-icon name="shop" />{{ __('Erweiterung kaufen') }}</button>
-                        <hr class="wall-menu-divider">
-                        <button type="button" id="shareViewBtn"><x-icon name="link" />{{ __('Ausschnitt teilen') }}</button>
-                        <a id="shareFacebookLink" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener noreferrer"><x-icon name="facebook" />{{ __('Auf Facebook teilen') }}</a>
-                        <hr class="wall-menu-divider">
-                        <a href="{{ route('gallery') }}"><x-icon name="gallery" />{{ __('Galerie') }}</a>
-                        <button type="button" id="openRulesBtn"><x-icon name="rules" />{{ __('Spielregeln') }}</button>
-                        <a href="{{ route('faq') }}"><x-icon name="faq" />{{ __('FAQ') }}</a>
-                        <hr class="wall-menu-divider">
-                        <x-language-switcher class="lang-switch--down" />
-                        <a href="{{ route('legal.impressum') }}">{{ __('Impressum') }}</a>
-                    </nav>
-                    <details class="feedback-details">
-                        <summary>{{ __('Feedback senden') }}</summary>
-                        <form id="feedbackForm" class="feedback-form">
-                            @csrf
-                            @guest
-                                <label for="feedbackEmail">{{ __('Deine E-Mail-Adresse') }}</label>
-                                <input id="feedbackEmail" name="email" type="email" maxlength="255" autocomplete="email" required>
-                            @endguest
-                            <label for="feedbackMessage">{{ __('Dein Feedback') }}</label>
-                            <textarea id="feedbackMessage" name="message" rows="4" maxlength="2000" required></textarea>
-                            <div class="feedback-honeypot" aria-hidden="true">
-                                <label for="feedbackWebsite">{{ __('Dieses Feld leer lassen') }}</label>
-                                <input id="feedbackWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
-                            </div>
-                            <button type="submit" class="primary-button" id="feedbackSubmitBtn">{{ __('Feedback senden') }}</button>
-                            <p id="feedbackStatus" class="feedback-status" role="status" aria-live="polite"></p>
-                        </form>
-                    </details>
-                </div>
-            </header>
+            @include('partials.site-menu', ['onWall' => true])
 
             <main class="canvas-stage">
                 <div class="canvas-shell">
@@ -99,7 +42,12 @@
                         <div class="wall-zoom-controls" role="group" aria-label="{{ __('Leinwandzoom') }}">
                             <button type="button" class="secondary-button" id="zoomOutBtn" aria-label="{{ __('Verkleinern') }}" disabled><span class="zoom-sign">−</span></button>
                             <button type="button" class="secondary-button" id="zoomResetBtn" aria-label="{{ __('Zoom auf 100 Prozent zurücksetzen') }}">100%</button>
-                            <button type="button" class="secondary-button" id="zoomInBtn" aria-label="{{ __('Vergrößern') }}"><span class="zoom-sign">+</span>
+                            <button type="button" class="secondary-button" id="zoomInBtn" aria-label="{{ __('Vergrößern') }}"><span class="zoom-sign">+</span></button>
+                            <button type="button" class="secondary-button wall-reload-btn" id="wallReloadBtn" data-label="{{ __('Hintergrundbild neu laden') }}" data-label-new="{{ __('Neues Hintergrundbild bzw. neue Leinwand verfügbar – klicken zum Neuladen') }}" aria-label="{{ __('Hintergrundbild neu laden') }}">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+                                <span class="wall-reload-badge hidden" aria-hidden="true">!</span>
+                                <span class="wall-reload-tip" role="tooltip">{{ __('Hintergrundbild neu laden') }}</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -236,5 +184,6 @@
                 <button type="button" id="closeRulesBtn" class="primary-button">{{ __('Verstanden') }}</button>
             </div>
         </div>
+        @include('partials.report-modal')
     </body>
 </html>

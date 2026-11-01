@@ -73,5 +73,11 @@
     "Nicht möglich: Limit von :max Extra-Pixeln würde überschritten.": "No disponible: se superaría el límite de :max píxeles extra.",
     "Zurzeit ist kein Zahlungsanbieter eingerichtet.": "No hay ningún proveedor de pago configurado actualmente.",
     "Shop konnte nicht geladen werden.": "No se pudo cargar la tienda.",
-    "Die Zahlung konnte nicht gestartet werden.": "No se pudo iniciar el pago."
+    "Die Zahlung konnte nicht gestartet werden.": "No se pudo iniciar el pago.",
+    "Ziehe ein Rechteck über den Bereich, den du melden möchtest.": "Dibuja un rectángulo sobre el área que quieres denunciar.",
+    "Bereich": "Área",
+    "Meldung wird gesendet ...": "Enviando denuncia ...",
+    "Zu viele Meldungen. Bitte versuche es später erneut.": "Demasiadas denuncias. Inténtalo de nuevo más tarde.",
+    "Meldung konnte nicht gesendet werden.": "No se pudo enviar la denuncia.",
+    "Danke! Deine Meldung wurde gespeichert und wird geprüft.": "¡Gracias! Tu denuncia se guardó y será revisada."
 }

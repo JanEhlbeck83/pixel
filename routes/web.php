@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LegalController;
@@ -50,6 +52,7 @@ Route::group($prefixed ? ['prefix' => '{locale}', 'where' => ['locale' => 'de|es
 // Technische Endpunkte ohne Sprach-Prefix (Sprache kommt aus Header X-App-Locale bzw. Session).
 Route::get('/api/pixels', [WallController::class, 'pixels'])->name('api.pixels');
 Route::get('/api/pixels/locks', [WallController::class, 'pixelLocks'])->name('api.pixels.locks');
+Route::get('/api/pixels/recent', [WallController::class, 'recentPixels'])->name('api.pixels.recent');
 Route::post('/api/pixels', [WallController::class, 'store'])->name('api.pixels.store');
 Route::get('/api/activity', [WallController::class, 'activity'])->name('api.activity');
 Route::get('/api/wall', [WallController::class, 'dimensions'])->name('api.wall.dimensions');
@@ -57,6 +60,15 @@ Route::get('/api/pixels/status', [WallController::class, 'pixelStatus'])->name('
 Route::get('/api/shop', [ShopController::class, 'catalog'])->name('shop.catalog');
 Route::post('/webhooks/stripe', [ShopController::class, 'stripeWebhook'])->name('webhooks.stripe');
 Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:3,1')->name('feedback.store');
+Route::post('/report', [ReportController::class, 'store'])->middleware('throttle:10,60')->name('report.store');
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/reports', [AdminReportController::class, 'index'])->name('admin.reports');
+    Route::get('/reports/{report}/image', [AdminReportController::class, 'image'])->name('admin.reports.image');
+    Route::post('/reports/{report}/reset', [AdminReportController::class, 'reset'])->name('admin.reports.reset');
+    Route::post('/reports/{report}/reset-ban', [AdminReportController::class, 'resetAndBan'])->name('admin.reports.reset-ban');
+    Route::post('/reports/{report}/dismiss', [AdminReportController::class, 'dismiss'])->name('admin.reports.dismiss');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/pixels/lock', [WallController::class, 'lockPixelArea'])->name('api.pixels.lock');

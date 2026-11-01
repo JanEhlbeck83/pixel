@@ -73,7 +73,21 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'free_pixels_at' => 'datetime',
+            'banned_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /** Admin nur mit bestätigter E-Mail-Adresse aus ADMIN_EMAILS, sonst könnte man sich die Rechte per Registrierung holen. */
+    public function isAdmin(): bool
+    {
+        $admins = array_map('strtolower', (array) config('wall.admin_emails', []));
+
+        return $this->email_verified_at !== null && in_array(strtolower((string) $this->email), $admins, true);
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null;
     }
 }

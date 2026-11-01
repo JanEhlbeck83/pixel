@@ -67,7 +67,5 @@
     <p>
         The German version of this legal notice is legally binding. The English and Spanish versions are
         translations provided for information only.
-    </p>
-    @include('legal.partials.more-links')
-@endsection
+    </p>@endsection
 

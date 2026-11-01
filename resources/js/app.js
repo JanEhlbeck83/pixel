@@ -94,6 +94,12 @@ const wallExtensionButtons = {
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const zoomResetBtn = document.getElementById('zoomResetBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
+const wallReloadBtn = document.getElementById('wallReloadBtn');
+let reportMode = false;
+let reportOrigin = null;
+let reportRect = null;
+let knownTilesVersion = null;
+let newTilesAvailable = false;
 const wallMenu = document.querySelector('.wall-menu');
 const wallMenuToggle = document.getElementById('wallMenuToggle');
 const wallMenuPanel = document.getElementById('wallMenuPanel');
@@ -320,6 +326,19 @@ function renderCanvas() {
         );
     }
 
+    if (reportRect) {
+        const reportX = (reportRect.x - viewOffsetX) * cellSize;
+        const reportY = (reportRect.y - viewOffsetY) * cellSize;
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 45, 149, 0.18)';
+        ctx.fillRect(reportX, reportY, reportRect.width * cellSize, reportRect.height * cellSize);
+        ctx.strokeStyle = '#ff2d95';
+        ctx.lineWidth = 2 / displayScale;
+        ctx.setLineDash([6 / displayScale, 4 / displayScale]);
+        ctx.strokeRect(reportX, reportY, reportRect.width * cellSize, reportRect.height * cellSize);
+        ctx.restore();
+    }
+
     if (!selection) {
         ctx.restore();
         return;
@@ -378,7 +397,10 @@ function updateWallExtensionZones() {
     if (rightZone) {
         rightZone.classList.toggle('hidden', !atRightEdge);
         rightZone.style.left = `${Math.max(0, Math.min(rightEdge, viewportWidth) - 30)}px`;
-        rightZone.style.height = `${viewportHeight}px`;
+        // Sind beide Reiter sichtbar, endet der rechte oberhalb des unteren; die konkave Rundung verbindet sie in der Ecke.
+        const cornerTop = Math.max(0, Math.min(bottomEdge, viewportHeight) - 30);
+        rightZone.style.height = `${atBottomEdge ? cornerTop : viewportHeight}px`;
+        rightZone.classList.toggle('has-corner', atRightEdge && atBottomEdge);
     }
 
     if (bottomZone) {
@@ -492,6 +514,8 @@ async function loadWallTiles() {
 
     try {
         await Promise.all(pending);
+        // Beim Scrollen werden für neu sichtbare Kacheln die unverarbeiteten Pixel nachgeladen.
+        loadRecentPixels();
     } catch (error) {
         console.error('Failed to load wall image tiles:', error);
         setStatus(t('Ein Bildausschnitt der Wall konnte nicht geladen werden.'));
@@ -529,6 +553,7 @@ async function loadWallDimensions() {
     wallWidth = dimensions.width;
     wallHeight = dimensions.height;
     wallTileSize = dimensions.tile_size;
+    knownTilesVersion = dimensions.tiles_version ?? null;
     wallDimensionsLoaded = true;
     updateCanvasDisplaySize();
     applyViewFromUrl();
@@ -614,6 +639,106 @@ function moveCursorCoords(event) {
 canvas.addEventListener('pointermove', moveCursorCoords);
 canvas.addEventListener('pointerleave', () => cursorCoords?.classList.add('hidden'));
 
+let recentCursor = null;
+let recentSyncing = false;
+const recentActiveTiles = new Set();
+
+// Sichtbare Kacheln plus 1 Kachel Rand; nur dafür werden unverarbeitete Pixel nachgeladen.
+function recentTileArea() {
+    const left = Math.max(0, Math.floor(viewOffsetX / wallTileSize) * wallTileSize - wallTileSize);
+    const top = Math.max(0, Math.floor(viewOffsetY / wallTileSize) * wallTileSize - wallTileSize);
+    const right = Math.min(wallWidth, Math.ceil((viewOffsetX + viewWidth) / wallTileSize) * wallTileSize + wallTileSize);
+    const bottom = Math.min(wallHeight, Math.ceil((viewOffsetY + viewHeight) / wallTileSize) * wallTileSize + wallTileSize);
+    const tiles = [];
+    for (let y = top; y < bottom; y += wallTileSize) {
+        for (let x = left; x < right; x += wallTileSize) {
+            tiles.push({ x, y, key: keyFor(x, y) });
+        }
+    }
+
+    return tiles;
+}
+
+async function fetchRecentPixels(tiles, since) {
+    const minX = Math.min(...tiles.map((tile) => tile.x));
+    const minY = Math.min(...tiles.map((tile) => tile.y));
+    const maxX = Math.max(...tiles.map((tile) => tile.x)) + wallTileSize;
+    const maxY = Math.max(...tiles.map((tile) => tile.y)) + wallTileSize;
+    const params = new URLSearchParams({ x: minX, y: minY, width: maxX - minX, height: maxY - minY });
+    if (since) {
+        params.set('since', since);
+    }
+    const response = await apiFetch(`/api/pixels/recent?${params}`, { headers: { Accept: 'application/json' } });
+    if (!response.ok) {
+        return null;
+    }
+    const payload = await response.json();
+    (payload.pixels || []).forEach((pixel) => {
+        pixels.set(keyFor(pixel.x, pixel.y), pixel.color);
+    });
+
+    return payload;
+}
+
+// Neu sichtbare Kacheln: einmal alle unverarbeiteten Pixel holen. Bekannte Kacheln: nur Änderungen seit dem letzten Abruf.
+async function loadRecentPixels({ full = false } = {}) {
+    if (recentSyncing && full) {
+        await new Promise((resolve) => window.setTimeout(resolve, 200));
+        return loadRecentPixels({ full });
+    }
+    if (recentSyncing || !wallDimensionsLoaded) {
+        return;
+    }
+    recentSyncing = true;
+    try {
+        if (full) {
+            recentCursor = null;
+            recentActiveTiles.clear();
+        }
+        const tiles = recentTileArea();
+        const visible = new Set(tiles.map((tile) => tile.key));
+        recentActiveTiles.forEach((key) => {
+            if (!visible.has(key)) {
+                recentActiveTiles.delete(key);
+            }
+        });
+        const known = tiles.filter((tile) => recentActiveTiles.has(tile.key));
+        const entering = tiles.filter((tile) => !recentActiveTiles.has(tile.key));
+        let changed = false;
+
+        if (known.length > 0 && recentCursor) {
+            const payload = await fetchRecentPixels(known, recentCursor);
+            if (payload) {
+                changed = changed || (payload.pixels || []).length > 0;
+                recentCursor = new Date(Date.parse(payload.server_time) - 3000).toISOString();
+            }
+        }
+        if (entering.length > 0) {
+            const payload = await fetchRecentPixels(entering, null);
+            if (payload) {
+                changed = changed || (payload.pixels || []).length > 0;
+                entering.forEach((tile) => recentActiveTiles.add(tile.key));
+                if (!recentCursor) {
+                    recentCursor = new Date(Date.parse(payload.server_time) - 3000).toISOString();
+                }
+            }
+        }
+        if (changed) {
+            renderCanvas();
+        }
+    } catch (error) {
+        console.error('Failed to load recent pixels:', error);
+    } finally {
+        recentSyncing = false;
+    }
+}
+
+window.setInterval(() => {
+    if (!document.hidden && initialViewportTilesLoaded) {
+        loadRecentPixels();
+    }
+}, 5000);
+
 function loadInitialViewportTiles() {
     if (initialViewportTilesLoaded || initialViewportTilesLoading
         || !wallDimensionsLoaded) {
@@ -624,6 +749,7 @@ function loadInitialViewportTiles() {
     loadWallTiles().then(() => {
         initialViewportTilesLoaded = true;
         reservationLoadingOverlay?.classList.add('hidden');
+        loadRecentPixels();
     }).catch((error) => {
         console.error('Failed to load initial wall viewport:', error);
         showInitialViewportLoadFailure();
@@ -651,9 +777,14 @@ async function refreshWallDimensions() {
         }
 
         const dimensions = await response.json();
+        if (knownTilesVersion !== null && dimensions.tiles_version > knownTilesVersion) {
+            setNewTilesAvailable(true);
+        }
         if (dimensions.width === wallWidth && dimensions.height === wallHeight) {
             return;
         }
+        // Neue Leinwandgröße: Hinweis am Reload-Button, die Kacheln werden erst beim Klick erneuert.
+        setNewTilesAvailable(true);
 
         const previousWidth = wallWidth;
         const previousHeight = wallHeight;
@@ -975,6 +1106,9 @@ async function paintInstant(x, y) {
 }
 
 function handlePointerDown(event) {
+    if (reportMode) {
+        return;
+    }
     const cell = getCellFromEvent(event);
     if (!cell) {
         return;
@@ -990,7 +1124,7 @@ function handlePointerDown(event) {
 }
 
 function handleCanvasHover(event) {
-    if (selectionDrag) {
+    if (selectionDrag || reportMode) {
         return;
     }
 
@@ -1005,7 +1139,7 @@ function handleCanvasHover(event) {
 }
 
 function handlePointerMove(event) {
-    if (!selectionDrag || !dragOrigin) {
+    if (reportMode || !selectionDrag || !dragOrigin) {
         return;
     }
 
@@ -1019,7 +1153,7 @@ function handlePointerMove(event) {
 }
 
 function handlePointerUp() {
-    if (!selectionDrag) {
+    if (reportMode || !selectionDrag) {
         return;
     }
 
@@ -1048,7 +1182,7 @@ function handlePointerUp() {
 }
 
 function handlePointerCancel() {
-    if (!selectionDrag) {
+    if (reportMode || !selectionDrag) {
         return;
     }
 
@@ -1255,10 +1389,22 @@ function initCookieAndRules() {
         rulesModal.classList.add('visible');
     });
 
-    closeRulesBtn?.addEventListener('click', () => {
+    closeRulesBtn?.addEventListener('click', closeRules);
+    rulesModal.addEventListener('click', (event) => {
+        if (event.target === rulesModal) {
+            closeRules();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && rulesModal.classList.contains('visible')) {
+            closeRules();
+        }
+    });
+
+    function closeRules() {
         localStorage.setItem(rulesKey, '1');
         rulesModal.classList.remove('visible');
-    });
+    }
 }
 
 function setActiveColor(color) {
@@ -1354,6 +1500,139 @@ feedbackForm?.addEventListener('submit', async (event) => {
     }
 });
 
+const reportAreaBtn = document.getElementById('reportAreaBtn');
+const reportBar = document.getElementById('reportBar');
+const reportModal = document.getElementById('reportModal');
+const reportForm = document.getElementById('reportForm');
+const reportStatus = document.getElementById('reportStatus');
+const reportSubmitBtn = document.getElementById('reportSubmitBtn');
+const reportMaxSize = 300;
+
+function setReportMode(active) {
+    reportMode = active;
+    reportOrigin = null;
+    reportRect = null;
+    reportBar?.classList.toggle('hidden', !active);
+    canvas.classList.toggle('report-mode', active);
+    if (active) {
+        selection = null;
+        wallMenuPanel?.classList.add('hidden');
+        wallMenuToggle?.setAttribute('aria-expanded', 'false');
+    }
+    renderCanvas();
+}
+
+function updateReportRect(cell) {
+    const dx = clamp(cell.x - reportOrigin.x, -(reportMaxSize - 1), reportMaxSize - 1);
+    const dy = clamp(cell.y - reportOrigin.y, -(reportMaxSize - 1), reportMaxSize - 1);
+    reportRect = {
+        x: Math.min(reportOrigin.x, reportOrigin.x + dx),
+        y: Math.min(reportOrigin.y, reportOrigin.y + dy),
+        width: Math.abs(dx) + 1,
+        height: Math.abs(dy) + 1,
+    };
+}
+
+function closeReportModal() {
+    reportModal?.classList.add('hidden');
+    reportForm?.reset();
+    if (reportStatus) {
+        reportStatus.textContent = '';
+    }
+}
+
+reportAreaBtn?.addEventListener('click', () => {
+    setReportMode(true);
+    setStatus(t('Ziehe ein Rechteck über den Bereich, den du melden möchtest.'));
+});
+document.getElementById('reportCancelBar')?.addEventListener('click', () => setReportMode(false));
+document.getElementById('reportCancelBtn')?.addEventListener('click', () => {
+    closeReportModal();
+    setReportMode(false);
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && reportMode) {
+        closeReportModal();
+        setReportMode(false);
+    }
+});
+
+canvas.addEventListener('pointerdown', (event) => {
+    if (!reportMode) {
+        return;
+    }
+    const cell = getCellFromEvent(event);
+    if (!cell) {
+        return;
+    }
+    canvas.setPointerCapture?.(event.pointerId);
+    reportOrigin = cell;
+    updateReportRect(cell);
+    renderCanvas();
+});
+
+canvas.addEventListener('pointermove', (event) => {
+    if (!reportMode || !reportOrigin) {
+        return;
+    }
+    const cell = getCellFromEvent(event);
+    if (cell) {
+        updateReportRect(cell);
+        renderCanvas();
+    }
+});
+
+canvas.addEventListener('pointerup', () => {
+    if (!reportMode || !reportOrigin || !reportRect) {
+        return;
+    }
+    reportOrigin = null;
+    document.getElementById('reportArea').textContent = `${t('Bereich')} ${reportRect.x} : ${reportRect.y} · ${reportRect.width} × ${reportRect.height}`;
+    reportModal.classList.remove('hidden');
+    document.getElementById('reportReason')?.focus();
+});
+
+reportForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!reportRect) {
+        return;
+    }
+    reportSubmitBtn.disabled = true;
+    reportStatus.textContent = t('Meldung wird gesendet ...');
+
+    try {
+        const formData = new FormData(reportForm);
+        const response = await apiFetch('/report', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': formData.get('_token'),
+            },
+            body: JSON.stringify({
+                ...reportRect,
+                reason: formData.get('reason'),
+                message: formData.get('message'),
+                email: formData.get('email') || null,
+            }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const message = payload.errors
+                ? Object.values(payload.errors).flat()[0]
+                : payload.message || (response.status === 429 ? t('Zu viele Meldungen. Bitte versuche es später erneut.') : t('Meldung konnte nicht gesendet werden.'));
+            throw new Error(message);
+        }
+
+        closeReportModal();
+        setReportMode(false);
+        setStatus(t('Danke! Deine Meldung wurde gespeichert und wird geprüft.'));
+    } catch (error) {
+        reportStatus.textContent = error.message || t('Meldung konnte nicht gesendet werden.');
+    } finally {
+        reportSubmitBtn.disabled = false;
+    }
+});
 canvas.addEventListener('pointerdown', handlePointerDown);
 canvas.addEventListener('pointermove', handleCanvasHover);
 
@@ -1447,6 +1726,56 @@ zoomOutBtn?.addEventListener('click', () => {
         changeZoom(currentZoom - 1);
     }
 });
+function setNewTilesAvailable(available) {
+    newTilesAvailable = available;
+    if (!wallReloadBtn) {
+        return;
+    }
+    wallReloadBtn.classList.toggle('has-update', available);
+    wallReloadBtn.querySelector('.wall-reload-badge')?.classList.toggle('hidden', !available);
+    const label = available ? wallReloadBtn.dataset.labelNew : wallReloadBtn.dataset.label;
+    wallReloadBtn.setAttribute('aria-label', label);
+    const tip = wallReloadBtn.querySelector('.wall-reload-tip');
+    if (tip) {
+        tip.textContent = label;
+    }
+}
+
+async function reloadWallBackground() {
+    wallReloadBtn.disabled = true;
+    try {
+        const response = await apiFetch('/api/wall', { headers: { Accept: 'application/json' } });
+        if (response.ok) {
+            const dimensions = await response.json();
+            knownTilesVersion = dimensions.tiles_version ?? knownTilesVersion;
+            if (dimensions.width !== wallWidth || dimensions.height !== wallHeight) {
+                wallWidth = dimensions.width;
+                wallHeight = dimensions.height;
+                updateCanvasDisplaySize();
+            }
+        }
+        await Promise.all([...wallBackgroundTiles.keys()].map((key) => {
+            const [x, y] = key.split(':').map(Number);
+            return loadWallTile(x, y).catch(() => {});
+        }));
+        await loadWallTiles();
+        // Die neuen Kacheln enthalten alte Overlay-Pixel bereits; nur noch nicht verarbeitete Pixel bleiben darüber.
+        pixels.clear();
+        await loadRecentPixels({ full: true });
+        if (selection) {
+            await loadPixelsForSelection(selection);
+        }
+        setNewTilesAvailable(false);
+        renderCanvas();
+    } catch (error) {
+        console.error('Failed to reload wall background:', error);
+    } finally {
+        wallReloadBtn.disabled = false;
+    }
+}
+
+wallReloadBtn?.addEventListener('click', reloadWallBackground);
+
 zoomResetBtn?.addEventListener('click', () => changeZoom(0));
 zoomInBtn?.addEventListener('click', () => {
     const currentZoom = zoomLevels.indexOf(displayScale);

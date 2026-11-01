@@ -73,5 +73,11 @@
     "Nicht möglich: Limit von :max Extra-Pixeln würde überschritten.": "Not available: this would exceed the limit of :max extra pixels.",
     "Zurzeit ist kein Zahlungsanbieter eingerichtet.": "No payment provider is currently configured.",
     "Shop konnte nicht geladen werden.": "The shop could not be loaded.",
-    "Die Zahlung konnte nicht gestartet werden.": "Payment could not be started."
+    "Die Zahlung konnte nicht gestartet werden.": "Payment could not be started.",
+    "Ziehe ein Rechteck über den Bereich, den du melden möchtest.": "Drag a rectangle over the area you want to report.",
+    "Bereich": "Area",
+    "Meldung wird gesendet ...": "Sending report ...",
+    "Zu viele Meldungen. Bitte versuche es später erneut.": "Too many reports. Please try again later.",
+    "Meldung konnte nicht gesendet werden.": "The report could not be sent.",
+    "Danke! Deine Meldung wurde gespeichert und wird geprüft.": "Thank you! Your report was saved and will be reviewed."
 }
