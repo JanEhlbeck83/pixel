@@ -31,8 +31,11 @@ class StripeProvider implements PaymentProvider
 
     public function createCheckout(Order $order): string
     {
-        $response = $this->http()->asForm()->post('/v1/checkout/sessions', [
+        // "card" deckt Visa/Mastercard sowie Apple Pay und Google Pay ab (Wallets laufen bei Stripe als Karte).
+        $response = $this->http()->withHeaders(['Idempotency-Key' => 'checkout-'.$order->uuid])->asForm()->post('/v1/checkout/sessions', [
             'mode' => 'payment',
+            'payment_method_types' => ['card'],
+            'expires_at' => now()->addHour()->timestamp,
             'locale' => app()->getLocale(),
             'client_reference_id' => $order->uuid,
             'metadata' => ['order_uuid' => $order->uuid],
@@ -67,23 +70,20 @@ class StripeProvider implements PaymentProvider
         if (! $response->successful()) {
             return Order::PENDING;
         }
-	$session = $response->json() ?? [];
-        $expectedLiveMode = str_starts_with(
-    (string) config('payments.providers.stripe.secret_key'),
-    'sk_live_'
-);
+        $session = $response->json() ?? [];
+        $expectedLiveMode = str_starts_with((string) config('payments.providers.stripe.secret_key'), 'sk_live_');
 
-if (($session['client_reference_id'] ?? null) !== $order->uuid
-    || (int) ($session['amount_total'] ?? -1) !== $order->amount_cents
-    || strtoupper((string) ($session['currency'] ?? '')) !== $order->currency
-    || ($session['livemode'] ?? null) !== $expectedLiveMode
-    || ($session['mode'] ?? null) !== 'payment'
-    || ($session['metadata']['order_uuid'] ?? null) !== $order->uuid)
-{
-    return Order::FAILED;
-}
+        if (($session['client_reference_id'] ?? null) !== $order->uuid
+            || ($session['id'] ?? $order->provider_reference) !== $order->provider_reference
+            || (int) ($session['amount_total'] ?? -1) !== $order->amount_cents
+            || strtoupper((string) ($session['currency'] ?? '')) !== $order->currency
+            || ($session['livemode'] ?? null) !== $expectedLiveMode
+            || ($session['mode'] ?? null) !== 'payment'
+            || ($session['metadata']['order_uuid'] ?? null) !== $order->uuid) {
+            return Order::FAILED;
+        }
 
-        if (($session['payment_status'] ?? null) === 'paid') {
+        if (($session['payment_status'] ?? null) === 'paid' && ($session['status'] ?? 'complete') === 'complete') {
             return Order::PAID;
         }
 

@@ -17,7 +17,7 @@ class PixelWallPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/wall');
+        $response = $this->actingAs($user)->get('/');
 
         $response->assertOk();
         $response->assertSee('PixRiot');
@@ -48,7 +48,7 @@ class PixelWallPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/wall');
+        $response = $this->actingAs($user)->get('/');
 
         $response->assertOk();
         $response->assertSee('Official_Presidential_Portrait');
@@ -59,7 +59,7 @@ class PixelWallPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/wall');
+        $response = $this->actingAs($user)->get('/');
 
         $response->assertOk();
         $response->assertSee('id="colorBar"', false);
@@ -305,6 +305,26 @@ class PixelWallPageTest extends TestCase
             ->assertJsonPath('locked_pixels.0.x', 30)
             ->assertJsonPath('locked_pixels.0.y', 40);
         $this->assertDatabaseHas('pixels', ['x' => 30, 'y' => 40, 'color' => '#111111']);
+    }
+
+    public function test_owner_can_edit_their_fresh_pixel_but_others_cannot(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $area = ['x' => 30, 'y' => 40, 'width' => 1, 'height' => 1];
+
+        $this->actingAs($owner)->postJson('/api/pixels/lock', $area)->assertOk();
+        $this->actingAs($owner)->postJson('/api/pixels', ['x' => 30, 'y' => 40, 'color' => '#111111'])->assertOk();
+
+        $this->actingAs($owner)->getJson('/api/pixels/locks')->assertJsonCount(0, 'locked_pixels');
+        $this->actingAs($owner)->getJson('/api/pixels?x=30&y=40&width=1&height=1')->assertJsonPath('pixels.0.locked_until', null);
+        $this->actingAs($other)->getJson('/api/pixels/locks')->assertJsonCount(1, 'locked_pixels');
+
+        $this->actingAs($owner)->postJson('/api/pixels/lock', $area)->assertOk();
+        $this->actingAs($owner)->postJson('/api/pixels', ['x' => 30, 'y' => 40, 'color' => '#222222'])->assertOk();
+        $this->assertDatabaseHas('pixels', ['x' => 30, 'y' => 40, 'color' => '#222222']);
+
+        $this->actingAs($other)->postJson('/api/pixels/lock', $area)->assertStatus(423);
     }
 
     public function test_lock_api_reports_pixels_that_are_still_locked(): void

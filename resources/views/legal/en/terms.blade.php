@@ -14,6 +14,7 @@
         <li>Every pixel can be overwritten by anyone, including yours. There is no entitlement to any pixel or image being preserved.</li>
         <li>Newly placed pixels are briefly locked (10 minutes).</li>
         <li>Guests receive 50 pixels once. With an account, one pixel regenerates every 30 seconds, up to a maximum stock of 50.</li>
+        <li>Purchased extra pixels are stored separately from the free stock and are only used once the free stock is empty. They do not expire. An account can hold at most 10,000 extra pixels; packs that would exceed this cannot be purchased.</li>
         <li>Prohibited are hateful imagery, unconstitutional or banned symbols, insults, pornography, depictions of violence and content that infringes third-party rights.</li>
         <li>Automated access, bots and scripts used to circumvent the pixel limits are not permitted.</li>
     </ul>

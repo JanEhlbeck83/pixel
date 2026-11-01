@@ -19,7 +19,7 @@
                 <div class="top-actions">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ route('wall') }}">{{ __('Wand betreten') }}</a>
+                            <a href="{{ route('home') }}">{{ __('Wand betreten') }}</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit">{{ __('Abmelden') }}</button>
@@ -46,7 +46,7 @@
 
                             <div class="hero-actions">
                                 @auth
-                                    <a href="{{ route('wall') }}" class="primary-button">{{ __('Zur Wand') }}</a>
+                                    <a href="{{ route('home') }}" class="primary-button">{{ __('Zur Wand') }}</a>
                                 @else
                                     <a href="{{ route('register') }}" class="primary-button">{{ __('Jetzt mitmachen') }}</a>
                                 @endif

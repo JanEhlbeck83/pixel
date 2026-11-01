@@ -69,5 +69,6 @@
         La versión alemana de este aviso legal es la jurídicamente vinculante. Las versiones en inglés y en
         español son traducciones que se ofrecen únicamente a título informativo.
     </p>
+    @include('legal.partials.more-links')
 @endsection
 

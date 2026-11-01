@@ -15,6 +15,7 @@
         <li>Jeder Pixel kann von jedem überschrieben werden, auch deiner. Es gibt keinen Anspruch auf Bestand eines Pixels oder Bildes.</li>
         <li>Neu gesetzte Pixel sind kurz gesperrt (10 Minuten).</li>
         <li>Gäste erhalten einmalig 50 Pixel. Mit Konto wächst alle 30 Sekunden ein Pixel nach, maximal 50 im Vorrat.</li>
+        <li>Gekaufte Extra-Pixel werden getrennt vom kostenlosen Vorrat gespeichert und erst verbraucht, wenn der kostenlose Vorrat leer ist. Sie verfallen nicht. Pro Konto können höchstens 10.000 Extra-Pixel gehalten werden; Pakete, die darüber hinausführen würden, können nicht gekauft werden.</li>
         <li>Verboten sind Hassbilder, verfassungsfeindliche oder verbotene Symbole, Beleidigungen, Pornografie, Gewaltdarstellungen und Inhalte, die Rechte Dritter verletzen.</li>
         <li>Automatisierte Zugriffe, Bots und Skripte zum Umgehen der Pixel-Limits sind nicht erlaubt.</li>
     </ul>

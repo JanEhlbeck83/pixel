@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('geoip:update')->monthlyOn(3, '04:00');
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+        $middleware->validateCsrfTokens(except: ['webhooks/*', 'auth/facebook/deauthorize', 'auth/facebook/data-deletion']);
         $middleware->web(append: [\App\Http\Middleware\SetLocale::class]);
 
         if ($proxies = env('TRUSTED_PROXIES')) {

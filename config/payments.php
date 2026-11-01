@@ -32,16 +32,21 @@ return [
             'amount' => 1,
             'price_cents' => (int)             env('PRICE_EXTEND_CENTS', 300),
         ],
+        // Der Schlüssel 'pixels_100' ist die ursprüngliche Paket-ID (bestehende Bestellungen), enthält jetzt 250 Pixel.
         'pixels_100' => [
             'type' => 'pixels',
-            'amount' => 100,
+            'amount' => 250,
             'price_cents' => (int) env('PRICE_PIXELS_100_CENTS', 500),
         ],
-        // Spar-Paket: 0,03 € statt 0,05 € pro Pixel
-        'pixels_500' => [
+        'pixels_600' => [
             'type' => 'pixels',
-            'amount' => 500,
-            'price_cents' => (int) env('PRICE_PIXELS_500_CENTS', 1500),
+            'amount' => 600,
+            'price_cents' => (int) env('PRICE_PIXELS_600_CENTS', 1000),
+        ],
+        'pixels_1000' => [
+            'type' => 'pixels',
+            'amount' => 1000,
+            'price_cents' => (int) env('PRICE_PIXELS_1000_CENTS', 1500),
         ],
     ],
 
@@ -52,6 +57,8 @@ return [
         // Konten: Vorrat (Maximum) und Nachwachsen. Mehr als das Maximum gibt es nur gekauft.
         'user_max_free_pixels' => (int) env('USER_MAX_FREE_PIXELS', 50),
         'user_regen_seconds' => (int) env('USER_REGEN_SECONDS', 30),
+        // Höchstbestand an gekauften Extra-Pixeln pro Konto.
+        'max_credits' => (int) env('USER_MAX_CREDITS', 10000),
     ],
 
     'providers' => [
@@ -66,21 +73,14 @@ return [
             'merchant_id' => env('PAYPAL_MERCHANT_ID'),
         ],
 
-        // Stripe Checkout (Karten, Apple Pay, Google Pay, SEPA-Lastschrift, Klarna ...
-        // je nachdem, was im Stripe-Dashboard unter "Zahlungsmethoden" aktiviert ist)
+        // Stripe Checkout: Visa/Mastercard (Kreditkarte), Apple Pay und Google Pay.
+        // Apple/Google Pay erscheinen automatisch, wenn sie im Stripe-Dashboard aktiviert sind
+        // (Apple Pay zusätzlich: Domain verifizieren) und der Kunde ein passendes Gerät nutzt.
         // Testschlüssel (sk_test_...): https://dashboard.stripe.com/test/apikeys
         'stripe' => [
-            'label' => 'Karte / Apple Pay / SEPA (Stripe)',
+            'label' => 'Karte / Apple Pay / Google Pay (Stripe)',
             'secret_key' => env('STRIPE_SECRET_KEY'),
             'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        ],
-
-        // Mollie (iDEAL, Kreditkarte, PayPal, SEPA, Klarna, Apple Pay ...)
-        // Ein Schlüssel "test_..." = Sandbox, "live_..." = echt.
-        // API-Key: https://my.mollie.com/dashboard/developers/api-keys
-        'mollie' => [
-            'label' => 'Mollie (Karte, Klarna, SEPA, …)',
-            'api_key' => env('MOLLIE_API_KEY'),
         ],
 
         // Lokale Simulation ohne Konto – nur wenn APP_ENV != production.

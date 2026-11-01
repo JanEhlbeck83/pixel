@@ -43,8 +43,10 @@ class WallController extends Controller
                 ->whereBetween('y', [(int) $y, (int) $y + (int) $height - 1]);
         }
 
-        $pixels = $query->get()->map(function ($pixel) {
-            $lockedUntil = $pixel->updated_by_user_id !== null
+        // Eigene, frisch gemalte Pixel bleiben für den Urheber editierbar.
+        $ownerId = $request->user()?->id;
+        $pixels = $query->get()->map(function ($pixel) use ($ownerId) {
+            $lockedUntil = $pixel->updated_by_user_id !== null && $pixel->updated_by_user_id !== $ownerId
                 ? $pixel->updated_at?->copy()->addMinutes(self::PIXEL_LOCK_MINUTES)
                 : null;
 
@@ -91,6 +93,7 @@ class WallController extends Controller
     {
         $editedLocks = Pixel::query()
             ->whereNotNull('updated_by_user_id')
+            ->when($request->user(), fn ($query, $user) => $query->where('updated_by_user_id', '!=', $user->id))
             ->where('updated_at', '>', now()->subMinutes(self::PIXEL_LOCK_MINUTES))
             ->get(['x', 'y', 'updated_at'])
             ->map(function ($pixel) {
@@ -147,6 +150,7 @@ class WallController extends Controller
                 ->whereBetween('x', [$area['x'], $area['x'] + $area['width'] - 1])
                 ->whereBetween('y', [$area['y'], $area['y'] + $area['height'] - 1])
                 ->whereNotNull('updated_by_user_id')
+                ->where('updated_by_user_id', '!=', $request->user()->id)
                 ->where('updated_at', '>', $now->copy()->subMinutes(self::PIXEL_LOCK_MINUTES))
                 ->get(['x', 'y', 'updated_at'])
                 ->map(fn ($pixel) => [
@@ -290,6 +294,7 @@ class WallController extends Controller
                 $coordinates = collect($validatedPixels)->unique(fn ($pixel) => $pixel['x'].':'.$pixel['y']);
                 $lockedPixels = Pixel::query()
                     ->whereNotNull('updated_by_user_id')
+                    ->when($user, fn ($query) => $query->where('updated_by_user_id', '!=', $user->id))
                     ->where('updated_at', '>', now()->subMinutes(self::PIXEL_LOCK_MINUTES))
                     ->where(function ($query) use ($coordinates) {
                         foreach ($coordinates as $pixel) {

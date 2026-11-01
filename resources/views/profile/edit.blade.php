@@ -17,7 +17,7 @@
                     <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                 </div>
                 <div class="top-actions">
-                    <a href="{{ route('wall') }}">{{ __('Zur Wand') }}</a>
+                    <a href="{{ route('home') }}">{{ __('Zur Wand') }}</a>
                     <a href="{{ route('gallery') }}">{{ __('Galerie') }}</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

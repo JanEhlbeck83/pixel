@@ -17,13 +17,15 @@ Route::get('/language/{lang}', [LanguageController::class, 'switch'])->name('lan
 foreach ([false, true] as $prefixed) {
 Route::group($prefixed ? ['prefix' => '{locale}', 'where' => ['locale' => 'de|es'], 'as' => 'localized.', 'locale_page' => true] : ['locale_page' => true], function () {
     Route::get('/', [WallController::class, 'index'])->middleware(GeoLocaleRedirect::class)->name('home');
-    Route::get('/wall', [WallController::class, 'index'])->name('wall');
+    Route::get('/wall', fn () => redirect()->route('home', [], 301));
     Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
 
     Route::get('/imprint', [LegalController::class, 'imprint'])->name('legal.impressum');
+    Route::get('/faq', [LegalController::class, 'faq'])->name('faq');
     Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
     Route::get('/terms', [LegalController::class, 'terms'])->name('legal.terms');
     Route::get('/data-deletion', [LegalController::class, 'dataDeletion'])->name('legal.data-deletion');
+    Route::get('/data-deletion/status/{code}', [LegalController::class, 'dataDeletionStatus'])->name('legal.data-deletion.status');
 
     // Alte deutsche Adressen bleiben gueltig (dauerhafte Weiterleitung).
     Route::get('/impressum', fn () => redirect()->route('legal.impressum', [], 301));
@@ -32,7 +34,7 @@ Route::group($prefixed ? ['prefix' => '{locale}', 'where' => ['locale' => 'de|es
     Route::get('/datenloeschung', fn () => redirect()->route('legal.data-deletion', [], 301));
 
     Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
-        return redirect()->route('wall');
+        return redirect()->route('home');
     })->name('dashboard');
 
     Route::middleware('auth')->group(function () {
@@ -54,7 +56,6 @@ Route::get('/api/wall', [WallController::class, 'dimensions'])->name('api.wall.d
 Route::get('/api/pixels/status', [WallController::class, 'pixelStatus'])->name('api.pixels.status');
 Route::get('/api/shop', [ShopController::class, 'catalog'])->name('shop.catalog');
 Route::post('/webhooks/stripe', [ShopController::class, 'stripeWebhook'])->name('webhooks.stripe');
-Route::post('/webhooks/mollie', [ShopController::class, 'mollieWebhook'])->name('webhooks.mollie');
 Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:3,1')->name('feedback.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {

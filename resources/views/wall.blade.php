@@ -30,25 +30,32 @@
                     <nav class="top-actions wall-menu-links" aria-label="{{ __('Hauptnavigation') }}">
                         @if (Route::has('login'))
                             @auth
-                                <a href="{{ route('profile.edit') }}">{{ __('Profil') }}</a>
+                                <a href="{{ route('profile.edit') }}"><x-icon name="user" />{{ __('Profil') }}</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit">{{ __('Abmelden') }}</button>
+                                    <button type="submit"><x-icon name="logout" />{{ __('Abmelden') }}</button>
                                 </form>
                             @else
-                                <a href="{{ route('login') }}">{{ __('Anmelden') }}</a>
+                                <a href="{{ route('login') }}"><x-icon name="login" />{{ __('Anmelden') }}</a>
                                 @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="primary-button">{{ __('Registrieren') }}</a>
+                                    <a href="{{ route('register') }}"><x-icon name="signup" />{{ __('Registrieren') }}</a>
                                 @endif
                             @endauth
                         @endif
-                        <a href="{{ route('gallery') }}">{{ __('Galerie') }}</a>
-                        <button type="button" class="secondary-button" id="openRulesBtn">{{ __('Spielregeln') }}</button>
-                        <button type="button" class="secondary-button" id="shareViewBtn">{{ __('🔗 Ausschnitt teilen') }}</button>
-                        <a class="secondary-button" id="shareFacebookLink" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener noreferrer">{{ __('Auf Facebook teilen') }}</a>
-                        <button type="button" class="primary-button" id="openShopBtn">{{ __('Pixel kaufen') }}</button>
+                        <hr class="wall-menu-divider">
+                        <button type="button" id="openShopBtn"><x-icon name="shop" />{{ __('Pixel kaufen') }}</button>
+                        <button type="button" id="openExtensionShopBtn"><x-icon name="shop" />{{ __('Erweiterung kaufen') }}</button>
+                        <hr class="wall-menu-divider">
+                        <button type="button" id="shareViewBtn"><x-icon name="link" />{{ __('Ausschnitt teilen') }}</button>
+                        <a id="shareFacebookLink" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener noreferrer"><x-icon name="facebook" />{{ __('Auf Facebook teilen') }}</a>
+                        <hr class="wall-menu-divider">
+                        <a href="{{ route('gallery') }}"><x-icon name="gallery" />{{ __('Galerie') }}</a>
+                        <button type="button" id="openRulesBtn"><x-icon name="rules" />{{ __('Spielregeln') }}</button>
+                        <a href="{{ route('faq') }}"><x-icon name="faq" />{{ __('FAQ') }}</a>
+                        <hr class="wall-menu-divider">
+                        <x-language-switcher class="lang-switch--down" />
+                        <a href="{{ route('legal.impressum') }}">{{ __('Impressum') }}</a>
                     </nav>
-                    <x-language-switcher />
                     <details class="feedback-details">
                         <summary>{{ __('Feedback senden') }}</summary>
                         <form id="feedbackForm" class="feedback-form">
@@ -76,7 +83,6 @@
                         <div id="wallBackground" class="wall-background" aria-hidden="true"></div>
                         <canvas id="pixelCanvas" width="1024" height="1024" aria-label="{{ __('Pixel-Wand') }}"></canvas>
                     </div>
-                    <div id="pixelLockTooltip" class="pixel-lock-tooltip hidden" role="status" aria-live="polite"></div>
                     <div class="wall-extension-controls" aria-label="{{ __('Pixelwandnavigation') }}">
                         <button type="button" class="secondary-button wall-nav wall-nav-up" id="navigateUpBtn" aria-label="{{ __('300 Pixel nach oben') }}">↑</button>
                         <button type="button" class="secondary-button wall-nav wall-nav-right" id="navigateRightBtn" aria-label="{{ __('300 Pixel nach rechts') }}">→</button>
@@ -91,9 +97,9 @@
                             <span class="wall-extension-label"><strong>{{ __('Pixel kaufen') }}</strong><small>{{ __('Wand nach unten erweitern – für alle') }}</small></span>
                         </button>
                         <div class="wall-zoom-controls" role="group" aria-label="{{ __('Leinwandzoom') }}">
-                            <button type="button" class="secondary-button" id="zoomOutBtn" aria-label="{{ __('Verkleinern') }}" disabled>−</button>
+                            <button type="button" class="secondary-button" id="zoomOutBtn" aria-label="{{ __('Verkleinern') }}" disabled><span class="zoom-sign">−</span></button>
                             <button type="button" class="secondary-button" id="zoomResetBtn" aria-label="{{ __('Zoom auf 100 Prozent zurücksetzen') }}">100%</button>
-                            <button type="button" class="secondary-button" id="zoomInBtn" aria-label="{{ __('Vergrößern') }}">+</button>
+                            <button type="button" class="secondary-button" id="zoomInBtn" aria-label="{{ __('Vergrößern') }}"><span class="zoom-sign">+</span>
                         </div>
                     </div>
                 </div>
@@ -125,7 +131,7 @@
                     <a href="{{ route('login') }}" class="secondary-button">{{ __('Einloggen') }}</a>
                 </div>
                 <div class="limit-actions hidden" id="limitUserActions">
-                    <button type="button" class="primary-button" id="limitBuyBtn">{{ __('100 Extra-Pixel kaufen') }}</button>
+                    <button type="button" class="primary-button" id="limitBuyBtn">{{ __('250 Extra-Pixel kaufen') }}</button>
                 </div>
                 <button type="button" class="secondary-button limit-close" id="limitCloseBtn">{{ __('Okay, ich warte') }}</button>
             </div>
@@ -138,7 +144,14 @@
                     <button type="button" id="closeShopBtn" class="icon-button" aria-label="{{ __('Shop schließen') }}">×</button>
                 </div>
                 <p class="shop-credits" id="shopCredits"></p>
+                <p class="shop-note shop-explain">{{ __('So werden Pixel verbraucht: Zuerst dein kostenloser Vorrat (wächst alle 30 Sekunden um 1 nach, maximal 50), danach deine gekauften Extra-Pixel. Extra-Pixel verfallen nicht und gibt es maximal :max pro Konto.', ['max' => number_format((int) config('payments.limits.max_credits'), 0, ',', '.')]) }} <a href="{{ route('faq') }}" target="_blank" rel="noopener">{{ __('Mehr in den FAQ') }}</a></p>
+                <hr class="shop-divider">
+                <h4 class="shop-section-title">{{ __('Pixel kaufen') }}</h4>
                 <div class="shop-products" id="shopProducts"></div>
+                <hr class="shop-divider">
+                <h4 class="shop-section-title" id="shopExtensionTitle">{{ __('Leinwanderweiterung') }}</h4>
+                <div class="shop-products" id="shopExtensions"></div>
+                <hr class="shop-divider">
                 <div class="shop-checkout hidden" id="shopCheckout">
                     <h4>{{ __('Bezahlen mit') }}</h4>
                     <div class="shop-providers" id="shopProviders"></div>
@@ -172,9 +185,14 @@
             </div>
             <div class="pixel-counter" id="pixelCounter" aria-live="polite">
                 <strong id="pixelCounterValue">0/50</strong>
+                <small id="pixelCounterExtra" class="hidden" title="{{ __('Gekaufte Extra-Pixel') }}"></small>
             </div>
         </div>
-        <div id="cursorCoords" class="cursor-coords hidden" aria-hidden="true"></div>
+        <div id="cursorCoords" class="cursor-coords hidden" aria-hidden="true">
+            <span id="cursorCoordsText"></span>
+            <hr id="cursorCoordsDivider" class="hidden">
+            <div id="pixelLockTooltip" class="pixel-lock-tooltip hidden" role="status" aria-live="polite"></div>
+        </div>
         <span id="isAuthenticated" data-auth="{{ Auth::check() ? '1' : '0' }}" style="display:none;"></span>
 
         <footer class="site-footer">
@@ -203,14 +221,15 @@
 
         <div id="rulesModal" class="rules-modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
             <div class="rules-card">
-                <h3 id="rulesTitle">{{ __('Spielregeln: Pixelkrieg') }}</h3>
+                <h3 id="rulesTitle">{{ __('Spielregeln:') }}</h3>
                 <ul>
                     <li><strong>{{ __('Die Wand gehört dem, der sie sich nimmt.') }}</strong> {{ __('Jeder Pixel kann von jedem überschrieben werden – auch deiner.') }}</li>
                     <li><strong>{{ __('Bau mit anderen ein Bild') }}</strong> – oder <strong>{{ __('zerstöre das Werk deiner Gegner') }}</strong> {{ __('und führe deinen eigenen Pixelkrieg. Gemeinsam oder gegeneinander: du entscheidest.') }}</li>
                     <li>{{ __('Wähle einen Pixel, färbe ihn in einer beliebigen Farbe (Farbwähler oder Hex-Code) und setze ihn.') }}</li>
                     <li>{{ __('Als Gast hast du einmalig 50 Pixel. Danach brauchst du ein kostenloses Konto (E-Mail, Google oder Facebook).') }}</li>
                     <li>{{ __('Mit Konto wächst alle 30 Sekunden ein Pixel nach – maximal 50 im Vorrat. Wer wartet, schlägt später härter zu.') }}</li>
-                    <li>{{ __('Frisch gesetzte Pixel sind kurz gesperrt (10 Minuten) – verteidige, was du gebaut hast, und hol dir zurück, was dir genommen wurde.') }}</li>
+                    <li>{{ __('Gekaufte Extra-Pixel werden separat gespeichert und erst genutzt, wenn dein kostenloser Vorrat leer ist – so wächst der Gratis-Vorrat sofort weiter nach. Du kannst höchstens :max Extra-Pixel besitzen; Pakete, die darüber hinausgehen, sind im Shop gesperrt.', ['max' => number_format((int) config('payments.limits.max_credits'), 0, ',', '.')]) }}</li>
+                    <li>{{ __('Frisch gesetzte Pixel sind 10 Minuten für andere gesperrt – du selbst kannst deinen Pixel in dieser Zeit noch ändern. Neue Pixel und Wandvergrößerungen sind für alle sofort nutzbar; im Hintergrundbild erscheinen sie aber erst nach bis zu 10 Minuten.') }}</li>
                     <li>{{ __('Keine Hassbilder, keine verbotenen Symbole, keine Beleidigungen von Personen. Verstöße werden gelöscht.') }}</li>
                     <li>{{ __('Die Wall lässt sich bis 800 % zoomen – für den Feinschliff und für den Angriff auf einzelne Pixel.') }}</li>
                 </ul>

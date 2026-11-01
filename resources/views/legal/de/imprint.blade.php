@@ -69,4 +69,6 @@
                 Rechtsverbindlich ist die deutsche Fassung dieses Impressums. Die englische und die spanische Fassung
                 sind Übersetzungen und dienen nur der Information.
             </p>
+
+    @include('legal.partials.more-links')
 @endsection

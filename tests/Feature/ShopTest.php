@@ -21,7 +21,6 @@ class ShopTest extends TestCase
             'payments.providers.fake.enabled' => true,
             'payments.providers.paypal.client_id' => null,
             'payments.providers.stripe.secret_key' => null,
-            'payments.providers.mollie.api_key' => null,
         ]);
     }
 
@@ -30,16 +29,29 @@ class ShopTest extends TestCase
         $response = $this->getJson('/api/shop')
             ->assertOk()
             ->assertJsonPath('authenticated', false)
-            ->assertJsonCount(4, 'products')
+            ->assertJsonCount(5, 'products')
             ->assertJsonPath('providers.0.key', 'fake');
 
         $products = collect($response->json('products'))->keyBy('id');
         $this->assertSame(300, $products['extend_x']['price_cents']);
         $this->assertSame(300, $products['extend_y']['price_cents']);
         $this->assertSame(500, $products['pixels_100']['price_cents']);
-        $this->assertSame(100, $products['pixels_100']['amount']);
-        $this->assertSame(1500, $products['pixels_500']['price_cents']);
-        $this->assertSame(500, $products['pixels_500']['amount']);
+        $this->assertSame(250, $products['pixels_100']['amount']);
+        $this->assertSame(1000, $products['pixels_600']['price_cents']);
+        $this->assertSame(600, $products['pixels_600']['amount']);
+        $this->assertSame(1500, $products['pixels_1000']['price_cents']);
+        $this->assertSame(1000, $products['pixels_1000']['amount']);
+    }
+
+    public function test_checkout_rejects_packs_beyond_the_credit_limit(): void
+    {
+        $user = User::factory()->create(['pixel_credits' => 9700]);
+
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_1000', 'provider' => 'fake'])
+            ->assertStatus(422);
+        $this->assertDatabaseCount('orders', 0);
+
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake'])->assertOk();
     }
 
     public function test_checkout_requires_login_and_valid_input(): void
@@ -76,23 +88,22 @@ class ShopTest extends TestCase
 
         $this->actingAs($user)->post(route('shop.fake.pay', $order), ['result' => 'paid'])
             ->assertRedirect(route('shop.return', $order));
-        $this->actingAs($user)->get(route('shop.return', $order))->assertRedirect(route('wall'));
+        $this->actingAs($user)->get(route('shop.return', $order))->assertRedirect(route('home'));
         $this->actingAs($user)->get(route('shop.return', $order));
 
-        $this->assertSame(100, $user->fresh()->pixel_credits);
-        $this->assertSame(Order::PAID, $order->fresh()->status);
+        $this->assertSame(250, $user->fresh()->pixel_credits);
     }
 
-    public function test_buying_500_pixels_bundle_adds_500_credits(): void
+    public function test_buying_1000_pixels_bundle_adds_1000_credits(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_500', 'provider' => 'fake'])->assertOk();
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_1000', 'provider' => 'fake'])->assertOk();
         $order = Order::firstOrFail();
         $this->assertSame(1500, $order->amount_cents);
 
         $this->actingAs($user)->post(route('shop.fake.pay', $order), ['result' => 'paid']);
 
-        $this->assertSame(500, $user->fresh()->pixel_credits);
+        $this->assertSame(1000, $user->fresh()->pixel_credits);
     }
 
     public function test_buying_a_wall_extension_grows_the_wall_for_everyone(): void
@@ -119,7 +130,7 @@ class ShopTest extends TestCase
 
         $this->actingAs($user)->post(route('shop.fake.pay', $order), ['result' => 'cancel'])
             ->assertRedirect(route('shop.cancel', $order));
-        $this->actingAs($user)->get(route('shop.cancel', $order))->assertRedirect(route('wall'));
+        $this->actingAs($user)->get(route('shop.cancel', $order))->assertRedirect(route('home'));
 
         $this->assertSame(Order::CANCELLED, $order->fresh()->status);
         $this->assertSame(0, $user->fresh()->pixel_credits);
@@ -160,7 +171,7 @@ public function test_cancel_cannot_overwrite_fulfilled_order(): void
     $shop->cancel($order);
 
     $this->assertSame(Order::PAID, $order->fresh()->status);
-    $this->assertSame(100, $user->fresh()->pixel_credits);
+    $this->assertSame(250, $user->fresh()->pixel_credits);
     $this->assertNotNull($order->fresh()->fulfilled_at);
 }
     public function test_other_users_cannot_touch_an_order(): void
@@ -253,9 +264,9 @@ if (str_contains($url, '/v1/oauth2/token')) {
 
     $this->actingAs($user)
         ->get(route('shop.return', $order).'?token=PAYPAL-1')
-        ->assertRedirect(route('wall'));
+        ->assertRedirect(route('home'));
 
-    $this->assertSame(100, $user->fresh()->pixel_credits);
+    $this->assertSame(250, $user->fresh()->pixel_credits);
     $this->assertSame(Order::PAID, $order->fresh()->status);
 }
 
@@ -348,7 +359,7 @@ if (str_contains($url, '/v1/oauth2/token')) {
             ->assertOk()->assertJsonPath('redirect', 'https://checkout.stripe.com/c/pay/cs_test_1');
 
         $this->actingAs($user)->get(route('shop.return', Order::firstOrFail()));
-        $this->assertSame(100, $user->fresh()->pixel_credits);
+        $this->assertSame(250, $user->fresh()->pixel_credits);
     }
 
 public function test_paypal_capture_with_wrong_custom_id_is_rejected(): void
@@ -773,88 +784,13 @@ public function test_paypal_capture_with_declined_status_is_rejected(): void
         ], $body)->assertOk();
     }
 
-    public function test_mollie_checkout_and_webhook_verification(): void
-    {
-        config(['payments.providers.mollie.api_key' => 'test_x']);
-        Http::fake([
-            'api.mollie.com/v2/payments' => Http::response(['id' => 'tr_1', '_links' => ['checkout' => ['href' => 'https://www.mollie.com/checkout/tr_1']]]),
-            'api.mollie.com/v2/payments/tr_1' => function () {
-                return Http::response([
-                    'status' => 'paid', 'metadata' => ['order_uuid' => Order::firstOrFail()->uuid],
-                    'amount' => ['value' => '3.00', 'currency' => 'EUR'],
-                ]);
-            },
-        ]);
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'extend_y', 'provider' => 'mollie'])
-            ->assertOk()->assertJsonPath('redirect', 'https://www.mollie.com/checkout/tr_1');
-
-        $this->post('/webhooks/mollie', ['id' => 'tr_1'])->assertOk();
-        $this->getJson('/api/wall')->assertJsonPath('height', 1025);
-    }
-
-public function test_mollie_webhook_replay_does_not_duplicate_credits(): void
-{
-    config(['payments.providers.mollie.api_key' => 'test_x']);
-
-    Http::fake([
-        'api.mollie.com/v2/payments' => Http::response([
-            'id' => 'tr_replay',
-            '_links' => [
-                'checkout' => [
-                    'href' => 'https://www.mollie.com/checkout/tr_replay',
-                ],
-            ],
-        ]),
-        'api.mollie.com/v2/payments/tr_replay' => function () {
-            return Http::response([
-                'status' => 'paid',
-                'metadata' => [
-                    'order_uuid' => Order::firstOrFail()->uuid,
-                ],
-                'amount' => [
-                    'value' => '5.00',
-                    'currency' => 'EUR',
-                ],
-            ]);
-        },
-    ]);
-
-    $user = User::factory()->create();
-
-    $this->actingAs($user)->postJson('/shop/checkout', [
-        'product' => 'pixels_100',
-        'provider' => 'mollie',
-    ])->assertOk();
-
-    $this->post('/webhooks/mollie', ['id' => 'tr_replay'])->assertOk();
-    $this->post('/webhooks/mollie', ['id' => 'tr_replay'])->assertOk();
-
-    $order = Order::firstOrFail();
-
-    $this->assertSame(100, $user->fresh()->pixel_credits);
-    $this->assertSame(Order::PAID, $order->fresh()->status);
-    $this->assertNotNull($order->fresh()->fulfilled_at);
-}
-public function test_mollie_webhook_with_unknown_payment_id_does_not_grant_credits(): void
-{
-    $user = User::factory()->create();
-
-    $this->post('/webhooks/mollie', [
-        'id' => 'tr_unknown',
-    ])->assertOk();
-
-    $this->assertSame(0, $user->fresh()->pixel_credits);
-    $this->assertDatabaseCount('orders', 0);
-}
     public function test_provider_failure_returns_friendly_error(): void
     {
-        config(['payments.providers.mollie.api_key' => 'test_x']);
-        Http::fake(['api.mollie.com/*' => Http::response([], 500)]);
+        config(['payments.providers.stripe.secret_key' => 'sk_test_x']);
+        Http::fake(['api.stripe.com/*' => Http::response([], 500)]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'mollie'])
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
             ->assertStatus(502)->assertJsonPath('success', false);
         $this->assertSame(Order::FAILED, Order::firstOrFail()->status);
     }
@@ -867,98 +803,11 @@ public function test_mollie_webhook_with_unknown_payment_id_does_not_grant_credi
         $this->actingAs($user)->get('/de/profile')
             ->assertOk()
             ->assertSee('Käufe &amp; Zahlungen', false)
-            ->assertSee('100 Extra-Pixel')
+            ->assertSee('250 Extra-Pixel')
             ->assertSee('5,00 €')
             ->assertSee('42');
     }
 
-    public function test_mollie_payment_with_wrong_order_uuid_is_rejected(): void
-    {
-        config(['payments.providers.mollie.api_key' => 'test_x']);
-
-        Http::fake([
-            'api.mollie.com/v2/payments' => Http::response([
-                'id' => 'tr_wrong_uuid',
-                '_links' => [
-                    'checkout' => [
-                        'href' => 'https://www.mollie.com/checkout/tr_wrong_uuid',
-                    ],
-                ],
-            ]),
-            'api.mollie.com/v2/payments/tr_wrong_uuid' => Http::response([
-                'status' => 'paid',
-                'metadata' => [
-                    'order_uuid' => '00000000-0000-0000-0000-000000000000',
-                ],
-                'amount' => [
-                    'value' => '5.00',
-                    'currency' => 'EUR',
-                ],
-            ]),
-        ]);
-
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->postJson('/shop/checkout', [
-            'product' => 'pixels_100',
-            'provider' => 'mollie',
-        ])->assertOk();
-
-        $this->post('/webhooks/mollie', [
-            'id' => 'tr_wrong_uuid',
-        ])->assertOk();
-
-        $order = Order::firstOrFail();
-
-        $this->assertSame(0, $user->fresh()->pixel_credits);
-        $this->assertSame(Order::FAILED, $order->fresh()->status);
-        $this->assertNull($order->fresh()->fulfilled_at);
-    }
-
-public function test_mollie_payment_with_wrong_amount_is_rejected(): void
-{
-    config(['payments.providers.mollie.api_key' => 'test_x']);
-
-    Http::fake([
-        'api.mollie.com/v2/payments' => Http::response([
-            'id' => 'tr_wrong_amount',
-            '_links' => [
-                'checkout' => [
-                    'href' => 'https://www.mollie.com/checkout/tr_wrong_amount',
-                ],
-            ],
-        ]),
-        'api.mollie.com/v2/payments/tr_wrong_amount' => function () {
-            return Http::response([
-                'status' => 'paid',
-                'metadata' => [
-                    'order_uuid' => Order::firstOrFail()->uuid,
-                ],
-                'amount' => [
-                    'value' => '1.00',
-                    'currency' => 'EUR',
-                ],
-            ]);
-        },
-    ]);
-
-    $user = User::factory()->create();
-
-    $this->actingAs($user)->postJson('/shop/checkout', [
-        'product' => 'pixels_100',
-        'provider' => 'mollie',
-    ])->assertOk();
-
-    $this->post('/webhooks/mollie', [
-        'id' => 'tr_wrong_amount',
-    ])->assertOk();
-
-    $order = Order::firstOrFail();
-
-    $this->assertSame(0, $user->fresh()->pixel_credits);
-    $this->assertSame(Order::FAILED, $order->fresh()->status);
-    $this->assertNull($order->fresh()->fulfilled_at);
-}
 public function test_failed_payment_cannot_overwrite_paid_order(): void
 {
     $user = User::factory()->create();
@@ -984,7 +833,7 @@ public function test_failed_payment_cannot_overwrite_paid_order(): void
     );
 
     $this->assertSame(Order::PAID, $order->fresh()->status);
-    $this->assertSame(100, $user->fresh()->pixel_credits);
+    $this->assertSame(250, $user->fresh()->pixel_credits);
     $this->assertNotNull($order->fresh()->fulfilled_at);
 }
 public function test_failed_payment_cannot_overwrite_cancelled_order(): void

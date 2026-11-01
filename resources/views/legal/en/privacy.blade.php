@@ -104,7 +104,6 @@
     <ul>
         <li>Stripe Payments Europe Ltd., Dublin, Ireland (<a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">privacy</a>)</li>
         <li>PayPal (Europe) S.à r.l. et Cie, S.C.A., Luxembourg (<a href="https://www.paypal.com/uk/legalhub/privacy-full" target="_blank" rel="noopener noreferrer">privacy</a>)</li>
-        <li>Mollie B.V., Amsterdam, Netherlands (<a href="https://www.mollie.com/privacy" target="_blank" rel="noopener noreferrer">privacy</a>)</li>
     </ul>
     <p>
         We do not enter or store your payment data (e.g. card number) ourselves; it goes directly to the

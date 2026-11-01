@@ -277,17 +277,18 @@
 .auth-page button.auth-submit {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 10px;
     width: 100%;
-    min-height: 52px;
+    min-height: 60px;
     margin-top: 2px;
-    padding: 0 17px;
+    padding: 0 20px;
     border: 1px solid rgba(255, 45, 149, 0.8);
-    border-radius: 9px;
+    border-radius: 10px;
     background: var(--accent);
     box-shadow: 0 8px 22px rgba(255, 45, 149, 0.25);
     color: #fff;
-    font-size: 0.87rem;
+    font-size: 1.05rem;
     font-weight: 750;
     letter-spacing: 0;
     text-transform: none;
@@ -930,7 +931,7 @@ body.wall-page .pixel-topbar.minimal {
     display: grid;
     gap: 16px;
     width: min(400px, calc(100vw - 24px));
-    max-height: calc(100dvh - 80px);
+    max-height: calc(100dvh - 160px);
     overflow-y: auto;
     padding: 18px;
     transform: none;
@@ -951,17 +952,55 @@ body.wall-page .pixel-topbar.minimal {
 }
 
 .wall-menu-links {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-content: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 4px;
 }
 
-.wall-menu-links>* {
-    text-align: center;
-}
-
+.wall-menu-links a,
+.wall-menu-links button,
 .wall-menu-links form button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.wall-menu-links form {
+    display: contents;
+}
+
+.wall-menu-links a:hover,
+.wall-menu-links button:hover {
+    transform: none;
+    background: rgba(255, 45, 149, 0.1);
+    border-color: rgba(255, 45, 149, 0.35);
+}
+
+.wall-menu-divider {
+    width: 100%;
+    margin: 6px 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+}
+
+.menu-icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: #ff2d95;
 }
 
 .feedback-details {
@@ -1446,7 +1485,7 @@ body.wall-page .site-footer {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 0 16px;
+    padding: 0 0 0 16px;
     overflow-x: auto;
     border-top: 2px solid #3a4558;
     background: #0f141d;
@@ -1495,7 +1534,7 @@ body.wall-page .site-footer {
 
 .neighborhood-label {
     min-width: 74px;
-    color: #ffe98a;
+    color: #ffffff;
     font: 700 0.8rem monospace;
 }
 
@@ -1553,14 +1592,35 @@ body.wall-page .site-footer {
     top: 0;
     left: 0;
     z-index: 90;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid #ffd93d;
+    max-width: 280px;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid #ff2d95;
     border-radius: 8px;
-    background: #0b0f16;
-    color: #ffe98a;
-    font: 700 0.8rem/1.2 monospace;
+    background: rgba(17, 20, 28, 0.96);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    color: var(--text);
+    font: 700 0.8rem/1.4 monospace;
     pointer-events: none;
-    white-space: nowrap;
+}
+
+.cursor-coords hr {
+    margin: 0.35rem 0;
+    border: 0;
+    border-top: 1px solid rgba(255, 45, 149, 0.5);
+}
+
+.cursor-coords hr.hidden {
+    display: none;
+}
+
+.cursor-coords .pixel-lock-tooltip {
+    position: static;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    font: 400 0.82rem/1.4 system-ui, sans-serif;
 }
 
 .cursor-coords.hidden {
@@ -1586,7 +1646,10 @@ a.secondary-button {
 }
 
 .social-button {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
     padding: 0.75rem 1rem;
     border-radius: 12px;
     border: 2px solid #3a4558;
@@ -1596,14 +1659,22 @@ a.secondary-button {
     color: #fff;
 }
 
+.social-icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+}
+
 .social-google {
-    background: #c5381f;
-    border-color: #e8543a;
+    background: #fff;
+    border-color: #dadce0;
+    color: #3c4043;
 }
 
 .social-facebook {
-    background: #1b4fbf;
-    border-color: #3d78f0;
+    background: #1877f2;
+    border-color: #1877f2;
+    color: #fff;
 }
 
 .social-button:hover {
@@ -1645,6 +1716,17 @@ a.secondary-button {
     color: var(--muted);
 }
 
+.shop-divider {
+    margin: 16px 0 12px;
+    border: 0;
+    border-top: 1px solid #3a4558;
+}
+
+.shop-section-title {
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+}
+
 .shop-products {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -1652,6 +1734,7 @@ a.secondary-button {
 }
 
 .shop-product {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1689,6 +1772,68 @@ a.secondary-button {
 .shop-product-pixels .shop-badge {
     background: #fff;
     color: #ff2d95;
+}
+
+.shop-tag {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #ff2d95;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    transform: rotate(3deg);
+}
+
+.faq details {
+    margin: 0 0 8px;
+    border: 1px solid #3a4558;
+    border-radius: 10px;
+    background: #1c2330;
+}
+
+.faq summary {
+    padding: 12px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.faq details[open] summary {
+    border-bottom: 1px solid #3a4558;
+    color: #ff2d95;
+}
+
+.faq details p {
+    margin: 0;
+    padding: 12px 14px;
+}
+
+.shop-limit-note {
+    color: #ffb4b4;
+    font-size: 0.8rem;
+}
+
+.shop-product:disabled {
+    opacity: 0.45;
+    filter: grayscale(0.8);
+    cursor: not-allowed;
+}
+
+.shop-explain {
+    margin: 0 0 12px;
+}
+
+.pixel-counter small {
+    display: block;
+    color: #ffd93d;
+    font-weight: 700;
+}
+
+.pixel-counter small.hidden {
+    display: none;
 }
 
 .shop-price {
@@ -1738,7 +1883,6 @@ a.secondary-button {
 
 .shop-provider-paypal,
 .shop-provider-stripe,
-.shop-provider-mollie,
 .shop-provider-fake {
     border-color: rgba(255, 45, 149, 0.55);
 }
@@ -2070,11 +2214,102 @@ a.secondary-button {
 
 .legal-links {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px 18px;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     margin: 18px auto 0;
     font-size: 0.85rem;
+}
+
+.legal-more-links {
+    margin-top: 28px;
+}
+
+.lang-switch {
+    position: relative;
+    display: inline-block;
+    font-size: 0.85rem;
+}
+
+.lang-switch summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.lang-switch summary::-webkit-details-marker {
+    display: none;
+}
+
+.lang-switch summary::after {
+    content: "▾";
+}
+
+.lang-switch .lang-flag {
+    display: inline-flex;
+    width: 20px;
+    height: 14px;
+    flex: none;
+}
+
+.lang-switch .lang-flag svg {
+    width: 100%;
+    height: 100%;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.lang-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    z-index: 50;
+    min-width: 100%;
+    margin: 0 0 4px;
+    padding: 4px;
+    list-style: none;
+    background: #1b1b18;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+}
+
+.lang-switch--down {
+    display: block;
+    margin: 6px 10px;
+}
+
+.lang-switch--down .lang-menu {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 6px 0 0;
+}
+
+.lang-switch--down .lang-menu a {
+    padding: 8px 10px;
+}
+
+.lang-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.lang-menu a:hover,
+.lang-menu a.active {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .auth-legal-note {
@@ -2082,4 +2317,341 @@ a.secondary-button {
     font-size: 0.8rem;
     text-align: center;
     opacity: 0.8;
+}
+
+/* Pfeilnavigation und Zoom: flach, mit Verlauf (CI: Pink auf Dunkel) */
+.wall-zoom-controls .secondary-button,
+.wall-extension-controls .wall-nav {
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: linear-gradient(180deg, #3a2347 0%, #1d1428 55%, #120c1b 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    transition: filter 0.15s ease, border-color 0.15s ease;
+}
+
+.wall-zoom-controls .secondary-button:not(:disabled):hover,
+.wall-extension-controls .wall-nav:hover {
+    filter: brightness(1.2);
+    border-color: rgba(255, 45, 149, 0.8);
+}
+
+.wall-extension-controls .wall-nav {
+    border-radius: 50%;
+}
+
+/* Pfeile als Reiter an den Rändern (wie Haftnotizen am Ordnerrand) */
+.wall-extension-controls .wall-nav {
+    border-radius: 0;
+    font-size: 1.15rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.wall-extension-controls .wall-nav-up,
+.wall-extension-controls .wall-nav-down {
+    width: 64px;
+    min-width: 64px;
+    height: 26px;
+    min-height: 26px;
+}
+
+.wall-extension-controls .wall-nav-left,
+.wall-extension-controls .wall-nav-right {
+    width: 26px;
+    min-width: 26px;
+    height: 64px;
+    min-height: 64px;
+}
+
+.wall-extension-controls .wall-nav-up {
+    top: 0;
+    border-top: 0;
+    border-radius: 0 0 12px 12px;
+}
+
+.wall-extension-controls .wall-nav-down {
+    bottom: 72px;
+    border-bottom: 0;
+    border-radius: 12px 12px 0 0;
+}
+
+.wall-extension-controls .wall-nav-left {
+    left: 0;
+    border-left: 0;
+    border-radius: 0 12px 12px 0;
+}
+
+.wall-extension-controls .wall-nav-right {
+    right: 0;
+    border-right: 0;
+    border-radius: 12px 0 0 12px;
+}
+
+.wall-zoom-controls .secondary-button:disabled {
+    background: linear-gradient(180deg, #25222b, #17151b);
+    box-shadow: none;
+}
+
+/* Pixelzaehler bleibt rechts angeheftet und immer sichtbar */
+.pixel-counter {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    margin-right: 0;
+    padding: 0.3rem 0.9rem;
+    align-self: stretch;
+    justify-content: center;
+    border: 0;
+    border-left: 2px solid rgba(255, 255, 255, 0.35);
+    border-radius: 0;
+    background: #0f141d;
+    box-shadow: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.pixel-counter small {
+    color: var(--muted);
+}
+
+.pixel-counter.empty {
+    border: 0;
+    border-left: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.pixel-counter.empty strong {
+    color: #ff2d95;
+}
+/* Reiter gehen mit konkaven Rundungen fließend in den Rand über */
+.wall-extension-controls,
+.wall-zoom-controls {
+    --tab-edge: transparent;
+}
+
+.wall-extension-controls .wall-nav {
+    border-color: transparent;
+}
+
+.wall-extension-controls .wall-nav::before,
+.wall-extension-controls .wall-nav::after,
+.wall-zoom-controls::before,
+.wall-zoom-controls::after {
+    content: "";
+    position: absolute;
+    width: 19px;
+    height: 19px;
+    background: radial-gradient(circle at var(--cx) var(--cy), transparent 18px, var(--tab-fill) 19px);
+    pointer-events: none;
+}
+
+.wall-extension-controls .wall-nav-up::before,
+.wall-extension-controls .wall-nav-up::after,
+.wall-extension-controls .wall-nav-down::before,
+.wall-extension-controls .wall-nav-down::after {
+    top: 0;
+}
+
+.wall-extension-controls .wall-nav-down::before,
+.wall-extension-controls .wall-nav-down::after {
+    top: auto;
+    bottom: 0;
+}
+
+.wall-extension-controls .wall-nav-up::before {
+    left: -19px;
+
+    --cx: 0;
+    --cy: 100%;
+    --tab-fill: #2a1b36;
+}
+
+.wall-extension-controls .wall-nav-up::after {
+    right: -19px;
+
+    --cx: 100%;
+    --cy: 100%;
+    --tab-fill: #2a1b36;
+}
+
+.wall-extension-controls .wall-nav-down::before {
+    left: -19px;
+    --cx: 0;
+    --cy: 0;
+    --tab-fill: #1d1428;
+}
+
+.wall-extension-controls .wall-nav-down::after {
+    right: -19px;
+    --cx: 100%;
+    --cy: 0;
+    --tab-fill: #1d1428;
+}
+
+.wall-extension-controls .wall-nav-left::before,
+.wall-extension-controls .wall-nav-right::before {
+    top: -19px;
+}
+
+.wall-extension-controls .wall-nav-left::after,
+.wall-extension-controls .wall-nav-right::after {
+    bottom: -19px;
+}
+
+.wall-extension-controls .wall-nav-left::before {
+    left: 0;
+    --cx: 100%;
+    --cy: 0;
+    --tab-fill: #2a1b36;
+}
+
+.wall-extension-controls .wall-nav-left::after {
+    left: 0;
+    --cx: 100%;
+    --cy: 100%;
+    --tab-fill: #2a1b36;
+}
+
+.wall-extension-controls .wall-nav-right::before {
+    right: 0;
+    --cx: 0;
+    --cy: 0;
+    --tab-fill: #2a1b36;
+}
+
+.wall-extension-controls .wall-nav-right::after {
+    right: 0;
+    --cx: 0;
+    --cy: 100%;
+    --tab-fill: #2a1b36;
+}
+
+/* Erweiterungsflächen im Reiter-Look mit konkaven Rundungen */
+.wall-extension-controls .wall-extension-zone {
+    border: 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.wall-extension-controls .wall-extension-zone-right {
+    border-radius: 0;
+    background: #2a1b36;
+}
+
+.wall-extension-controls .wall-extension-zone-bottom {
+    border-radius: 0;
+    background: #1d1428;
+}
+
+.wall-extension-controls .wall-extension-zone:hover,
+.wall-extension-controls .wall-extension-zone:focus-visible {
+    filter: brightness(1.3);
+}
+
+
+/* Zoom als umrandeter Reiter in der linken oberen Ecke */
+.wall-zoom-controls {
+    top: 0;
+    left: 0;
+    flex-direction: row;
+    gap: 0;
+    padding: 0 5px 5px 0;
+    border: 0;
+    border-radius: 0 0 19px 0;
+    background: linear-gradient(180deg, #3a2347 0%, #1d1428 55%, #120c1b 100%);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.wall-zoom-controls .secondary-button,
+.wall-zoom-controls .secondary-button:disabled {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.wall-zoom-controls .secondary-button + .secondary-button {
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Hover: nur +/− werden etwas größer, kein Aufhellen/Rand */
+.wall-zoom-controls .secondary-button:not(:disabled):hover {
+    filter: none;
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.zoom-sign {
+    display: inline-block;
+    transition: transform 0.15s ease;
+}
+
+#zoomOutBtn:not(:disabled):hover .zoom-sign,
+#zoomInBtn:not(:disabled):hover .zoom-sign {
+    transform: scale(1.35);
+}
+
+.wall-zoom-controls::before {
+    top: 0;
+    left: 100%;
+    --cx: 100%;
+    --cy: 100%;
+    --tab-fill: #3a2347;
+}
+
+.wall-zoom-controls::after {
+    top: 100%;
+    left: 0;
+    --cx: 100%;
+    --cy: 100%;
+    --tab-fill: #1a1124;
+}
+
+/* Menü-Button: gleicher Reiter wie der Zoom, gespiegelt in der rechten oberen Ecke */
+body.wall-page .pixel-topbar.minimal {
+    top: 0;
+    right: 0;
+}
+
+body.wall-page .wall-menu-toggle {
+    position: relative;
+    border: 0;
+    border-radius: 0 0 0 19px;
+    padding: 0.5rem 1rem 0.75rem 1.25rem;
+    background: linear-gradient(180deg, #3a2347 0%, #1d1428 55%, #120c1b 100%);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+body.wall-page .wall-menu-toggle:hover {
+    filter: brightness(1.15);
+}
+
+body.wall-page .wall-menu-toggle::before,
+body.wall-page .wall-menu-toggle::after {
+    content: "";
+    position: absolute;
+    width: 19px;
+    height: 19px;
+    pointer-events: none;
+    --cx: 0;
+    --cy: 100%;
+    background: radial-gradient(circle at var(--cx) var(--cy), transparent 18px, var(--tab-fill) 19px);
+}
+
+body.wall-page .wall-menu-toggle::before {
+    top: 0;
+    right: 100%;
+    --tab-fill: #3a2347;
+}
+
+body.wall-page .wall-menu-toggle::after {
+    top: 100%;
+    right: 0;
+    --tab-fill: #1a1124;
+}
+
+body.wall-page .wall-menu-panel {
+    top: calc(100% + 24px);
+    right: 12px;
+}
+
+/* Rechter Erweiterungsstreifen (30px) sichtbar: nur die untere Rundung rückt davor */
+body.wall-page:has(#extendWallRightBtn:not(.hidden)) .wall-menu-toggle::after {
+    right: 30px;
 }

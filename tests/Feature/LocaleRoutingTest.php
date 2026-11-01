@@ -24,7 +24,7 @@ class LocaleRoutingTest extends TestCase
     public function test_pages_exist_in_every_language(): void
     {
         foreach (['', '/de', '/es'] as $prefix) {
-            foreach (['/wall', '/gallery', '/imprint', '/privacy', '/terms', '/data-deletion', '/login', '/register', '/forgot-password'] as $path) {
+            foreach (['/gallery', '/imprint', '/faq', '/privacy', '/terms', '/data-deletion', '/login', '/register', '/forgot-password'] as $path) {
                 $this->get($prefix.$path)->assertOk();
             }
         }
@@ -34,13 +34,14 @@ class LocaleRoutingTest extends TestCase
     {
         $this->get('/datenschutz')->assertStatus(301)->assertRedirect(url('/privacy'));
         $this->get('/de/impressum')->assertStatus(301)->assertRedirect(url('/de/imprint'));
+        $this->get('/de/wall')->assertStatus(301)->assertRedirect(url('/de'));
     }
 
     public function test_urls_keep_the_current_language(): void
     {
         $html = $this->get('/de/login')->assertOk()->getContent();
         $this->assertStringContainsString('/de/register', $html);
-        $this->assertStringContainsString('/de/privacy', $html);
+        $this->assertStringContainsString('/de/imprint', $html);
 
         $html = $this->get('/login')->getContent();
         $this->assertStringContainsString(url('/register'), $html);

@@ -59,10 +59,12 @@ const openRulesBtn = document.getElementById('openRulesBtn');
 const shareViewBtn = document.getElementById('shareViewBtn');
 const shareFacebookLink = document.getElementById('shareFacebookLink');
 const cursorCoords = document.getElementById('cursorCoords');
+const cursorCoordsText = document.getElementById('cursorCoordsText');
 const neighborhoodCanvas = document.getElementById('neighborhoodCanvas');
 const neighborhoodLabel = document.getElementById('neighborhoodLabel');
 const pixelCounter = document.getElementById('pixelCounter');
 const pixelCounterValue = document.getElementById('pixelCounterValue');
+const pixelCounterExtra = document.getElementById('pixelCounterExtra');
 const authFlag = document.getElementById('isAuthenticated');
 const isAuthenticated = authFlag ? authFlag.dataset.auth === '1' : false;
 
@@ -148,6 +150,12 @@ function getReferencePixelColor(x, y) {
     return `#${[0, 1, 2].map((channel) => tilePixels[index + channel].toString(16).padStart(2, '0')).join('')}`;
 }
 
+function pixelLockMessage(x, y, lock) {
+    const minutes = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
+
+    return t(minutes === 1 ? 'Pixel :x::y ist gesperrt. Bearbeitung in :minutes Minute wieder möglich.' : 'Pixel :x::y ist gesperrt. Bearbeitung in :minutes Minuten wieder möglich.', { x, y, minutes });
+}
+
 function getActivePixelLock(x, y) {
     const key = keyFor(x, y);
     const lock = pixelLocks.get(key);
@@ -180,19 +188,17 @@ async function refreshPixelLocks() {
 function updatePixelLockTooltip(event) {
     const cell = getCellFromEvent(event);
     const lock = cell ? getActivePixelLock(cell.x, cell.y) : null;
+    const divider = document.getElementById('cursorCoordsDivider');
 
     if (!lock || !pixelLockTooltip) {
         pixelLockTooltip?.classList.add('hidden');
+        divider?.classList.add('hidden');
         return;
     }
 
-    const minutesRemaining = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
-    pixelLockTooltip.textContent = t(minutesRemaining === 1 ? 'Bereits bearbeitet. Bearbeitung in :minutes Minute wieder möglich.' : 'Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining });
-
-    const shellRect = canvas.parentElement.getBoundingClientRect();
-    pixelLockTooltip.style.left = `${clamp(event.clientX - shellRect.left + 12, 8, shellRect.width - 288)}px`;
-    pixelLockTooltip.style.top = `${clamp(event.clientY - shellRect.top + 12, 8, shellRect.height - 56)}px`;
+    pixelLockTooltip.textContent = pixelLockMessage(cell.x, cell.y, lock);
     pixelLockTooltip.classList.remove('hidden');
+    divider?.classList.remove('hidden');
 }
 
 function findLockedPixelInSelection() {
@@ -600,7 +606,7 @@ function moveCursorCoords(event) {
         cursorCoords.classList.add('hidden');
         return;
     }
-    cursorCoords.textContent = `⌖ ${cell.x} : ${cell.y}`;
+    cursorCoordsText.textContent = `${cell.x} : ${cell.y}`;
     cursorCoords.style.transform = `translate(${event.clientX + 16}px, ${event.clientY + 18}px)`;
     cursorCoords.classList.remove('hidden');
 }
@@ -797,9 +803,6 @@ function savePixel(x, y, color) {
 
         const key = keyFor(x, y);
         pixels.set(key, color);
-        if (payload.locked_until) {
-            pixelLocks.set(key, { x, y, locked_until: payload.locked_until });
-        }
         renderCanvas();
         fetchPixelStatus().then((status) => setStatus(t('Pixel :x::y gespeichert. :quota', { x, y, quota: describeQuota(status) })));
     }).catch((error) => {
@@ -810,7 +813,8 @@ function savePixel(x, y, color) {
         }
         if (error.payload?.locked_pixels?.length) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
-            setStatus(t('Bereits bearbeitet. Bearbeitung in 10 Minuten wieder möglich.'));
+            const firstLocked = error.payload.locked_pixels[0];
+            setStatus(pixelLockMessage(firstLocked.x, firstLocked.y, firstLocked));
             return false;
         }
 
@@ -847,9 +851,6 @@ function savePixels(changedPixels) {
         changedPixels.forEach((pixel) => {
             const key = keyFor(pixel.x, pixel.y);
             pixels.set(key, pixel.color);
-            if (payload.locked_until) {
-                pixelLocks.set(key, { x: pixel.x, y: pixel.y, locked_until: payload.locked_until });
-            }
         });
         renderCanvas();
         fetchPixelStatus().then((status) => setStatus(t('Pixel gespeichert: :x::y. :quota', { x: changedPixels[0].x, y: changedPixels[0].y, quota: describeQuota(status) })));
@@ -863,8 +864,7 @@ function savePixels(changedPixels) {
         if (error.payload?.locked_pixels) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
             const firstLock = error.payload.locked_pixels[0];
-            const minutesRemaining = Math.max(1, Math.ceil((Date.parse(firstLock.locked_until) - Date.now()) / 60000));
-            setStatus(t('Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining }));
+            setStatus(pixelLockMessage(firstLock.x, firstLock.y, firstLock));
             refreshPixelLocks();
             return false;
         }
@@ -911,8 +911,7 @@ function paintPopupCell(event) {
     const globalY = selection.y + localY;
     const lock = getActivePixelLock(globalX, globalY);
     if (lock) {
-        const minutesRemaining = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
-        setStatus(t('Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining }));
+        setStatus(pixelLockMessage(globalX, globalY, lock));
         return;
     }
 
@@ -1467,6 +1466,8 @@ loadWallDimensions().catch((error) => {
     showInitialViewportLoadFailure();
 });
 window.setInterval(refreshWallDimensions, 15000);
+refreshPixelLocks();
+window.setInterval(refreshPixelLocks, 15000);
 
 // ---------------------------------------------------------------------------
 // Limits (Popup bei zu früher Änderung) und Shop (Pixel kaufen)
@@ -1480,6 +1481,7 @@ const limitUserActions = document.getElementById('limitUserActions');
 const limitBuyBtn = document.getElementById('limitBuyBtn');
 const shopModal = document.getElementById('shopModal');
 const shopProductsEl = document.getElementById('shopProducts');
+const shopExtensionsEl = document.getElementById('shopExtensions');
 const shopProvidersEl = document.getElementById('shopProviders');
 const shopCheckoutEl = document.getElementById('shopCheckout');
 const shopGuestNotice = document.getElementById('shopGuestNotice');
@@ -1507,7 +1509,11 @@ function updatePixelCounter(status) {
     }
     latestPixelStatus = status;
     const total = status.free + (status.credits || 0);
-    pixelCounterValue.textContent = `${total.toLocaleString(locale)}/${status.max_free.toLocaleString(locale)}`.replace(/\s*\/\s*/g, '/');
+    pixelCounterValue.textContent = `${status.free.toLocaleString(locale)}/${status.max_free.toLocaleString(locale)}`;
+    if (pixelCounterExtra) {
+        pixelCounterExtra.textContent = status.credits > 0 ? `+${status.credits.toLocaleString(locale)}` : '';
+        pixelCounterExtra.classList.toggle('hidden', !(status.credits > 0));
+    }
     pixelCounter.classList.toggle('empty', total === 0);
 }
 
@@ -1622,27 +1628,43 @@ function shopProductCopy(product) {
         return {
             title: t('Wand nach :direction erweitern', { direction: t(direction) }),
             badge: t('🌍 Für die ganze Community'),
-            text: t('Die Pixelwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung – dein Beitrag für die Community.', { amount: product.amount.toLocaleString(locale), direction: t(direction) }),
+            text: t('Die Pixelwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung (im Hintergrundbild erscheint er nach bis zu 10 Minuten) – dein Beitrag für die Community.', { amount: product.amount.toLocaleString(locale), direction: t(direction) }),
         };
     }
 
-    if (product.amount >= 500) {
+    if (product.amount >= 1000) {
         return {
             title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
-            badge: t('💰 Spar-Paket: nur 0,03 € pro Pixel'),
-            text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Rund 40 % günstiger als das 100er-Paket.', { amount: product.amount.toLocaleString(locale) }),
+            badge: t('🏆 Bestpreis'),
+            text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Der günstigste Preis pro Pixel.', { amount: product.amount.toLocaleString(locale) }),
+        };
+    }
+
+    if (product.amount >= 600) {
+        return {
+            title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
+            badge: t('🔥 Beliebt'),
+            text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Das beste Verhältnis aus Preis und Menge.', { amount: product.amount.toLocaleString(locale) }),
         };
     }
 
     return {
         title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
-        badge: t('⚡ Beliebt'),
+        badge: t('⚡ Starter'),
         text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Perfekt zum Vergleichen und Ausprobieren.', { amount: product.amount.toLocaleString(locale) }),
     };
 }
 
+function shopSavingsPercent(product) {
+    const pixelProducts = shopData.products.filter((item) => item.type === 'pixels');
+    const base = Math.max(...pixelProducts.map((item) => item.price_cents / item.amount));
+    const percent = Math.round((1 - product.price_cents / product.amount / base) * 100);
+    return product.type === 'pixels' && percent > 0 ? percent : 0;
+}
+
 function renderShop() {
     shopProductsEl.replaceChildren();
+    shopExtensionsEl.replaceChildren();
     shopProvidersEl.replaceChildren();
     shopErrorEl.classList.add('hidden');
 
@@ -1652,6 +1674,11 @@ function renderShop() {
         const card = document.createElement('button');
         card.type = 'button';
         card.className = `shop-product shop-product-${product.type}`;
+        const overLimit = product.type === 'pixels' && shopData.authenticated && shopData.credits + product.amount > shopData.max_credits;
+        card.disabled = overLimit;
+        if (overLimit && shopSelected === product.id) {
+            shopSelected = null;
+        }
         card.dataset.product = product.id;
         card.setAttribute('aria-pressed', String(product.id === shopSelected));
 
@@ -1667,14 +1694,27 @@ function renderShop() {
         price.className = 'shop-price';
         price.textContent = product.price;
         card.append(badge, title, text, price);
+        if (overLimit) {
+            const limitNote = document.createElement('span');
+            limitNote.className = 'shop-limit-note';
+            limitNote.textContent = t('Nicht möglich: Limit von :max Extra-Pixeln würde überschritten.', { max: shopData.max_credits.toLocaleString(locale) });
+            card.appendChild(limitNote);
+        }
+        const savings = shopSavingsPercent(product);
+        if (savings > 0) {
+            const tag = document.createElement('span');
+            tag.className = 'shop-tag';
+            tag.textContent = `−${savings} %`;
+            card.appendChild(tag);
+        }
         card.addEventListener('click', () => {
             shopSelected = product.id;
             renderShop();
         });
-        shopProductsEl.appendChild(card);
+        (product.type === 'extend' ? shopExtensionsEl : shopProductsEl).appendChild(card);
     });
 
-    shopCreditsEl.textContent = shopData.authenticated ? t('Dein Guthaben: :credits Extra-Pixel', { credits: shopData.credits.toLocaleString(locale) }) : '';
+    shopCreditsEl.textContent = shopData.authenticated ? t('Dein Guthaben: :credits von maximal :max Extra-Pixeln', { credits: shopData.credits.toLocaleString(locale), max: shopData.max_credits.toLocaleString(locale) }) : '';
     shopCheckoutEl.classList.toggle('hidden', !(shopSelected && shopData.authenticated));
     shopGuestNotice.classList.toggle('hidden', !(shopSelected && !shopData.authenticated));
 
@@ -1747,6 +1787,10 @@ async function startCheckout(provider, button) {
 }
 
 document.getElementById('openShopBtn')?.addEventListener('click', () => openShop());
+document.getElementById('openExtensionShopBtn')?.addEventListener('click', async () => {
+    await openShop();
+    document.getElementById('shopExtensionTitle')?.scrollIntoView({ block: 'start' });
+});
 document.getElementById('closeShopBtn')?.addEventListener('click', () => shopModal.classList.add('hidden'));
 document.getElementById('limitCloseBtn')?.addEventListener('click', hideLimitModal);
 limitBuyBtn?.addEventListener('click', () => openShop('pixels_100'));

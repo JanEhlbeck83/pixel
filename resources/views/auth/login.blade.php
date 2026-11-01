@@ -30,7 +30,6 @@
 
         <x-primary-button class="auth-submit">
             <span>{{ __('Anmelden') }}</span>
-            <span aria-hidden="true">→</span>
         </x-primary-button>
     </form>
 

@@ -20,7 +20,6 @@ class Shop
         $all = [
             new PayPalProvider,
             new StripeProvider,
-            new MollieProvider,
             new FakeProvider,
         ];
 

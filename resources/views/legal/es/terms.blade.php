@@ -14,6 +14,7 @@
         <li>Cualquiera puede sobrescribir cualquier píxel, también el tuyo. No existe derecho a que un píxel o una imagen se conserve.</li>
         <li>Los píxeles recién colocados quedan bloqueados brevemente (10 minutos).</li>
         <li>Los invitados reciben 50 píxeles una sola vez. Con cuenta, se regenera un píxel cada 30 segundos, hasta un máximo de 50 en reserva.</li>
+        <li>Los píxeles extra comprados se guardan por separado de la reserva gratuita y solo se usan cuando esta está vacía. No caducan. Una cuenta puede tener como máximo 10.000 píxeles extra; no se pueden comprar paquetes que superen ese límite.</li>
         <li>Están prohibidas las imágenes de odio, los símbolos anticonstitucionales o prohibidos, los insultos, la pornografía, las representaciones de violencia y los contenidos que vulneren derechos de terceros.</li>
         <li>No se permiten los accesos automatizados, bots ni scripts para eludir los límites de píxeles.</li>
     </ul>

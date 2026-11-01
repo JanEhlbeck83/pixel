@@ -11,7 +11,7 @@
     </head>
     <body class="legal-page">
         <main class="legal-main">
-            <a class="legal-back" href="{{ route('wall') }}">← {{ __('Zurück zur Wand') }}</a>
+            <a class="legal-back" href="{{ route('home') }}">← {{ __('Zurück zur Wand') }}</a>
 
             <article class="legal-card">
                 <h1>@yield('title')</h1>

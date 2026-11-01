@@ -22,7 +22,7 @@
         <div class="auth-layout">
             <main class="auth-main">
                 <div class="auth-mobile-brand">
-                    <a class="auth-brand" href="{{ route('wall') }}" aria-label="{{ __('PixRiot – zur Wand') }}">
+                    <a class="auth-brand" href="{{ route('home') }}" aria-label="{{ __('PixRiot – zur Wand') }}">
                         <span class="brand-wordmark">Pix<span>Riot</span></span>
                     </a>
                 </div>
