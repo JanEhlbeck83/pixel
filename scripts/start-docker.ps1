@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Continue'
+﻿$ErrorActionPreference = 'Continue'
 
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
@@ -15,8 +15,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $stacks = @(
-    @{ Name = 'Live';    Project = 'pixel';         Port = 8000; Files = @('docker-compose.yml', 'docker-compose.local-backup.yml', 'docker-compose.local-tls.yml') },
-    @{ Name = 'Staging'; Project = 'pixel-staging'; Port = 8001; Files = @('docker-compose.yml', 'docker-compose.local-tls.yml') }
+    @{ Name = 'Live';    Project = 'pixel';         Port = 8000; Files = @('docker-compose-staging.yml', 'docker-compose.local-backup.yml', 'docker-compose.local-tls.yml') },
+    @{ Name = 'Staging'; Project = 'pixel-staging'; Port = 8001; Files = @('docker-compose-staging.yml', 'docker-compose.local-tls.yml') }
 )
 
 foreach ($s in $stacks) {
@@ -40,3 +40,4 @@ foreach ($s in $stacks) {
     }
     "{0}: https://localhost:{1} -> {2}" -f $s.Name, $s.Port, $code
 }
+

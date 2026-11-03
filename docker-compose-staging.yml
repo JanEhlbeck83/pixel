@@ -1,4 +1,5 @@
 
+# Staging (staging.pixriot.online): sudo docker compose -p pixel-staging -f docker-compose-staging.yml up -d --build
 services:
   app:
     build:
@@ -89,7 +90,7 @@ services:
     networks:
       - backend
 
-  # Mail-Testserver (nur Staging): docker compose -p pixel-staging --profile mail up -d mailpit
+  # Mail-Testserver (nur Staging): docker compose -p pixel-staging -f docker-compose-staging.yml --profile mail up -d mailpit
   mailpit:
     image: axllent/mailpit
     profiles: ["mail"]

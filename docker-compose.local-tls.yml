@@ -1,6 +1,6 @@
-# Lokales HTTPS (selbstsigniertes Zertifikat in docker/certs, siehe .gitignore).
-# Live:    HTTPS_PORT=8000 HTTPS_SUFFIX=:8000 docker compose -p pixel -f docker-compose.yml -f docker-compose.local-backup.yml -f docker-compose.local-tls.yml up -d
-# Staging: HTTPS_PORT=8001 HTTPS_SUFFIX=:8001 docker compose -p pixel-staging -f docker-compose.yml -f docker-compose.local-tls.yml up -d
+﻿# Lokales HTTPS (selbstsigniertes Zertifikat in docker/certs, siehe .gitignore).
+# Live:    HTTPS_PORT=8000 HTTPS_SUFFIX=:8000 docker compose -p pixel -f docker-compose-staging.yml -f docker-compose.local-backup.yml -f docker-compose.local-tls.yml up -d
+# Staging: HTTPS_PORT=8001 HTTPS_SUFFIX=:8001 docker compose -p pixel-staging -f docker-compose-staging.yml -f docker-compose.local-tls.yml up -d
 services:
   app:
     environment:
