@@ -2005,16 +2005,19 @@ function renderShop() {
     shopErrorEl.classList.add('hidden');
 
     const order = { pixels: 0, extend: 1 };
-    [...shopData.products].sort((a, b) => order[a.type] - order[b.type]).forEach((product) => {
+    const sortedProducts = [...shopData.products].sort((a, b) => order[a.type] - order[b.type]);
+    const isOverLimit = (product) => product.type === 'pixels' && shopData.authenticated && shopData.credits + product.amount > shopData.max_credits;
+    const selectable = sortedProducts.find((product) => product.id === shopSelected && !isOverLimit(product))
+        ?? sortedProducts.find((product) => !isOverLimit(product));
+    shopSelected = selectable ? selectable.id : null;
+
+    sortedProducts.forEach((product) => {
         const copy = shopProductCopy(product);
         const card = document.createElement('button');
         card.type = 'button';
         card.className = `shop-product shop-product-${product.type}`;
-        const overLimit = product.type === 'pixels' && shopData.authenticated && shopData.credits + product.amount > shopData.max_credits;
+        const overLimit = isOverLimit(product);
         card.disabled = overLimit;
-        if (overLimit && shopSelected === product.id) {
-            shopSelected = null;
-        }
         card.dataset.product = product.id;
         card.setAttribute('aria-pressed', String(product.id === shopSelected));
 
@@ -2058,11 +2061,25 @@ function renderShop() {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `shop-provider shop-provider-${provider.key}`;
-        const name = document.createElement('strong');
-        name.textContent = provider.label;
-        const mode = document.createElement('small');
-        mode.textContent = provider.mode;
-        button.append(name, mode);
+        button.setAttribute('aria-label', provider.label);
+        if (provider.key === 'paypal' || provider.key === 'stripe') {
+            const logo = document.createElement('img');
+            logo.className = 'shop-provider-logo';
+            logo.src = `/images/payments/${provider.key}.svg`;
+            logo.alt = '';
+            button.appendChild(logo);
+        } else {
+            const name = document.createElement('strong');
+            name.textContent = provider.label;
+            button.appendChild(name);
+        }
+        const hint = provider.key === 'stripe' ? provider.label : '';
+        const mode = String(provider.mode || '').toLowerCase() === 'live' ? '' : provider.mode;
+        const small = document.createElement('small');
+        small.textContent = [hint, mode].filter(Boolean).join(' · ');
+        if (small.textContent) {
+            button.appendChild(small);
+        }
         button.addEventListener('click', () => startCheckout(provider.key, button));
         shopProvidersEl.appendChild(button);
     });
