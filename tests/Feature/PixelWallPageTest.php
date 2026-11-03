@@ -23,7 +23,7 @@ class PixelWallPageTest extends TestCase
         $response->assertSee('PixRiot');
     }
 
-    public function test_pixriot_wall_reset_requires_confirmation_before_deleting_pixels(): void
+    public function test_wall_reset_requires_confirmation_before_deleting_pixels(): void
     {
         Pixel::query()->create([
             'x' => 10,
@@ -33,9 +33,9 @@ class PixelWallPageTest extends TestCase
             'updated_by_user_id' => null,
         ]);
 
-        $this->artisan('wall:reset-pixriot')
+        $this->artisan('wall:reset-text')
             ->expectsConfirmation(
-                'This will delete all current wall pixels and locks, reset its dimensions, and generate new tiles. Continue?',
+                'Alle Pixel, Sperren, Aktivitäten, Snapshots und Kacheln werden gelöscht. Fortfahren?',
                 'no'
             )
             ->assertExitCode(1);

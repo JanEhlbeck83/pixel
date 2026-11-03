@@ -20,6 +20,7 @@ services:
     volumes:
       - /opt/pixel-data/staging/images/wall-tiles:/var/www/html/public/images/wall-tiles
       - /opt/pixel-data/staging/images/snapshots:/var/www/html/public/images/snapshots
+      - private-data:/var/www/html/storage/app/private
     depends_on:
       postgres:
         condition: service_healthy
@@ -32,6 +33,7 @@ services:
       dockerfile: Dockerfile
       target: app
     restart: unless-stopped
+    user: "33:33"
     command: ["php", "artisan", "schedule:work"]
     env_file:
       - .env
@@ -64,6 +66,7 @@ services:
     volumes:
       - /opt/pixel-data/staging/images/wall-tiles:/var/www/html/public/images/wall-tiles:ro
       - /opt/pixel-data/staging/images/snapshots:/var/www/html/public/images/snapshots:ro
+      - /opt/pixel-auth/staging.htpasswd:/etc/nginx/.htpasswd:ro
     depends_on:
       - app
     networks:
@@ -98,6 +101,7 @@ services:
 
 volumes:
   pgdata:
+  private-data:
 
 networks:
   backend:

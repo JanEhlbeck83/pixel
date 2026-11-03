@@ -42,6 +42,10 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        if ($request->boolean('newsletter')) {
+            $user->forceFill(['newsletter_subscribed_at' => now()])->save();
+        }
+
         event(new Registered($user));
 
         Auth::login($user);

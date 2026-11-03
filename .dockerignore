@@ -20,6 +20,10 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
 
+*.dump
+database/*.sqlite
+docker/certs
+
 .phpunit.cache
 .phpunit.result.cache
 npm-debug.log*

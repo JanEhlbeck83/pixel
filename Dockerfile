@@ -38,6 +38,7 @@ RUN composer dump-autoload --optimize \
     && mkdir -p storage/framework/cache storage/framework/sessions \
        storage/framework/views storage/logs bootstrap/cache \
        public/images/wall-tiles public/images/snapshots \
+       storage/app/private/newsletters storage/app/private/reports \
     && chown -R www-data:www-data \
        storage bootstrap/cache public/images/wall-tiles public/images/snapshots
 

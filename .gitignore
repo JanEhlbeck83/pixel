@@ -30,3 +30,5 @@ pixel-backup.dump
 
 /public/images/wall-tiles/
 /public/images/snapshots/
+
+/docker/certs/

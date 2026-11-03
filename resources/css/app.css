@@ -2735,6 +2735,22 @@ a.secondary-button {
     right: 12px;
 }
 
+/* Admin-Reiter links neben dem Menü-Reiter, Panel öffnet am selben Platz wie das Hauptmenü */
+:is(body.wall-page, body.menu-page) .pixel-topbar.minimal {
+    display: flex;
+    align-items: flex-start;
+}
+
+.admin-menu {
+    margin-right: 19px;
+}
+
+:is(body.wall-page, body.menu-page) .admin-menu .wall-menu-panel {
+    position: fixed;
+    top: 70px;
+    right: 12px;
+}
+
 .page-heading {
     display: flex;
     align-items: center;
@@ -2887,6 +2903,123 @@ button:focus-visible {
 
 .admin-flash {
     color: var(--success);
+}
+
+.profile-form textarea,
+.profile-form select {
+    padding: 10px 12px;
+    border: 1px solid #3a4558;
+    border-radius: 10px;
+    background: #0f1117;
+    color: var(--text);
+    font: inherit;
+}
+
+.profile-form textarea {
+    min-height: 220px;
+    resize: vertical;
+}
+
+.profile-form .check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 8px;
+    color: var(--text);
+}
+
+.profile-form .check-row input {
+    flex: 0 0 auto;
+    margin-top: 3px;
+    accent-color: var(--accent);
+}
+
+.profile-form .form-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.auth-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 4px 0 8px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.auth-check input {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    accent-color: var(--accent);
+}
+
+.nl-admin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.nl-admin-grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+}
+
+.nl-admin-grid2 > div {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+}
+
+.nl-preview-frame {
+    width: 100%;
+    height: 760px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.nl-admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.nl-admin-actions form {
+    margin: 0;
+}
+
+.nl-thumb {
+    max-width: 160px;
+    max-height: 90px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.nl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.nl-table th,
+.nl-table td {
+    padding: 8px 6px;
+    border-top: 1px solid var(--line);
+    text-align: left;
+}
+
+@media (max-width: 1000px) {
+    .nl-admin-layout,
+    .nl-admin-grid2 {
+        grid-template-columns: 1fr;
+    }
 }
 
 .report-history {

@@ -105,6 +105,9 @@
                             <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required maxlength="255" autocomplete="email">
                             @error('email') <p class="profile-error">{{ $message }}</p> @enderror
 
+                            <input type="hidden" name="newsletter" value="0">
+                            <label class="check-row"><input type="checkbox" name="newsletter" value="1" @checked(old('newsletter', $user->newsletter_subscribed_at !== null))> {{ __('PixRiot-Newsletter erhalten') }}</label>
+
                             <button type="submit" class="primary-button">{{ __('Speichern') }}</button>
                         </form>
                     </section>
