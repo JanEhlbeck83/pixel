@@ -89,6 +89,7 @@ return [
         // Stripe Checkout: Visa/Mastercard (Kreditkarte), Apple Pay und Google Pay.
         // Apple/Google Pay erscheinen automatisch, wenn sie im Stripe-Dashboard aktiviert sind
         // (Apple Pay zusätzlich: Domain verifizieren) und der Kunde ein passendes Gerät nutzt.
+        // Eingeschränkter Live-Schlüssel (rk_live_...) genügt: Berechtigung "Checkout Sessions" auf Schreiben.
         // Testschlüssel (sk_test_...): https://dashboard.stripe.com/test/apikeys
         'stripe' => [
             'label' => 'Karte / Apple Pay / Google Pay (Stripe)',

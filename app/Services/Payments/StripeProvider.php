@@ -21,7 +21,7 @@ class StripeProvider implements PaymentProvider
 
     public function modeLabel(): string
     {
-        return str_starts_with((string) config('payments.providers.stripe.secret_key'), 'sk_live') ? 'Live' : __('Sandbox');
+        return $this->isLiveKey() ? 'Live' : __('Sandbox');
     }
 
     public function isEnabled(): bool
@@ -70,7 +70,7 @@ class StripeProvider implements PaymentProvider
             return Order::PENDING;
         }
         $session = $response->json() ?? [];
-        $expectedLiveMode = str_starts_with((string) config('payments.providers.stripe.secret_key'), 'sk_live_');
+        $expectedLiveMode = $this->isLiveKey();
 
         if (($session['client_reference_id'] ?? null) !== $order->uuid
             || ($session['id'] ?? $order->provider_reference) !== $order->provider_reference
@@ -87,6 +87,12 @@ class StripeProvider implements PaymentProvider
         }
 
         return ($session['status'] ?? null) === 'expired' ? Order::FAILED : Order::PENDING;
+    }
+
+    // sk_live_ = Standard-Geheimschlüssel, rk_live_ = eingeschränkter Schlüssel
+    private function isLiveKey(): bool
+    {
+        return preg_match('/^[sr]k_live_/', (string) config('payments.providers.stripe.secret_key')) === 1;
     }
 
     private function http()
