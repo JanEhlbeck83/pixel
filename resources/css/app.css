@@ -2753,6 +2753,16 @@ a.secondary-button {
     margin-right: 19px;
 }
 
+/* Admin-Reiter: untere Rundung sitzt links statt rechts */
+:is(body.wall-page, body.menu-page) .admin-menu .wall-menu-toggle::after {
+       right: -19px;
+    top: 0;
+    left: auto;
+    --cx: 100%;
+    --cy: 100%;
+    --tab-fill: #1a1124;
+}
+
 :is(body.wall-page, body.menu-page) .admin-menu .wall-menu-panel {
     position: fixed;
     top: 70px;
