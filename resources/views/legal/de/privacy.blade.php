@@ -130,7 +130,10 @@
         Deine Zahlungsdaten (z. B. Kartennummer) geben wir nicht selbst ein oder speichern sie, sie gehen
         direkt an den Anbieter. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO. Bestelldaten bewahren wir
         wegen steuer- und handelsrechtlicher Pflichten bis zu zehn Jahre auf (Art. 6 Abs. 1 lit. c DSGVO).
-        Beim Löschen deines Kontos wird die Bestellung vom Konto getrennt, bleibt aber als Buchungsbeleg erhalten.
+        Bei zustimmungspflichtigen digitalen Käufen speichern wir außerdem die für die Bestellbestätigung
+        benötigte E-Mail-Adresse sowie Zeitpunkt, Version und Sprache deiner ausdrücklichen Erklärung zum
+        vorzeitigen Leistungsbeginn. Beim Löschen deines Kontos wird die Bestellung von deinem Konto getrennt;
+        die Bestell- und Zustimmungsnachweise bleiben im Rahmen gesetzlicher Aufbewahrungspflichten erhalten.
     </p>
 
     <h2>11. Schriftarten</h2>

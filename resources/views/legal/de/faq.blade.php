@@ -69,7 +69,7 @@
 
         <details>
             <summary>Kann ich einen Kauf widerrufen?</summary>
-            <p>Bei digitalen Inhalten erlischt das Widerrufsrecht, sobald wir mit der Ausführung begonnen haben und du ausdrücklich zugestimmt hast. Details stehen in den <a href="{{ route('legal.terms') }}">Nutzungsbedingungen</a>.</p>
+            <p>Bei Pixel-Guthaben kann das Widerrufsrecht nach deiner ausdrücklichen Zustimmung und Bestätigung mit Beginn der Ausführung erlöschen. Bei einer Leinwanderweiterung erlischt es gegebenenfalls erst nach vollständiger Erbringung. Vor der Zahlung bitten wir dich um die gesetzlich erforderlichen Erklärungen. Details stehen in den <a href="{{ route('legal.terms') }}#withdrawal">Nutzungsbedingungen</a>.</p>
         </details>
 
         <details>

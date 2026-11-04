@@ -103,7 +103,15 @@
                 <div class="shop-products" id="shopExtensions"></div>
                 <hr class="shop-divider">
                 <div class="shop-checkout hidden" id="shopCheckout">
+                    <p class="shop-note">{{ __('Kleinunternehmer im Sinne von § 19 UStG: Es wird keine Umsatzsteuer berechnet oder ausgewiesen.') }}</p>
                     <h4>{{ __('Bezahlen mit') }}</h4>
+                    <label class="shop-withdrawal-consent" for="shopWithdrawalConsent">
+                        <input id="shopWithdrawalConsent" type="checkbox" required>
+                        <span>
+                            {{ __('Ich habe die Widerrufsbelehrung gelesen. Ich stimme ausdrücklich zu, dass PixRiot vor Ablauf der Widerrufsfrist mit der Bereitstellung der digitalen Inhalte beginnt. Mir ist bekannt, dass mein Widerrufsrecht mit Beginn der Bereitstellung erlischt.') }}
+                            <a href="{{ route('legal.terms') }}#withdrawal" target="_blank" rel="noopener">{{ __('Widerrufsbelehrung lesen') }}</a>
+                        </span>
+                    </label>
                     <div class="shop-providers" id="shopProviders"></div>
                     <p class="shop-note">{{ __('Du wirst zum Zahlungsanbieter weitergeleitet. Nach der Zahlung kommst du automatisch zurück.') }}</p>
                 </div>

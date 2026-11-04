@@ -30,6 +30,19 @@ class LocaleRoutingTest extends TestCase
         }
     }
 
+    public function test_shop_displays_small_business_vat_notice_and_withdrawal_consent(): void
+    {
+        $this->get('/de')
+            ->assertOk()
+            ->assertSee('Kleinunternehmer im Sinne von § 19 UStG')
+            ->assertSee('Ich habe die Widerrufsbelehrung gelesen')
+            ->assertSee('Widerrufsbelehrung lesen');
+
+        $this->get('/de/terms')
+            ->assertOk()
+            ->assertSee('keine Umsatzsteuer berechnet oder ausgewiesen');
+    }
+
     public function test_old_german_legal_urls_redirect_permanently(): void
     {
         $this->get('/datenschutz')->assertStatus(301)->assertRedirect(url('/privacy'));

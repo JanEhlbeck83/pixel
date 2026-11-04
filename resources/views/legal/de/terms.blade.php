@@ -37,19 +37,27 @@
 
     <h2>5. Kostenpflichtige Leistungen</h2>
     <p>
-        Preise werden im Shop in Euro inklusive gesetzlicher Umsatzsteuer, soweit diese anfällt, angezeigt.
-        Die Zahlung erfolgt über die dort angebotenen Zahlungsdienstleister. Gekaufte Pixel-Pakete werden
-        dem Konto gutgeschrieben, eine Wandvergrößerung wird nach erfolgreicher Zahlung umgesetzt. Ein Kauf
-        setzt ein Konto voraus.
+        Die Preise werden im Shop in Euro als Endpreise angezeigt. Wir wenden die Kleinunternehmerregelung
+        gemäß § 19 UStG an; deshalb wird keine Umsatzsteuer berechnet oder ausgewiesen. Die Zahlung erfolgt
+        über die dort angebotenen Zahlungsdienstleister. Gekaufte Pixel-Pakete werden dem Konto gutgeschrieben,
+        eine Wandvergrößerung wird nach erfolgreicher Zahlung umgesetzt. Ein Kauf setzt ein Konto voraus.
     </p>
 
-    <h2>6. Widerrufsrecht bei digitalen Inhalten</h2>
+    <h2 id="withdrawal">6. Widerrufsrecht bei digitalen Inhalten</h2>
     <p>
-        Verbraucher haben bei Fernabsatzverträgen grundsätzlich ein 14-tägiges Widerrufsrecht. Bei digitalen
-        Inhalten, die nicht auf einem körperlichen Datenträger geliefert werden (hier: Gutschrift von Pixeln
-        und Wandvergrößerung), erlischt das Widerrufsrecht nach § 356 Abs. 5 BGB, wenn wir mit der Ausführung
-        begonnen haben, nachdem du ausdrücklich zugestimmt hast, dass wir vor Ablauf der Widerrufsfrist
-        beginnen, und bestätigt hast, dass du dadurch dein Widerrufsrecht verlierst.
+        Verbraucher haben bei Fernabsatzverträgen grundsätzlich ein 14-tägiges Widerrufsrecht. Unsere
+        Produkte – Pixel-Guthaben und Leinwanderweiterungen – sind digitale Inhalte, die nicht auf einem
+        körperlichen Datenträger geliefert werden. Das Widerrufsrecht erlischt nach § 356 Abs. 6 BGB, wenn
+        wir mit der Vertragserfüllung begonnen haben, nachdem du ausdrücklich zugestimmt hast, dass wir vor
+        Ablauf der Widerrufsfrist beginnen, und bestätigt hast, dass du weißt, dass dein Widerrufsrecht mit
+        Beginn der Vertragserfüllung erlischt. Vor dem Start der Zahlung bitten wir dich um diese Zustimmung
+        und Kenntnisbestätigung. Die Bestellbestätigung erhältst du anschließend per E-Mail.
+    </p>
+    <p>
+        Das ist kein pauschaler Ausschluss sämtlicher Erstattungs- oder Gewährleistungsrechte. Die gesetzlichen
+        Rechte bei Mängeln und sonstige zwingende Verbraucherrechte bleiben unberührt. Wenn die jeweiligen
+        gesetzlichen Voraussetzungen für das Erlöschen des Widerrufsrechts nicht erfüllt sind, bleibt das
+        Widerrufsrecht bestehen.
     </p>
 
     <h2>7. Verfügbarkeit und Haftung</h2>

@@ -17,6 +17,7 @@
 return [
 
     'currency' => 'EUR',
+    'withdrawal_consent_version' => '2026-11-04-v2',
 
     // Preise in Cent. 300 = 3,00 €
     'products' => [

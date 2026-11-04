@@ -1965,6 +1965,31 @@ a.secondary-button {
     margin: 0 0 10px;
 }
 
+.shop-withdrawal-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.shop-withdrawal-consent input {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: #ff2d95;
+}
+
+.shop-withdrawal-consent a {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 .shop-providers {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

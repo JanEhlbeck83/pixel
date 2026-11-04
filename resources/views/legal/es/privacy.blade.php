@@ -130,7 +130,10 @@
         Nosotros no introducimos ni almacenamos tus datos de pago (p. ej., el número de tarjeta); van
         directamente al proveedor. La base jurídica es el art. 6, apdo. 1, letra b RGPD. Conservamos los datos
         de los pedidos hasta diez años por obligaciones fiscales y mercantiles (art. 6, apdo. 1, letra c RGPD).
-        Al eliminar tu cuenta, el pedido se desvincula de la cuenta, pero se conserva como justificante contable.
+        En las compras digitales que requieren consentimiento, también guardamos la dirección de correo
+        electrónico necesaria para la confirmación del pedido y la fecha, la versión y el idioma de la
+        declaración expresa que solicita el inicio anticipado de la ejecución. Al eliminar tu cuenta, el pedido
+        se desvincula de ella; los registros del pedido y del consentimiento se conservan según lo exige la ley.
     </p>
 
     <h2>11. Tipografías</h2>

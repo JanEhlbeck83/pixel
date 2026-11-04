@@ -123,8 +123,10 @@
     <p>
         We do not enter or store your payment data (e.g. card number) ourselves; it goes directly to the
         provider. The legal basis is Art. 6(1)(b) GDPR. We retain order data for up to ten years because of tax
-        and commercial-law obligations (Art. 6(1)(c) GDPR). When you delete your account, the order is detached
-        from the account but retained as an accounting record.
+        and commercial-law obligations (Art. 6(1)(c) GDPR). For digital purchases requiring consent, we also
+        store the email address needed for the order confirmation and the time, version and language of the
+        express declaration requesting early performance. When you delete your account, the order is detached
+        from it; order and consent records are retained as required by law.
     </p>
 
     <h2>11. Fonts</h2>

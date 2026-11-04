@@ -36,18 +36,26 @@
 
     <h2>5. Paid services</h2>
     <p>
-        Prices are displayed in the shop in euros, including statutory value added tax where applicable.
-        Payment is made through the payment service providers offered there. Purchased pixel packs are credited
-        to your account; a wall expansion is implemented after successful payment. A purchase requires an account.
+        Prices are displayed in euros as final prices. We apply the German small-business VAT scheme under
+        Section 19 of the German VAT Act (UStG); therefore, no VAT is charged or shown. Payment is made through
+        the payment service providers offered there. Purchased pixel packs are credited to your account; a wall
+        expansion is implemented after successful payment. A purchase requires an account.
     </p>
 
-    <h2>6. Right of withdrawal for digital content</h2>
+    <h2 id="withdrawal">6. Right of withdrawal for digital content</h2>
     <p>
-        Consumers generally have a 14-day right of withdrawal for distance contracts. For digital content not
-        supplied on a tangible medium (here: crediting of pixels and wall expansion), the right of withdrawal
-        expires under Section 356(5) of the German Civil Code (BGB) once we have begun performance after you
-        have expressly consented to our beginning performance before the withdrawal period has expired and have
-        acknowledged that you thereby lose your right of withdrawal.
+        Consumers generally have a 14-day right of withdrawal for distance contracts. Our products—pixel
+        credits and wall expansions—are digital content not supplied on a tangible medium. Under Section
+        356(6) of the German Civil Code (BGB), the right of withdrawal expires once we have begun performance,
+        provided that you expressly consented to performance beginning before the withdrawal period expires
+        and acknowledged that you understand your right of withdrawal expires when performance begins. We
+        ask for this consent and acknowledgment before payment starts. You will then receive an order
+        confirmation by email.
+    </p>
+    <p>
+        This is not a blanket exclusion of all refund or warranty rights. Statutory rights relating to defects
+        and other mandatory consumer rights remain unaffected. If the applicable statutory requirements for
+        expiry of the right of withdrawal are not met, that right remains in force.
     </p>
 
     <h2>7. Availability and liability</h2>

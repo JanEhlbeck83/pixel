@@ -1804,6 +1804,7 @@ const shopModal = document.getElementById('shopModal');
 const shopProductsEl = document.getElementById('shopProducts');
 const shopExtensionsEl = document.getElementById('shopExtensions');
 const shopProvidersEl = document.getElementById('shopProviders');
+const shopWithdrawalConsent = document.getElementById('shopWithdrawalConsent');
 const shopCheckoutEl = document.getElementById('shopCheckout');
 const shopGuestNotice = document.getElementById('shopGuestNotice');
 const shopCreditsEl = document.getElementById('shopCredits');
@@ -2035,6 +2036,9 @@ function renderShop() {
         }
         card.addEventListener('click', () => {
             shopSelected = product.id;
+            if (shopWithdrawalConsent) {
+                shopWithdrawalConsent.checked = false;
+            }
             renderShop();
         });
         (product.type === 'extend' ? shopExtensionsEl : shopProductsEl).appendChild(card);
@@ -2084,6 +2088,9 @@ async function openShop(productId = null) {
 
     hideLimitModal();
     shopSelected = productId;
+    if (shopWithdrawalConsent) {
+        shopWithdrawalConsent.checked = false;
+    }
     shopModal.classList.remove('hidden');
     try {
         const response = await apiFetch('/api/shop', { headers: { Accept: 'application/json' } });
@@ -2100,6 +2107,11 @@ async function openShop(productId = null) {
 }
 
 async function startCheckout(provider, button) {
+    if (!shopWithdrawalConsent?.checked) {
+        shopWithdrawalConsent?.reportValidity();
+        return;
+    }
+
     shopErrorEl.classList.add('hidden');
     shopProvidersEl.querySelectorAll('button').forEach((item) => { item.disabled = true; });
     button.classList.add('is-loading');
@@ -2111,7 +2123,11 @@ async function startCheckout(provider, button) {
                 Accept: 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
             },
-            body: JSON.stringify({ product: shopSelected, provider }),
+            body: JSON.stringify({
+                product: shopSelected,
+                provider,
+                withdrawal_consent: shopWithdrawalConsent?.checked ?? false,
+            }),
         });
         const payload = await response.json();
         if (!response.ok || !payload.redirect) {
