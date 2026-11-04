@@ -53,7 +53,7 @@ class StripeProvider implements PaymentProvider
         ]);
 
         if (! $response->successful() || ! $response->json('url')) {
-            throw new RuntimeException('Stripe: Zahlung konnte nicht angelegt werden ('.$response->status().').');
+            throw new RuntimeException('Stripe: Zahlung konnte nicht angelegt werden ('.$response->status().'): '.mb_substr((string) $response->json('error.message'), 0, 300));
         }
 
         $order->update(['provider_reference' => $response->json('id')]);
