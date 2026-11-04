@@ -168,7 +168,7 @@ class StripeShopTest extends TestCase
             return $request->hasHeader('Authorization', 'Bearer sk_test_x')
                 && $request->hasHeader('Idempotency-Key', 'checkout-'.$order->uuid)
                 && $data['mode'] === 'payment'
-                && $data['payment_method_types'] === ['card', 'sepa_debit', 'klarna', 'link']
+                && ! array_key_exists('payment_method_types', $data)
                 && $data['client_reference_id'] === $order->uuid
                 && $data['metadata'] === ['order_uuid' => $order->uuid]
                 && $data['success_url'] === route('shop.return', $order)

@@ -94,9 +94,6 @@ return [
             'label' => 'Karte / Apple Pay / Google Pay (Stripe)',
             'secret_key' => env('STRIPE_SECRET_KEY'),
             'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-            // Komma-getrennt. Jede Methode muss auch im Stripe-Dashboard aktiviert sein, sonst lehnt Stripe den Checkout ab.
-            // Karte inkl. Apple/Google Pay, SEPA lastschrift (asynchron, braucht den Webhook), Klarna, Link.
-            'payment_methods' => array_values(array_filter(array_map('trim', explode(',', (string) env('STRIPE_PAYMENT_METHODS', 'card,sepa_debit,klarna,link'))))),
         ],
 
         // Lokale Simulation ohne Konto – nur wenn APP_ENV != production.
