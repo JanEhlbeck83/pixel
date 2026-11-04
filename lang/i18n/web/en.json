@@ -2,7 +2,7 @@
     "Link zum Teilen:": "Link to share:",
     "Cookies & lokaler Speicher": "Cookies & local storage",
     "Ohne Speichern weiterspielen": "Continue without saving",
-    "Notwendige Cookies ermöglichen Sitzung und Sicherheit. Mit „Akzeptieren“ erlaubst du zusätzlich, Einführung und bestätigte Spielregeln dauerhaft in deinem Browser zu merken. Ohne Zustimmung kannst du spielen; beim nächsten Aufruf erscheint die Einführung erneut. Kein Tracking. Du kannst die Zustimmung durch Löschen dieser Websitedaten in deinem Browser widerrufen.": "Necessary cookies enable sessions and security. By choosing “Accept”, you also allow us to remember the introduction and confirmed game rules in your browser. You can play without consent; the introduction will appear again on your next visit. No tracking. You can withdraw consent by deleting this site's data in your browser.",
+    "Notwendige Cookies ermöglichen Sitzung und Sicherheit. Mit „Akzeptieren“ erlaubst du zusätzlich, Einführung und bestätigte Spielregeln dauerhaft in deinem Browser zu merken. Ohne Zustimmung kannst du spielen; beim nächsten Aufruf erscheint die Einführung erneut. PixRiot misst Besuche und gesetzte Pixel mit einer täglich wechselnden Hash-Kennung; Details stehen im Datenschutz. Keine externen Werbe- oder Analysedienste.": "Necessary cookies enable sessions and security. By choosing “Accept”, you also allow us to remember the introduction and confirmed game rules in your browser. You can play without consent; the introduction will appear again on your next visit. PixRiot measures visits and pixels placed using a daily changing hash; see the privacy policy for details. No external advertising or analytics services.",
     "Spiel starten": "Start playing",
     "PixRiot – Gemeinsam Pixelart online gestalten": "PixRiot – Create Pixelart together online",
     "Gestalte mit der PixRiot-Community eine gemeinsame Pixelwand. Setze kostenlos Pixel, erschaffe Pixelart und entdecke Kunstwerke im Wandel.": "Create a shared pixel wall with the PixRiot community. Place pixels for free, make Pixelart and discover ever-changing artworks.",
@@ -146,5 +146,8 @@
     "PixRiot-Newsletter erhalten": "Receive the PixRiot newsletter",
     "PixRiot | Newsletter": "PixRiot | Newsletter",
     "Newsletter abbestellt": "Unsubscribed from the newsletter",
-    "Du erhältst keine Newsletter mehr von PixRiot.": "You will no longer receive newsletters from PixRiot."
+    "Du erhältst keine Newsletter mehr von PixRiot.": "You will no longer receive newsletters from PixRiot.",
+    "Ich habe die Widerrufsbelehrung gelesen. Ich stimme ausdrücklich zu, dass PixRiot vor Ablauf der Widerrufsfrist mit der Bereitstellung der digitalen Inhalte beginnt. Mir ist bekannt, dass mein Widerrufsrecht mit Beginn der Bereitstellung erlischt.": "I have read the withdrawal policy. I expressly agree that PixRiot may begin providing the digital content before the withdrawal period ends. I understand that my right of withdrawal expires when provision begins.",
+    "Widerrufsbelehrung lesen": "Read the withdrawal policy",
+    "Kleinunternehmer im Sinne von § 19 UStG: Es wird keine Umsatzsteuer berechnet oder ausgewiesen.": "Small business under Section 19 of the German VAT Act (UStG): no VAT is charged or shown."
 }

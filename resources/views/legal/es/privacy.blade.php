@@ -30,7 +30,16 @@
         sesión. Tras una elección deliberada de idioma se añade la cookie funcional «pixel_locale» (véase el
         apartado 15). La base jurídica del almacenamiento necesario es el
         art. 25, apdo. 2, n.º 2 TDDDG y el art. 6, apdo. 1, letra f RGPD. No utilizamos cookies de seguimiento
-        ni publicitarias.
+        ni publicitarias adicionales.
+    </p>
+    <p>
+        Medimos el alcance con datos seudonimizados, contando las visitas al muro y a la galería, el tiempo
+        activo en esas páginas y los píxeles colocados correctamente en el muro. Para ello, el identificador de la cookie de sesión
+        técnicamente necesaria se convierte diariamente en un hash cambiante; no almacenamos dicho identificador
+        ni tu dirección IP para las estadísticas. El país se estima a partir de la IP utilizando únicamente
+        nuestra base de datos Geo-IP local; la IP no se envía a ningún proveedor de geolocalización. Los datos
+        estadísticos se eliminan a los 90 días. La base jurídica es nuestro interés legítimo en operar y mejorar
+        el sitio web (art. 6, apdo. 1, letra f RGPD).
     </p>
     <p>
         Solo con tu consentimiento adicional mediante «Aceptar» recordamos la introducción y las reglas
@@ -121,7 +130,10 @@
         Nosotros no introducimos ni almacenamos tus datos de pago (p. ej., el número de tarjeta); van
         directamente al proveedor. La base jurídica es el art. 6, apdo. 1, letra b RGPD. Conservamos los datos
         de los pedidos hasta diez años por obligaciones fiscales y mercantiles (art. 6, apdo. 1, letra c RGPD).
-        Al eliminar tu cuenta, el pedido se desvincula de la cuenta, pero se conserva como justificante contable.
+        En las compras digitales que requieren consentimiento, también guardamos la dirección de correo
+        electrónico necesaria para la confirmación del pedido y la fecha, la versión y el idioma de la
+        declaración expresa que solicita el inicio anticipado de la ejecución. Al eliminar tu cuenta, el pedido
+        se desvincula de ella; los registros del pedido y del consentimiento se conservan según lo exige la ley.
     </p>
 
     <h2>11. Tipografías</h2>

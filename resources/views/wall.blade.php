@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="analytics-heartbeat-url" content="{{ route('analytics.heartbeat') }}">
         <title>{{ __('PixRiot – Gemeinsam Pixelart online gestalten') }}</title>
         <meta name="description" content="{{ __('Gestalte mit der PixRiot-Community eine gemeinsame Pixelwand. Setze kostenlos Pixel, erschaffe Pixelart und entdecke Kunstwerke im Wandel.') }}">
         <x-favicons />
@@ -102,7 +103,15 @@
                 <div class="shop-products" id="shopExtensions"></div>
                 <hr class="shop-divider">
                 <div class="shop-checkout hidden" id="shopCheckout">
+                    <p class="shop-note">{{ __('Kleinunternehmer im Sinne von § 19 UStG: Es wird keine Umsatzsteuer berechnet oder ausgewiesen.') }}</p>
                     <h4>{{ __('Bezahlen mit') }}</h4>
+                    <label class="shop-withdrawal-consent" for="shopWithdrawalConsent">
+                        <input id="shopWithdrawalConsent" type="checkbox" required>
+                        <span>
+                            {{ __('Ich habe die Widerrufsbelehrung gelesen. Ich stimme ausdrücklich zu, dass PixRiot vor Ablauf der Widerrufsfrist mit der Bereitstellung der digitalen Inhalte beginnt. Mir ist bekannt, dass mein Widerrufsrecht mit Beginn der Bereitstellung erlischt.') }}
+                            <a href="{{ route('legal.terms') }}#withdrawal" target="_blank" rel="noopener">{{ __('Widerrufsbelehrung lesen') }}</a>
+                        </span>
+                    </label>
                     <div class="shop-providers" id="shopProviders"></div>
                     <p class="shop-note">{{ __('Du wirst zum Zahlungsanbieter weitergeleitet. Nach der Zahlung kommst du automatisch zurück.') }}</p>
                 </div>
@@ -171,7 +180,7 @@
             <div class="cookie-content">
                 <div>
                     <strong>{{ __('Cookies & lokaler Speicher') }}</strong>
-                    <p>{{ __('Notwendige Cookies ermöglichen Sitzung und Sicherheit. Mit „Akzeptieren“ erlaubst du zusätzlich, Einführung und bestätigte Spielregeln dauerhaft in deinem Browser zu merken. Ohne Zustimmung kannst du spielen; beim nächsten Aufruf erscheint die Einführung erneut. Kein Tracking. Du kannst die Zustimmung durch Löschen dieser Websitedaten in deinem Browser widerrufen.') }} <a href="{{ route('legal.privacy') }}">{{ __('Datenschutz') }}</a></p>
+                    <p>{{ __('Notwendige Cookies ermöglichen Sitzung und Sicherheit. Mit „Akzeptieren“ erlaubst du zusätzlich, Einführung und bestätigte Spielregeln dauerhaft in deinem Browser zu merken. Ohne Zustimmung kannst du spielen; beim nächsten Aufruf erscheint die Einführung erneut. PixRiot misst Besuche und gesetzte Pixel mit einer täglich wechselnden Hash-Kennung; Details stehen im Datenschutz. Keine externen Werbe- oder Analysedienste.') }} <a href="{{ route('legal.privacy') }}">{{ __('Datenschutz') }}</a></p>
                 </div>
                 <button type="button" id="declineStorageBtn" class="secondary-button">{{ __('Ohne Speichern weiterspielen') }}</button>
                 <button type="button" id="acceptCookiesBtn" class="primary-button">{{ __('Akzeptieren') }}</button>

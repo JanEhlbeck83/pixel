@@ -2,13 +2,16 @@
 
 namespace App\Services\Payments;
 
+use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\Wall\WallExtender;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use RuntimeException;
 
 class Shop
 {
@@ -39,7 +42,13 @@ class Shop
             ?? throw new InvalidArgumentException('Unbekannter oder nicht aktivierter Zahlungsanbieter.');
     }
 
-    public function createOrder(User $user, string $product, string $providerKey): Order
+    public function createOrder(
+        User $user,
+        string $product,
+        string $providerKey,
+        bool $withdrawalConsent = false,
+        string $locale = 'de',
+    ): Order
     {
         $definition = config('payments.products.'.$product);
         if (! $definition) {
@@ -56,6 +65,10 @@ class Shop
             'amount_cents' => $definition['price_cents'],
             'currency' => config('payments.currency'),
             'meta' => array_filter(['axis' => $definition['axis'] ?? null, 'amount' => $definition['amount']]),
+            'purchaser_email' => $user->email,
+            'withdrawal_consent_at' => $withdrawalConsent ? now() : null,
+            'withdrawal_consent_version' => $withdrawalConsent ? config('payments.withdrawal_consent_version') : null,
+            'withdrawal_consent_locale' => $withdrawalConsent ? $locale : null,
         ]);
     }
 
@@ -106,7 +119,25 @@ public function settle(Order $order, string $status): void
     return;
 }
 
-            $product = config('payments.products.'.$locked->product);
+if (
+    ! $locked->withdrawal_consent_at
+    || ! $locked->withdrawal_consent_version
+    || ! $locked->withdrawal_consent_locale
+) {
+    throw new RuntimeException('Bestellung kann ohne protokollierte Widerrufserklärung nicht erfüllt werden.');
+}
+
+if (! $locked->contract_confirmation_sent_at) {
+    if (! $locked->purchaser_email) {
+        throw new RuntimeException('Bestellbestätigung kann ohne Käufer-E-Mail nicht versendet werden.');
+    }
+
+    Mail::to($locked->purchaser_email)->send(new OrderConfirmationMail($locked));
+    $locked->contract_confirmation_sent_at = now();
+    $locked->save();
+}
+
+$product = config('payments.products.'.$locked->product);
             if (($product['type'] ?? null) === 'extend') {
                 $this->extender->extend($product['axis'], (int) ($product['amount'] ?? 1));
             } elseif (($product['type'] ?? null) === 'pixels') {

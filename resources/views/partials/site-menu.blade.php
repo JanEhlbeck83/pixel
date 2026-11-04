@@ -11,6 +11,7 @@
                     <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                 </div>
                 <nav class="top-actions wall-menu-links" aria-label="Admin">
+                    <a href="{{ route('admin.analytics') }}"><x-icon name="faq" />{{ __('Analyse') }}</a>
                     <a href="{{ route('admin.reports') }}"><x-icon name="flag" />{{ __('Meldungen') }}</a>
                     <a href="{{ route('admin.newsletters') }}"><x-icon name="faq" />Newsletter</a>
                 </nav>

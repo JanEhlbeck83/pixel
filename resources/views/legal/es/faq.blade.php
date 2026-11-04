@@ -69,7 +69,7 @@
 
         <details>
             <summary>¿Puedo desistir de una compra?</summary>
-            <p>En los contenidos digitales el derecho de desistimiento se extingue cuando hemos comenzado la ejecución y has dado tu consentimiento expreso. Los detalles están en las <a href="{{ route('legal.terms') }}">Condiciones de uso</a>.</p>
+            <p>Para el saldo de píxeles, el derecho de desistimiento puede extinguirse cuando comienza la ejecución, tras tu consentimiento y confirmación expresos. Para la ampliación del muro, puede extinguirse únicamente cuando el servicio se haya prestado por completo. Antes del pago solicitamos las declaraciones exigidas por la ley. Consulta las <a href="{{ route('legal.terms') }}#withdrawal">Condiciones de uso</a>.</p>
         </details>
 
         <details>

@@ -69,7 +69,7 @@
 
         <details>
             <summary>Can I withdraw from a purchase?</summary>
-            <p>For digital content the right of withdrawal expires once we have started delivery and you have expressly agreed. Details are in the <a href="{{ route('legal.terms') }}">Terms of Use</a>.</p>
+            <p>For pixel credits, the right of withdrawal may expire when performance begins after your express consent and acknowledgment. For a wall expansion, it may expire only after the service has been fully performed. Before payment, we ask for the declarations required by law. Details are in the <a href="{{ route('legal.terms') }}#withdrawal">Terms of Use</a>.</p>
         </details>
 
         <details>

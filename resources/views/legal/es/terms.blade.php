@@ -36,20 +36,27 @@
 
     <h2>5. Servicios de pago</h2>
     <p>
-        Los precios se muestran en la tienda en euros, con el impuesto sobre el valor añadido legal incluido
-        cuando proceda. El pago se realiza a través de los proveedores de servicios de pago ofrecidos allí. Los
-        paquetes de píxeles comprados se abonan en tu cuenta; la ampliación del muro se aplica tras el pago
-        correcto. Para comprar es necesaria una cuenta.
+        Los precios se muestran en euros como precios finales. Aplicamos el régimen alemán para pequeñas
+        empresas conforme al § 19 de la Ley alemana del IVA (UStG); por tanto, no se cobra ni se indica el IVA.
+        El pago se realiza a través de los proveedores de servicios de pago ofrecidos allí. Los paquetes de
+        píxeles comprados se abonan en tu cuenta; la ampliación del muro se aplica tras el pago correcto.
+        Para comprar es necesaria una cuenta.
     </p>
 
-    <h2>6. Derecho de desistimiento en contenidos digitales</h2>
+    <h2 id="withdrawal">6. Derecho de desistimiento sobre contenidos digitales</h2>
     <p>
         Los consumidores tienen, por regla general, un derecho de desistimiento de 14 días en los contratos a
-        distancia. En el caso de contenidos digitales que no se suministran en un soporte material (aquí: abono
-        de píxeles y ampliación del muro), el derecho de desistimiento se extingue conforme al art. 356, apdo. 5
-        del Código Civil alemán (BGB) cuando hemos comenzado la ejecución después de que hayas consentido
-        expresamente que comencemos antes de que expire el plazo de desistimiento y hayas confirmado que con ello
-        pierdes tu derecho de desistimiento.
+        distancia. Nuestros productos —saldo de píxeles y ampliaciones del muro— son contenidos digitales que
+        no se suministran en un soporte material. Conforme al art. 356, apdo. 6, del Código Civil alemán (BGB),
+        el derecho de desistimiento se extingue cuando comenzamos la ejecución, siempre que hayas consentido
+        expresamente que comencemos antes de que expire el plazo de desistimiento y hayas confirmado que sabes
+        que tu derecho se extingue cuando comienza la ejecución. Solicitamos este consentimiento y confirmación
+        antes de iniciar el pago. Después recibirás la confirmación del pedido por correo electrónico.
+    </p>
+    <p>
+        Esto no supone una exclusión general de todos los derechos de reembolso o garantía. Se mantienen los
+        derechos legales por defectos y los demás derechos imperativos de los consumidores. Si no se cumplen
+        los requisitos legales aplicables para la extinción del derecho de desistimiento, este sigue vigente.
     </p>
 
     <h2>7. Disponibilidad y responsabilidad</h2>

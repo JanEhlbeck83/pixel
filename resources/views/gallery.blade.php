@@ -3,6 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="analytics-heartbeat-url" content="{{ route('analytics.heartbeat') }}">
         <title>{{ __('Pixelart – Community-Kunstwerke & Snapshots | PixRiot') }}</title>
         <meta name="description" content="{{ __('Entdecke die Kunstwerke der PixRiot-Community. Regelmäßige Snapshots zeigen, wie sich unsere gemeinsame Pixelwand verändert.') }}">
         <x-favicons />

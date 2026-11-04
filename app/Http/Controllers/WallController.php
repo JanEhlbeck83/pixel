@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\Pixel;
 use App\Models\PixelEditLock;
 use App\Models\Snapshot;
+use App\Services\Analytics;
 use App\Services\Wall\PixelQuota;
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -15,7 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class WallController extends Controller
 {
-    public function __construct(private PixelQuota $quota) {}
+    public function __construct(
+        private PixelQuota $quota,
+        private Analytics $analytics,
+    ) {}
 
     private const WALL_TILE_SIZE = 300;
 
@@ -374,8 +378,8 @@ class WallController extends Controller
         if ($user?->isBanned()) {
             return response()->json(['message' => __('Dein Konto wurde gesperrt. Du kannst keine Pixel mehr setzen.')], 403);
         }
-        $savePixels = function () use ($validatedPixels, $isBatch, $user) {
-            return DB::transaction(function () use ($validatedPixels, $isBatch, $user) {
+        $savePixels = function () use ($validatedPixels, $isBatch, $user, $request) {
+            return DB::transaction(function () use ($validatedPixels, $isBatch, $user, $request) {
                 $coordinates = collect($validatedPixels)->unique(fn ($pixel) => $pixel['x'].':'.$pixel['y']);
                 $lockedPixels = Pixel::query()
                     ->whereNotNull('updated_by_user_id')
@@ -448,6 +452,8 @@ class WallController extends Controller
                         ]
                     );
                 }
+
+                $this->analytics->recordPixels($request, count($validatedPixels));
 
                 if ($user !== null && ! $isBatch) {
                     Activity::create([

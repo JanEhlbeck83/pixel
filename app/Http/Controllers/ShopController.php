@@ -47,6 +47,7 @@ class ShopController extends Controller
         $data = $request->validate([
             'product' => ['required', Rule::in(array_keys(config('payments.products')))],
             'provider' => ['required', Rule::in(array_keys($this->shop->providers()))],
+            'withdrawal_consent' => ['required', 'accepted'],
         ]);
 
         $product = config('payments.products.'.$data['product']);
@@ -58,7 +59,13 @@ class ShopController extends Controller
             ], 422);
         }
 
-        $order = $this->shop->createOrder($request->user(), $data['product'], $data['provider']);
+        $order = $this->shop->createOrder(
+            $request->user(),
+            $data['product'],
+            $data['provider'],
+            (bool) ($data['withdrawal_consent'] ?? false),
+            app()->getLocale(),
+        );
 
         try {
             $url = $this->shop->provider($order->provider)->createCheckout($order);
@@ -153,11 +160,7 @@ class ShopController extends Controller
             : null;
 
         if ($order) {
-            try {
-                $this->shop->refresh($order);
-            } catch (Throwable $e) {
-                Log::error('Webhook-Verarbeitung fehlgeschlagen', ['order' => $order->uuid, 'error' => $e->getMessage()]);
-            }
+            $this->shop->refresh($order);
         }
     }
 

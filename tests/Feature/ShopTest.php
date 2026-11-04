@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -22,6 +23,7 @@ class ShopTest extends TestCase
             'payments.providers.paypal.client_id' => null,
             'payments.providers.stripe.secret_key' => null,
         ]);
+        Mail::fake();
     }
 
     public function test_catalog_lists_products_and_enabled_providers(): void
@@ -48,20 +50,37 @@ class ShopTest extends TestCase
     {
         $user = User::factory()->create(['pixel_credits' => 9700]);
 
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_1000', 'provider' => 'fake'])
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_1000', 'provider' => 'fake', 'withdrawal_consent' => true])
             ->assertStatus(422);
         $this->assertDatabaseCount('orders', 0);
 
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake'])->assertOk();
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake', 'withdrawal_consent' => true])->assertOk();
     }
 
     public function test_checkout_requires_login_and_valid_input(): void
     {
-        $this->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake'])->assertUnauthorized();
+        $this->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake', 'withdrawal_consent' => true])->assertUnauthorized();
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'free', 'provider' => 'fake'])->assertUnprocessable();
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'free', 'provider' => 'fake', 'withdrawal_consent' => true])->assertUnprocessable();
         $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'paypal'])->assertUnprocessable();
+    }
+
+    public function test_real_payment_checkout_requires_withdrawal_consent(): void
+    {
+        config([
+            'payments.providers.paypal.client_id' => 'id',
+            'payments.providers.paypal.client_secret' => 'secret',
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'paypal'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('withdrawal_consent');
+
+        $this->assertDatabaseCount('orders', 0);
     }
 
     public function test_fake_provider_is_disabled_in_production(): void
@@ -76,7 +95,8 @@ class ShopTest extends TestCase
         $user = User::factory()->create();
 
         $redirect = $this->actingAs($user)
-            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake'])
+            ->withHeader('X-App-Locale', 'de')
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake', 'withdrawal_consent' => true])
             ->assertOk()
             ->json('redirect');
 
@@ -84,6 +104,7 @@ class ShopTest extends TestCase
         $this->assertSame(Order::PENDING, $order->status);
         $this->assertSame(500, $order->amount_cents);
         $this->assertSame(route('shop.fake', $order), $redirect);
+        $this->assertSame($user->email, $order->purchaser_email);
 
         $this->actingAs($user)->withHeader('X-App-Locale', 'de')->get($redirect)->assertOk()->assertSee('5,00 €');
 
@@ -93,12 +114,20 @@ class ShopTest extends TestCase
         $this->actingAs($user)->get(route('shop.return', $order));
 
         $this->assertSame(250, $user->fresh()->pixel_credits);
+        $this->assertNotNull($order->fresh()->contract_confirmation_sent_at);
+        Mail::assertSent(\App\Mail\OrderConfirmationMail::class, function ($mail) use ($user) {
+            $rendered = $mail->render();
+
+            return $mail->hasTo($user->email)
+                && str_contains($rendered, 'Widerrufsrecht')
+                && str_contains($rendered, '5,00 EUR');
+        });
     }
 
     public function test_buying_1000_pixels_bundle_adds_1000_credits(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_1000', 'provider' => 'fake'])->assertOk();
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_1000', 'provider' => 'fake', 'withdrawal_consent' => true])->assertOk();
         $order = Order::firstOrFail();
         $this->assertSame(1500, $order->amount_cents);
 
@@ -110,7 +139,7 @@ class ShopTest extends TestCase
     public function test_buying_a_wall_extension_grows_the_wall_for_everyone(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'extend_x', 'provider' => 'fake'])->assertOk();
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'extend_x', 'provider' => 'fake', 'withdrawal_consent' => true])->assertOk();
         $order = Order::firstOrFail();
 
         $this->actingAs($user)->post(route('shop.fake.pay', $order), ['result' => 'paid']);
@@ -126,7 +155,7 @@ class ShopTest extends TestCase
     public function test_buying_five_pixels_of_extension_at_once_costs_twelve_euro(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'extend_y_5', 'provider' => 'fake'])->assertOk();
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'extend_y_5', 'provider' => 'fake', 'withdrawal_consent' => true])->assertOk();
         $order = Order::firstOrFail();
         $this->assertSame(1200, $order->amount_cents);
 
@@ -140,7 +169,7 @@ class ShopTest extends TestCase
     public function test_cancelled_payment_gives_nothing(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake']);
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake', 'withdrawal_consent' => true]);
         $order = Order::firstOrFail();
 
         $this->actingAs($user)->post(route('shop.fake.pay', $order), ['result' => 'cancel'])
@@ -158,6 +187,7 @@ public function test_cancelled_order_cannot_be_fulfilled(): void
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'fake',
+        'withdrawal_consent' => true,
     ]);
 
     $order = Order::firstOrFail();
@@ -176,6 +206,7 @@ public function test_cancel_cannot_overwrite_fulfilled_order(): void
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'fake',
+        'withdrawal_consent' => true,
     ]);
 
     $order = Order::firstOrFail();
@@ -192,7 +223,7 @@ public function test_cancel_cannot_overwrite_fulfilled_order(): void
     public function test_other_users_cannot_touch_an_order(): void
     {
         $owner = User::factory()->create();
-        $this->actingAs($owner)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake']);
+        $this->actingAs($owner)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake', 'withdrawal_consent' => true]);
         $order = Order::firstOrFail();
 
         $this->actingAs(User::factory()->create())->get(route('shop.return', $order))->assertForbidden();
@@ -266,6 +297,7 @@ if (str_contains($url, '/v1/oauth2/token')) {
         ->postJson('/shop/checkout', [
             'product' => 'pixels_100',
             'provider' => 'paypal',
+            'withdrawal_consent' => true,
         ])
         ->assertOk()
         ->assertJsonPath(
@@ -370,8 +402,17 @@ if (str_contains($url, '/v1/oauth2/token')) {
         ]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
+        $this->actingAs($user)->postJson('/shop/checkout', [
+            'product' => 'pixels_100',
+            'provider' => 'stripe',
+            'withdrawal_consent' => true,
+        ])
             ->assertOk()->assertJsonPath('redirect', 'https://checkout.stripe.com/c/pay/cs_test_1');
+
+        $order = Order::firstOrFail();
+        $this->assertNotNull($order->withdrawal_consent_at);
+        $this->assertSame('2026-11-04-v2', $order->withdrawal_consent_version);
+        $this->assertSame('en', $order->withdrawal_consent_locale);
 
         $this->actingAs($user)->get(route('shop.return', Order::firstOrFail()));
         $this->assertSame(250, $user->fresh()->pixel_credits);
@@ -805,7 +846,11 @@ public function test_paypal_capture_with_declined_status_is_rejected(): void
         Http::fake(['api.stripe.com/*' => Http::response([], 500)]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
+        $this->actingAs($user)->postJson('/shop/checkout', [
+            'product' => 'pixels_100',
+            'provider' => 'stripe',
+            'withdrawal_consent' => true,
+        ])
             ->assertStatus(502)->assertJsonPath('success', false);
         $this->assertSame(Order::FAILED, Order::firstOrFail()->status);
     }
@@ -813,7 +858,7 @@ public function test_paypal_capture_with_declined_status_is_rejected(): void
     public function test_profile_shows_orders_and_credits(): void
     {
         $user = User::factory()->create(['pixel_credits' => 42]);
-        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake']);
+        $this->actingAs($user)->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'fake', 'withdrawal_consent' => true]);
 
         $this->actingAs($user)->get('/de/profile')
             ->assertOk()
@@ -832,6 +877,10 @@ public function test_failed_payment_cannot_overwrite_paid_order(): void
         'user_id' => $user->id,
         'product' => 'pixels_100',
         'provider' => 'fake',
+        'purchaser_email' => $user->email,
+        'withdrawal_consent_at' => now(),
+        'withdrawal_consent_version' => '2026-11-04-v2',
+        'withdrawal_consent_locale' => 'de',
         'status' => Order::PENDING,
         'amount_cents' => 500,
         'currency' => 'EUR',
@@ -942,6 +991,7 @@ Http::fake([
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'paypal',
+            'withdrawal_consent' => true,
     ])->assertOk();
 
     $order = Order::firstOrFail();
@@ -1008,6 +1058,7 @@ public function test_paypal_does_not_accept_matching_second_purchase_unit(): voi
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'paypal',
+            'withdrawal_consent' => true,
     ])->assertOk();
 
     $order = Order::firstOrFail();
@@ -1075,6 +1126,7 @@ public function test_paypal_rejects_unexpected_additional_purchase_unit(): void
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'paypal',
+            'withdrawal_consent' => true,
     ])->assertOk();
 
     $order = Order::firstOrFail();
@@ -1132,6 +1184,7 @@ public function test_paypal_keeps_order_pending_when_capture_list_is_empty(): vo
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'paypal',
+            'withdrawal_consent' => true,
     ])->assertOk();
 
     $order = Order::firstOrFail();
@@ -1187,6 +1240,7 @@ public function test_paypal_keeps_order_pending_when_captures_field_is_missing()
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'paypal',
+            'withdrawal_consent' => true,
     ])->assertOk();
 
     $order = Order::firstOrFail();
@@ -1250,6 +1304,7 @@ public function test_paypal_rejects_denied_capture_even_when_order_is_completed(
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'paypal',
+            'withdrawal_consent' => true,
     ])->assertOk();
 
     $order = Order::firstOrFail();
@@ -1581,6 +1636,7 @@ public function test_stripe_rejects_live_payment_in_test_mode(): void
     $this->actingAs($user)->postJson('/shop/checkout', [
         'product' => 'pixels_100',
         'provider' => 'stripe',
+        'withdrawal_consent' => true,
     ])->assertOk();
 
     $this->actingAs($user)->get(route('shop.return', Order::firstOrFail()));

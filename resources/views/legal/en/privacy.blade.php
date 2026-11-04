@@ -29,7 +29,15 @@
         attacks (CSRF/XSRF) and, if you use “stay logged in”, a login cookie. After a deliberate choice of
         language, the functional cookie “pixel_locale” is added (see section 15).
         The legal basis for necessary storage is Section 25(2) no. 2 TDDDG and
-        Art. 6(1)(f) GDPR. We do not use tracking or advertising cookies.
+        Art. 6(1)(f) GDPR. We do not set additional tracking or advertising cookies.
+    </p>
+    <p>
+        We measure reach using pseudonymised data by counting visits to the wall and gallery, active time on
+        those pages and successfully placed pixels on the wall. For this purpose, the identifier of the technically necessary session cookie is
+        hashed with a daily changing value; neither the identifier nor your IP address is stored for analytics.
+        Your country is estimated from your IP address using only our local Geo-IP database; the IP is not sent
+        to a geolocation provider. Analytics records are deleted after 90 days. The legal basis is our
+        legitimate interest in operating and improving the website (Art. 6(1)(f) GDPR).
     </p>
     <p>
         Only with your additional consent via “Accept” do we remember the introduction and confirmed game
@@ -115,8 +123,10 @@
     <p>
         We do not enter or store your payment data (e.g. card number) ourselves; it goes directly to the
         provider. The legal basis is Art. 6(1)(b) GDPR. We retain order data for up to ten years because of tax
-        and commercial-law obligations (Art. 6(1)(c) GDPR). When you delete your account, the order is detached
-        from the account but retained as an accounting record.
+        and commercial-law obligations (Art. 6(1)(c) GDPR). For digital purchases requiring consent, we also
+        store the email address needed for the order confirmation and the time, version and language of the
+        express declaration requesting early performance. When you delete your account, the order is detached
+        from it; order and consent records are retained as required by law.
     </p>
 
     <h2>11. Fonts</h2>

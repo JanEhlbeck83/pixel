@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -36,6 +37,7 @@ class StripeShopTest extends TestCase
             'payments.providers.stripe.secret_key' => 'sk_test_x',
             'payments.providers.stripe.webhook_secret' => self::WEBHOOK_SECRET,
         ]);
+        Mail::fake();
     }
 
     // ---------------------------------------------------------------- Katalog / Aktivierung
@@ -85,7 +87,7 @@ class StripeShopTest extends TestCase
         $this->getJson('/api/shop')->assertJsonCount(0, 'providers');
 
         $this->actingAs(User::factory()->create())
-            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe', 'withdrawal_consent' => true])
             ->assertUnprocessable();
         $this->assertDatabaseCount('orders', 0);
     }
@@ -148,7 +150,7 @@ class StripeShopTest extends TestCase
 
         // Ein vom Client mitgeschickter Preis darf nie verwendet werden.
         $this->actingAs($user)
-            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe', 'price_cents' => 1, 'amount_cents' => 1])
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe', 'withdrawal_consent' => true, 'price_cents' => 1, 'amount_cents' => 1])
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('redirect', 'https://checkout.stripe.com/c/pay/cs_test_1');
@@ -187,7 +189,7 @@ class StripeShopTest extends TestCase
         $this->fakeStripe('cs_test_p');
 
         $this->actingAs(User::factory()->create())
-            ->postJson('/shop/checkout', ['product' => $product, 'provider' => 'stripe'])
+            ->postJson('/shop/checkout', ['product' => $product, 'provider' => 'stripe', 'withdrawal_consent' => true])
             ->assertOk();
 
         $this->assertSame($cents, Order::firstOrFail()->amount_cents);
@@ -211,7 +213,7 @@ class StripeShopTest extends TestCase
         $this->fakeStripe('cs_test_cfg');
 
         $this->actingAs(User::factory()->create())
-            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe', 'withdrawal_consent' => true])
             ->assertOk();
 
         $this->assertSame(777, Order::firstOrFail()->amount_cents);
@@ -224,7 +226,7 @@ class StripeShopTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe', 'withdrawal_consent' => true])
             ->assertStatus(502)
             ->assertJsonPath('success', false)
             ->assertJsonMissingPath('redirect');
@@ -251,7 +253,7 @@ class StripeShopTest extends TestCase
         Http::fake(fn () => throw new ConnectionException('timeout'));
 
         $this->actingAs(User::factory()->create())
-            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe', 'withdrawal_consent' => true])
             ->assertStatus(502);
 
         $this->assertSame(Order::FAILED, Order::firstOrFail()->status);
@@ -262,7 +264,7 @@ class StripeShopTest extends TestCase
         Http::fake(['api.stripe.com/*' => Http::response(['error' => ['message' => 'sk_test_x secret detail']], 401)]);
 
         $response = $this->actingAs(User::factory()->create())
-            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe'])
+            ->postJson('/shop/checkout', ['product' => 'pixels_100', 'provider' => 'stripe', 'withdrawal_consent' => true])
             ->assertStatus(502);
 
         $this->assertStringNotContainsString('sk_test_x', $response->getContent());
@@ -978,7 +980,7 @@ class StripeShopTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->postJson('/shop/checkout',             ['product' => 'pixels_1000', 'provider' => 'stripe'])
+            ->postJson('/shop/checkout',             ['product' => 'pixels_1000', 'provider' => 'stripe', 'withdrawal_consent' => true])
             ->assertOk();
         $order = Order::firstOrFail();
         $this->sessionResponse = $this->stripeSession($order, ['id' => 'cs_test_flow']);
@@ -1037,6 +1039,10 @@ class StripeShopTest extends TestCase
             'amount_cents' => $definition['price_cents'],
             'currency' => config('payments.currency'),
             'meta' => array_filter(['axis' => $definition['axis'] ?? null, 'amount' => $definition['amount']]),
+            'purchaser_email' => $user->email,
+            'withdrawal_consent_at' => now(),
+            'withdrawal_consent_version' => '2026-11-04-v2',
+            'withdrawal_consent_locale' => 'de',
         ]);
     }
 

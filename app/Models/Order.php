@@ -18,6 +18,8 @@ class Order extends Model
     protected $fillable = [
         'uuid', 'user_id', 'product', 'provider', 'provider_reference', 'status',
         'amount_cents', 'currency', 'meta', 'paid_at', 'fulfilled_at',
+        'purchaser_email', 'withdrawal_consent_at', 'withdrawal_consent_version',
+        'withdrawal_consent_locale', 'contract_confirmation_sent_at',
     ];
 
     protected function casts(): array
@@ -26,6 +28,8 @@ class Order extends Model
             'meta' => 'array',
             'paid_at' => 'datetime',
             'fulfilled_at' => 'datetime',
+            'withdrawal_consent_at' => 'datetime',
+            'contract_confirmation_sent_at' => 'datetime',
         ];
     }
 
