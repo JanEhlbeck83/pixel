@@ -1,4 +1,8 @@
 {
+    "Schau dir diesen Ausschnitt an!": "¡Mira esta vista!",
+    "Ausschnitt geteilt.": "Vista compartida.",
+    "Link kopiert!": "¡Enlace copiado!",
+    "Automatisches Kopieren nicht möglich. Bitte kopiere den Link aus dem Feld.": "No se puede copiar automáticamente. Copia el enlace del campo.",
     "Der Bereich konnte nicht reserviert werden.": "No se pudo reservar el área.",
     "Die Flächensperre konnte nicht mit dem Server synchronisiert werden.": "No se pudo sincronizar el bloqueo del área con el servidor.",
     "Zoom auf 100 Prozent zurücksetzen; aktuell :percent Prozent": "Restablecer zoom al 100 %; ahora :percent %",

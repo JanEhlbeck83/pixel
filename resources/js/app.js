@@ -605,24 +605,47 @@ shareFacebookLink?.addEventListener('click', () => {
 });
 
 shareViewBtn?.addEventListener('click', async () => {
+    if (shareViewBtn.disabled) return;
     const url = buildShareUrl();
-    if (navigator.share) {
-        try {
-            await navigator.share({ title: 'PixRiot', text: 'Schau dir diesen Ausschnitt an!', url });
-            return;
-        } catch (error) {
-            if (error?.name === 'AbortError') {
+    const feedback = document.getElementById('shareFeedback');
+    const message = document.getElementById('shareFeedbackText');
+    const input = document.getElementById('shareUrlInput');
+    feedback.classList.add('hidden');
+    input.value = url;
+    shareViewBtn.disabled = true;
+    try {
+        if (typeof navigator.share === 'function') {
+            try {
+                await navigator.share({ title: 'PixRiot', text: t('Schau dir diesen Ausschnitt an!'), url });
+                message.textContent = t('Ausschnitt geteilt.');
+                feedback.classList.remove('hidden');
                 return;
+            } catch (error) {
+                if (error?.name === 'AbortError') {
+                    return;
+                }
+                console.warn('Native sharing failed; trying clipboard:', error);
             }
         }
-    }
-    try {
-        await navigator.clipboard.writeText(url);
-        setStatus(t('Link kopiert: :url', { url }));
-    } catch (error) {
-        window.prompt(t('Link zum Teilen:'), url);
+        try {
+            if (typeof navigator.clipboard?.writeText !== 'function') {
+                throw new Error('Clipboard API is unavailable.');
+            }
+            await navigator.clipboard.writeText(url);
+            message.textContent = t('Link kopiert!');
+            feedback.classList.remove('hidden');
+        } catch (error) {
+            console.warn('Share link could not be copied:', error);
+            message.textContent = t('Automatisches Kopieren nicht möglich. Bitte kopiere den Link aus dem Feld.');
+            feedback.classList.remove('hidden');
+            input.focus();
+            input.select();
+        }
+    } finally {
+        shareViewBtn.disabled = false;
     }
 });
+document.getElementById('shareUrlInput')?.addEventListener('click', (event) => event.currentTarget.select());
 
 function moveCursorCoords(event) {
     if (!cursorCoords) {
