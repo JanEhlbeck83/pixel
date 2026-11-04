@@ -999,6 +999,35 @@ body.wall-page .wall-shell {
     display: contents;
 }
 
+.share-feedback {
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: rgba(255, 45, 149, 0.1);
+    border-radius: 8px;
+}
+
+.share-feedback p {
+    margin: 0 0 8px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.share-feedback label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+}
+
+.share-feedback input {
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+}
+
 .wall-menu-links a:hover,
 .wall-menu-links button:hover {
     transform: none;

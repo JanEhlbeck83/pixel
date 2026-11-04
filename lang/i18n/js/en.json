@@ -1,4 +1,8 @@
 {
+    "Schau dir diesen Ausschnitt an!": "Take a look at this view!",
+    "Ausschnitt geteilt.": "View shared.",
+    "Link kopiert!": "Link copied!",
+    "Automatisches Kopieren nicht möglich. Bitte kopiere den Link aus dem Feld.": "Automatic copying is unavailable. Please copy the link from the field.",
     "Der Bereich konnte nicht reserviert werden.": "The area could not be reserved.",
     "Die Flächensperre konnte nicht mit dem Server synchronisiert werden.": "The area lock could not be synchronized with the server.",
     "Zoom auf 100 Prozent zurücksetzen; aktuell :percent Prozent": "Reset zoom to 100 percent; currently :percent percent",

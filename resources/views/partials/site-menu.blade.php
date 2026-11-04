@@ -46,6 +46,11 @@
                 <button type="button" id="openExtensionShopBtn"><x-icon name="shop" />{{ __('Erweiterung kaufen') }}</button>
                 <hr class="wall-menu-divider">
                 <button type="button" id="shareViewBtn"><x-icon name="link" />{{ __('Ausschnitt teilen') }}</button>
+                <div id="shareFeedback" class="share-feedback hidden">
+                    <p id="shareFeedbackText" role="status" aria-live="polite"></p>
+                    <label for="shareUrlInput">{{ __('Link zum Teilen:') }}</label>
+                    <input id="shareUrlInput" type="text" readonly>
+                </div>
                 <a id="shareFacebookLink" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener noreferrer"><x-icon name="facebook" />{{ __('Auf Facebook teilen') }}</a>
             @endif
             <hr class="wall-menu-divider">

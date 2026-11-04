@@ -40,6 +40,11 @@ Der Menuebutton erhaelt nach der Einfuehrung keinen automatischen Fokus und
 keinen Fokusrand. Angemeldete Nutzer koennen sich im Menue per
 CSRF-geschuetztem POST-Formular abmelden.
 
+"Ausschnitt teilen" nutzt zuerst natives Teilen, sonst die Zwischenablage.
+Erfolg oder Kopierfehler werden sichtbar im Menue angezeigt; ein Linkfeld
+ermoeglicht manuelles Kopieren. Abbruch des nativen Dialogs kopiert nichts.
+Der Link behaelt Sprache, Ausschnittmitte und Zoom bei.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
