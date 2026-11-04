@@ -32,9 +32,10 @@ class StripeProvider implements PaymentProvider
     public function createCheckout(Order $order): string
     {
         // "card" deckt Visa/Mastercard sowie Apple Pay und Google Pay ab (Wallets laufen bei Stripe als Karte).
+        $methods = config('payments.providers.stripe.payment_methods') ?: ['card'];
         $response = $this->http()->withHeaders(['Idempotency-Key' => 'checkout-'.$order->uuid])->asForm()->post('/v1/checkout/sessions', [
             'mode' => 'payment',
-            'payment_method_types' => ['card'],
+            'payment_method_types' => $methods,
             'expires_at' => now()->addHour()->timestamp,
             'locale' => app()->getLocale(),
             'client_reference_id' => $order->uuid,
