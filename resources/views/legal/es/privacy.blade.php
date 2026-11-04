@@ -30,7 +30,16 @@
         sesión. Tras una elección deliberada de idioma se añade la cookie funcional «pixel_locale» (véase el
         apartado 15). La base jurídica del almacenamiento necesario es el
         art. 25, apdo. 2, n.º 2 TDDDG y el art. 6, apdo. 1, letra f RGPD. No utilizamos cookies de seguimiento
-        ni publicitarias.
+        ni publicitarias adicionales.
+    </p>
+    <p>
+        Medimos el alcance con datos seudonimizados, contando las visitas al muro y a la galería, el tiempo
+        activo en esas páginas y los píxeles colocados correctamente en el muro. Para ello, el identificador de la cookie de sesión
+        técnicamente necesaria se convierte diariamente en un hash cambiante; no almacenamos dicho identificador
+        ni tu dirección IP para las estadísticas. El país se estima a partir de la IP utilizando únicamente
+        nuestra base de datos Geo-IP local; la IP no se envía a ningún proveedor de geolocalización. Los datos
+        estadísticos se eliminan a los 90 días. La base jurídica es nuestro interés legítimo en operar y mejorar
+        el sitio web (art. 6, apdo. 1, letra f RGPD).
     </p>
     <p>
         Solo con tu consentimiento adicional mediante «Aceptar» recordamos la introducción y las reglas

@@ -28,7 +28,15 @@
         Wir setzen nur technisch notwendige Cookies: ein Sitzungs-Cookie, ein Schutz-Cookie gegen
         Cross-Site-Angriffe (CSRF/XSRF) und, wenn du „angemeldet bleiben“ nutzt, ein Anmelde-Cookie. Nach einer bewussten Sprachwahl kommt das funktionale Cookie „pixel_locale“ hinzu
         (siehe Abschnitt 15). Rechtsgrundlage für notwendige Speicherung ist § 25 Abs. 2 Nr. 2
-        TDDDG und Art. 6 Abs. 1 lit. f DSGVO. Tracking- oder Werbe-Cookies setzen wir nicht ein.
+        TDDDG und Art. 6 Abs. 1 lit. f DSGVO. Zusätzliche Tracking- oder Werbe-Cookies setzen wir nicht ein.
+    </p>
+    <p>
+        Für eine pseudonymisierte Reichweitenmessung zählen wir Besuche der Wand und Galerie, aktive Verweildauer
+        und erfolgreich gesetzte Pixel auf der Wand. Dazu wird die Kennung des technisch notwendigen Sitzungs-Cookies täglich
+        wechselnd gehasht; die Kennung selbst und deine IP-Adresse werden dafür nicht gespeichert. Das Land
+        wird aus der IP-Adresse ausschließlich mit unserer lokalen Geo-IP-Datenbank geschätzt; die IP wird
+        nicht an einen Geo-Dienst übermittelt. Die Statistik wird nach 90 Tagen gelöscht. Rechtsgrundlage ist
+        unser berechtigtes Interesse an Betrieb und Verbesserung der Website (Art. 6 Abs. 1 lit. f DSGVO).
     </p>
     <p>
         Nur mit deiner zusätzlichen Zustimmung über „Akzeptieren“ merken wir Einführung und bestätigte

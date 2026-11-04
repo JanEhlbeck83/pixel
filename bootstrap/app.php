@@ -15,11 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('wall:tiles')->everyTenMinutes()->withoutOverlapping(30);
         $schedule->command('snapshot:generate')->cron('0 */12 * * *')->withoutOverlapping(60);
         $schedule->command('geoip:update')->monthlyOn(3, '04:00');
+        $schedule->command('analytics:prune')->daily()->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: ['webhooks/*', 'auth/facebook/deauthorize', 'auth/facebook/data-deletion', 'newsletter/unsubscribe/*']);
         $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
-        $middleware->web(append: [\App\Http\Middleware\SetLocale::class]);
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\RecordAnalyticsVisit::class,
+        ]);
 
         if ($proxies = env('TRUSTED_PROXIES')) {
             $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));

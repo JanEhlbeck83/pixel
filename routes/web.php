@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AdminNewsletterController;
 use App\Http\Controllers\AdminReportController;
+use App\Http\Controllers\AdminAnalyticsController;
+use App\Http\Controllers\AnalyticsHeartbeatController;
 use App\Http\Controllers\NewsletterPublicController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ReportController;
@@ -66,11 +68,13 @@ Route::get('/api/shop', [ShopController::class, 'catalog'])->name('shop.catalog'
 Route::post('/webhooks/stripe', [ShopController::class, 'stripeWebhook'])->name('webhooks.stripe');
 Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:3,1')->name('feedback.store');
 Route::post('/report', [ReportController::class, 'store'])->middleware('throttle:10,60')->name('report.store');
+Route::post('/analytics/heartbeat', AnalyticsHeartbeatController::class)->middleware('throttle:120,1')->name('analytics.heartbeat');
 Route::get('/newsletter-images/{file}', [NewsletterPublicController::class, 'image'])->name('newsletter.image');
 Route::match(['get', 'post'], '/newsletter/unsubscribe/{user}', [NewsletterPublicController::class, 'unsubscribe'])
     ->middleware(['signed', 'throttle:20,1'])->name('newsletter.unsubscribe');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('admin.analytics');
     Route::get('/reports', [AdminReportController::class, 'index'])->name('admin.reports');
     Route::get('/reports/{report}/image', [AdminReportController::class, 'image'])->name('admin.reports.image');
     Route::post('/reports/{report}/reset', [AdminReportController::class, 'reset'])->name('admin.reports.reset');

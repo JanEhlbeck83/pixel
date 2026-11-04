@@ -1,4 +1,5 @@
 import './bootstrap';
+import './analytics';
 
 import Alpine from 'alpinejs';
 import { t, localizedUrl, apiFetch, locale } from './i18n';

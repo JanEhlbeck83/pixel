@@ -3140,6 +3140,66 @@ button:focus-visible {
     font-size: 0.85rem;
 }
 
+.analytics-page {
+    display: grid;
+    gap: 18px;
+}
+
+.analytics-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.analytics-card,
+.analytics-page .panel {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(17, 20, 28, 0.9);
+}
+
+.analytics-card h2,
+.analytics-page .panel h2 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+}
+
+.analytics-card p {
+    margin: 7px 0 0;
+    color: var(--muted);
+}
+
+.analytics-card p strong {
+    color: var(--text);
+    font-size: 1.4rem;
+}
+
+.analytics-panels {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.8fr);
+    gap: 14px;
+}
+
+.analytics-country {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 8px 0;
+    border-top: 1px solid var(--line);
+}
+
+.analytics-note {
+    margin: 0;
+}
+
+@media (max-width: 760px) {
+    .analytics-cards,
+    .analytics-panels {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 640px) {
     .report-item {
         flex-direction: column;
