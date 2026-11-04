@@ -5,7 +5,7 @@
 @section('content')
     <h2>1. Ámbito de aplicación</h2>
     <p>
-        Estas condiciones se aplican al uso de Pixel Chaos, operado por <x-legal-value key="name" />. El uso del
+        Estas condiciones se aplican al uso de PixRiot, operado por <x-legal-value key="name" />. El uso del
         muro es gratuito. Los servicios adicionales (paquetes de píxeles, ampliación del muro) son de pago.
     </p>
 
@@ -14,6 +14,7 @@
         <li>Cualquiera puede sobrescribir cualquier píxel, también el tuyo. No existe derecho a que un píxel o una imagen se conserve.</li>
         <li>Los píxeles recién colocados quedan bloqueados brevemente (10 minutos).</li>
         <li>Los invitados reciben 50 píxeles una sola vez. Con cuenta, se regenera un píxel cada 30 segundos, hasta un máximo de 50 en reserva.</li>
+        <li>Los píxeles extra comprados se guardan por separado de la reserva gratuita y solo se usan cuando esta está vacía. No caducan. Una cuenta puede tener como máximo 10.000 píxeles extra; no se pueden comprar paquetes que superen ese límite.</li>
         <li>Están prohibidas las imágenes de odio, los símbolos anticonstitucionales o prohibidos, los insultos, la pornografía, las representaciones de violencia y los contenidos que vulneren derechos de terceros.</li>
         <li>No se permiten los accesos automatizados, bots ni scripts para eludir los límites de píxeles.</li>
     </ul>
@@ -28,7 +29,7 @@
     <h2>4. Contenidos y derechos</h2>
     <p>
         El muro se crea de forma colectiva. Nos concedes el derecho no exclusivo y gratuito a mostrar, almacenar
-        y reproducir los píxeles que coloques en el marco del servicio, y a mostrarlos en imágenes y galerías del
+        y reproducir los píxeles que coloques en el marco del servicio, y a mostrarlos en imágenes y en la sección Pixelart del
         muro. Los colores de los píxeles por sí solos, por regla general, no generan derechos de autor sobre
         píxeles individuales. Podemos retirar los contenidos que infrinjan estas condiciones o la ley.
     </p>
@@ -81,4 +82,3 @@
 
     <p>Más información: <a href="{{ route('legal.privacy') }}">Política de privacidad</a>, <a href="{{ route('legal.impressum') }}">Aviso legal</a>.</p>
 @endsection
-

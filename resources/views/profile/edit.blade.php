@@ -4,24 +4,18 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Pixel Chaos | {{ __('Mein Profil') }}</title>
+        <title>PixRiot | {{ __('Mein Profil') }}</title>
+        <x-favicons />
         <x-locale-head />
         @vite(['resources/css/app.css'])
     </head>
-    <body class="profile-page">
+    <body class="profile-page menu-page">
         <div class="pixel-shell">
-            <header class="pixel-topbar">
+            @include('partials.site-menu')
+            <header class="page-heading">
                 <div class="brand">
                     <small>{{ __('Mein Konto') }}</small>
-                    <strong>PIXEL CHAOS</strong>
-                </div>
-                <div class="top-actions">
-                    <a href="{{ route('wall') }}">{{ __('Zur Wand') }}</a>
-                    <a href="{{ route('gallery') }}">{{ __('Galerie') }}</a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit">{{ __('Abmelden') }}</button>
-                    </form>
+                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                 </div>
             </header>
 
@@ -62,7 +56,7 @@
                 <section class="profile-card" aria-labelledby="ordersTitle">
                     <h2 id="ordersTitle">{{ __('Käufe & Zahlungen') }}</h2>
                     @if ($orders->isEmpty())
-                        <p class="profile-muted">{{ __('Noch keine Käufe. Auf der Wand findest du Extra-Pixel und die Wand-Erweiterung.') }}</p>
+                        <p class="profile-muted">{{ __('Noch keine Käufe. Auf der Wand findest du Extra-Pixel und die Leinwand-Erweiterung.') }}</p>
                     @else
                         <div class="profile-table-wrap">
                             <table class="profile-table">
@@ -111,6 +105,9 @@
                             <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required maxlength="255" autocomplete="email">
                             @error('email') <p class="profile-error">{{ $message }}</p> @enderror
 
+                            <input type="hidden" name="newsletter" value="0">
+                            <label class="check-row"><input type="checkbox" name="newsletter" value="1" @checked(old('newsletter', $user->newsletter_subscribed_at !== null))> {{ __('PixRiot-Newsletter erhalten') }}</label>
+
                             <button type="submit" class="primary-button">{{ __('Speichern') }}</button>
                         </form>
                     </section>
@@ -151,7 +148,13 @@
                         </form>
                     </details>
                 </section>
+
+                <form method="POST" action="{{ route('logout') }}" class="profile-logout">
+                    @csrf
+                    <button type="submit" class="secondary-button">{{ __('Abmelden') }}</button>
+                </form>
             </main>
+            @include('legal.partials.links')
         </div>
     </body>
 </html>

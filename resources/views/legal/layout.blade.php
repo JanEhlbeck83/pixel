@@ -3,14 +3,15 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Pixel Chaos | @yield('title')</title>
+        <title>PixRiot | @yield('title')</title>
+        <x-favicons />
         <meta name="robots" content="index,follow">
         <x-locale-head />
         @vite(['resources/css/app.css'])
     </head>
     <body class="legal-page">
         <main class="legal-main">
-            <a class="legal-back" href="{{ route('wall') }}">← {{ __('Zurück zur Wand') }}</a>
+            <a class="legal-back" href="{{ route('home') }}">← {{ __('Zurück zur Wand') }}</a>
 
             <article class="legal-card">
                 <h1>@yield('title')</h1>

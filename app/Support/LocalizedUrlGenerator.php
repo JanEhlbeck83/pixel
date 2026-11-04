@@ -6,8 +6,8 @@ use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Arr;
 
 /**
- * Seitenrouten sind zweimal registriert: "wall" (Englisch, ohne Prefix) und "localized.wall"
- * (/de/wall, /es/wall). route('wall') liefert automatisch die Variante der aktuellen Sprache.
+ * Seitenrouten sind zweimal registriert: "home" (Englisch, ohne Prefix) und "localized.home"
+ * (/de, /es). route('home') liefert automatisch die Variante der aktuellen Sprache.
  */
 class LocalizedUrlGenerator extends UrlGenerator
 {

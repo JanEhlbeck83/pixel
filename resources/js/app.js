@@ -2,6 +2,7 @@ import './bootstrap';
 
 import Alpine from 'alpinejs';
 import { t, localizedUrl, apiFetch, locale } from './i18n';
+import { initOnboarding } from './onboarding';
 window.pixelI18n = { t, localizedUrl, apiFetch, locale };
 
 window.Alpine = Alpine;
@@ -51,18 +52,15 @@ const closeEditorBtn = document.getElementById('closeEditorBtn');
 const editorPopup = document.getElementById('editorPopup');
 const colorPicker = document.getElementById('colorPicker');
 const colorHexInput = document.getElementById('colorHexInput');
-const rulesModal = document.getElementById('rulesModal');
-const cookieBanner = document.getElementById('cookieBanner');
-const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
-const closeRulesBtn = document.getElementById('closeRulesBtn');
-const openRulesBtn = document.getElementById('openRulesBtn');
 const shareViewBtn = document.getElementById('shareViewBtn');
 const shareFacebookLink = document.getElementById('shareFacebookLink');
 const cursorCoords = document.getElementById('cursorCoords');
+const cursorCoordsText = document.getElementById('cursorCoordsText');
 const neighborhoodCanvas = document.getElementById('neighborhoodCanvas');
 const neighborhoodLabel = document.getElementById('neighborhoodLabel');
 const pixelCounter = document.getElementById('pixelCounter');
 const pixelCounterValue = document.getElementById('pixelCounterValue');
+const pixelCounterExtra = document.getElementById('pixelCounterExtra');
 const authFlag = document.getElementById('isAuthenticated');
 const isAuthenticated = authFlag ? authFlag.dataset.auth === '1' : false;
 
@@ -92,12 +90,19 @@ const wallExtensionButtons = {
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const zoomResetBtn = document.getElementById('zoomResetBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
+const wallReloadBtn = document.getElementById('wallReloadBtn');
+let reportMode = false;
+let reportOrigin = null;
+let reportRect = null;
+let knownTilesVersion = null;
+let newTilesAvailable = false;
 const wallMenu = document.querySelector('.wall-menu');
 const wallMenuToggle = document.getElementById('wallMenuToggle');
 const wallMenuPanel = document.getElementById('wallMenuPanel');
 const feedbackForm = document.getElementById('feedbackForm');
 const feedbackStatus = document.getElementById('feedbackStatus');
 const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+const onboarding = initOnboarding();
 
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
@@ -148,6 +153,12 @@ function getReferencePixelColor(x, y) {
     return `#${[0, 1, 2].map((channel) => tilePixels[index + channel].toString(16).padStart(2, '0')).join('')}`;
 }
 
+function pixelLockMessage(x, y, lock) {
+    const minutes = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
+
+    return t(minutes === 1 ? 'Pixel :x::y ist gesperrt. Bearbeitung in :minutes Minute wieder möglich.' : 'Pixel :x::y ist gesperrt. Bearbeitung in :minutes Minuten wieder möglich.', { x, y, minutes });
+}
+
 function getActivePixelLock(x, y) {
     const key = keyFor(x, y);
     const lock = pixelLocks.get(key);
@@ -180,19 +191,17 @@ async function refreshPixelLocks() {
 function updatePixelLockTooltip(event) {
     const cell = getCellFromEvent(event);
     const lock = cell ? getActivePixelLock(cell.x, cell.y) : null;
+    const divider = document.getElementById('cursorCoordsDivider');
 
     if (!lock || !pixelLockTooltip) {
         pixelLockTooltip?.classList.add('hidden');
+        divider?.classList.add('hidden');
         return;
     }
 
-    const minutesRemaining = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
-    pixelLockTooltip.textContent = t(minutesRemaining === 1 ? 'Bereits bearbeitet. Bearbeitung in :minutes Minute wieder möglich.' : 'Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining });
-
-    const shellRect = canvas.parentElement.getBoundingClientRect();
-    pixelLockTooltip.style.left = `${clamp(event.clientX - shellRect.left + 12, 8, shellRect.width - 288)}px`;
-    pixelLockTooltip.style.top = `${clamp(event.clientY - shellRect.top + 12, 8, shellRect.height - 56)}px`;
+    pixelLockTooltip.textContent = pixelLockMessage(cell.x, cell.y, lock);
     pixelLockTooltip.classList.remove('hidden');
+    divider?.classList.remove('hidden');
 }
 
 function findLockedPixelInSelection() {
@@ -233,7 +242,12 @@ async function requestPixelAreaLock(area, method = 'POST') {
                 showLimitModal(payload);
                 return false;
             }
+            if (response.status === 409) {
+                setStatus(t('Bitte bestätige zuerst deine E-Mail-Adresse.'));
+                return false;
+            }
             payload.locked_pixels?.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
+            setStatus(payload.message || t('Der Bereich konnte nicht reserviert werden.'));
             setStatus(payload.message || t('Der Bereich konnte nicht reserviert werden.'));
             return false;
         }
@@ -314,6 +328,19 @@ function renderCanvas() {
         );
     }
 
+    if (reportRect) {
+        const reportX = (reportRect.x - viewOffsetX) * cellSize;
+        const reportY = (reportRect.y - viewOffsetY) * cellSize;
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 45, 149, 0.18)';
+        ctx.fillRect(reportX, reportY, reportRect.width * cellSize, reportRect.height * cellSize);
+        ctx.strokeStyle = '#ff2d95';
+        ctx.lineWidth = 2 / displayScale;
+        ctx.setLineDash([6 / displayScale, 4 / displayScale]);
+        ctx.strokeRect(reportX, reportY, reportRect.width * cellSize, reportRect.height * cellSize);
+        ctx.restore();
+    }
+
     if (!selection) {
         ctx.restore();
         return;
@@ -372,7 +399,10 @@ function updateWallExtensionZones() {
     if (rightZone) {
         rightZone.classList.toggle('hidden', !atRightEdge);
         rightZone.style.left = `${Math.max(0, Math.min(rightEdge, viewportWidth) - 30)}px`;
-        rightZone.style.height = `${viewportHeight}px`;
+        // Sind beide Reiter sichtbar, endet der rechte oberhalb des unteren; die konkave Rundung verbindet sie in der Ecke.
+        const cornerTop = Math.max(0, Math.min(bottomEdge, viewportHeight) - 30);
+        rightZone.style.height = `${atBottomEdge ? cornerTop : viewportHeight}px`;
+        rightZone.classList.toggle('has-corner', atRightEdge && atBottomEdge);
     }
 
     if (bottomZone) {
@@ -462,16 +492,32 @@ async function loadWallTiles() {
 
     for (let y = top; y < bottom; y += wallTileSize) {
         for (let x = left; x < right; x += wallTileSize) {
-            const key = keyFor(x, y);
-            if (wallBackgroundTiles.has(key)) {
+            if (wallBackgroundTiles.has(keyFor(x, y))) {
                 continue;
             }
             pending.push(loadWallTile(x, y));
         }
     }
 
+    // Ring von einem Tile um den Viewport wird im Hintergrund vorgeladen.
+    const prefetchLeft = Math.max(0, left - wallTileSize);
+    const prefetchTop = Math.max(0, top - wallTileSize);
+    const prefetchRight = Math.min(wallWidth, right + wallTileSize);
+    const prefetchBottom = Math.min(wallHeight, bottom + wallTileSize);
+    for (let y = prefetchTop; y < prefetchBottom; y += wallTileSize) {
+        for (let x = prefetchLeft; x < prefetchRight; x += wallTileSize) {
+            const inViewport = x >= left && x < right && y >= top && y < bottom;
+            if (inViewport || wallBackgroundTiles.has(keyFor(x, y))) {
+                continue;
+            }
+            loadWallTile(x, y).catch(() => {});
+        }
+    }
+
     try {
         await Promise.all(pending);
+        // Beim Scrollen werden für neu sichtbare Kacheln die unverarbeiteten Pixel nachgeladen.
+        loadRecentPixels();
     } catch (error) {
         console.error('Failed to load wall image tiles:', error);
         setStatus(t('Ein Bildausschnitt der Wall konnte nicht geladen werden.'));
@@ -509,6 +555,7 @@ async function loadWallDimensions() {
     wallWidth = dimensions.width;
     wallHeight = dimensions.height;
     wallTileSize = dimensions.tile_size;
+    knownTilesVersion = dimensions.tiles_version ?? null;
     wallDimensionsLoaded = true;
     updateCanvasDisplaySize();
     applyViewFromUrl();
@@ -561,7 +608,7 @@ shareViewBtn?.addEventListener('click', async () => {
     const url = buildShareUrl();
     if (navigator.share) {
         try {
-            await navigator.share({ title: 'Pixel Chaos', text: 'Schau dir diesen Ausschnitt an!', url });
+            await navigator.share({ title: 'PixRiot', text: 'Schau dir diesen Ausschnitt an!', url });
             return;
         } catch (error) {
             if (error?.name === 'AbortError') {
@@ -586,13 +633,113 @@ function moveCursorCoords(event) {
         cursorCoords.classList.add('hidden');
         return;
     }
-    cursorCoords.textContent = `⌖ ${cell.x} : ${cell.y}`;
+    cursorCoordsText.textContent = `${cell.x} : ${cell.y}`;
     cursorCoords.style.transform = `translate(${event.clientX + 16}px, ${event.clientY + 18}px)`;
     cursorCoords.classList.remove('hidden');
 }
 
 canvas.addEventListener('pointermove', moveCursorCoords);
 canvas.addEventListener('pointerleave', () => cursorCoords?.classList.add('hidden'));
+
+let recentCursor = null;
+let recentSyncing = false;
+const recentActiveTiles = new Set();
+
+// Sichtbare Kacheln plus 1 Kachel Rand; nur dafür werden unverarbeitete Pixel nachgeladen.
+function recentTileArea() {
+    const left = Math.max(0, Math.floor(viewOffsetX / wallTileSize) * wallTileSize - wallTileSize);
+    const top = Math.max(0, Math.floor(viewOffsetY / wallTileSize) * wallTileSize - wallTileSize);
+    const right = Math.min(wallWidth, Math.ceil((viewOffsetX + viewWidth) / wallTileSize) * wallTileSize + wallTileSize);
+    const bottom = Math.min(wallHeight, Math.ceil((viewOffsetY + viewHeight) / wallTileSize) * wallTileSize + wallTileSize);
+    const tiles = [];
+    for (let y = top; y < bottom; y += wallTileSize) {
+        for (let x = left; x < right; x += wallTileSize) {
+            tiles.push({ x, y, key: keyFor(x, y) });
+        }
+    }
+
+    return tiles;
+}
+
+async function fetchRecentPixels(tiles, since) {
+    const minX = Math.min(...tiles.map((tile) => tile.x));
+    const minY = Math.min(...tiles.map((tile) => tile.y));
+    const maxX = Math.max(...tiles.map((tile) => tile.x)) + wallTileSize;
+    const maxY = Math.max(...tiles.map((tile) => tile.y)) + wallTileSize;
+    const params = new URLSearchParams({ x: minX, y: minY, width: maxX - minX, height: maxY - minY });
+    if (since) {
+        params.set('since', since);
+    }
+    const response = await apiFetch(`/api/pixels/recent?${params}`, { headers: { Accept: 'application/json' } });
+    if (!response.ok) {
+        return null;
+    }
+    const payload = await response.json();
+    (payload.pixels || []).forEach((pixel) => {
+        pixels.set(keyFor(pixel.x, pixel.y), pixel.color);
+    });
+
+    return payload;
+}
+
+// Neu sichtbare Kacheln: einmal alle unverarbeiteten Pixel holen. Bekannte Kacheln: nur Änderungen seit dem letzten Abruf.
+async function loadRecentPixels({ full = false } = {}) {
+    if (recentSyncing && full) {
+        await new Promise((resolve) => window.setTimeout(resolve, 200));
+        return loadRecentPixels({ full });
+    }
+    if (recentSyncing || !wallDimensionsLoaded) {
+        return;
+    }
+    recentSyncing = true;
+    try {
+        if (full) {
+            recentCursor = null;
+            recentActiveTiles.clear();
+        }
+        const tiles = recentTileArea();
+        const visible = new Set(tiles.map((tile) => tile.key));
+        recentActiveTiles.forEach((key) => {
+            if (!visible.has(key)) {
+                recentActiveTiles.delete(key);
+            }
+        });
+        const known = tiles.filter((tile) => recentActiveTiles.has(tile.key));
+        const entering = tiles.filter((tile) => !recentActiveTiles.has(tile.key));
+        let changed = false;
+
+        if (known.length > 0 && recentCursor) {
+            const payload = await fetchRecentPixels(known, recentCursor);
+            if (payload) {
+                changed = changed || (payload.pixels || []).length > 0;
+                recentCursor = new Date(Date.parse(payload.server_time) - 3000).toISOString();
+            }
+        }
+        if (entering.length > 0) {
+            const payload = await fetchRecentPixels(entering, null);
+            if (payload) {
+                changed = changed || (payload.pixels || []).length > 0;
+                entering.forEach((tile) => recentActiveTiles.add(tile.key));
+                if (!recentCursor) {
+                    recentCursor = new Date(Date.parse(payload.server_time) - 3000).toISOString();
+                }
+            }
+        }
+        if (changed) {
+            renderCanvas();
+        }
+    } catch (error) {
+        console.error('Failed to load recent pixels:', error);
+    } finally {
+        recentSyncing = false;
+    }
+}
+
+window.setInterval(() => {
+    if (!document.hidden && initialViewportTilesLoaded) {
+        loadRecentPixels();
+    }
+}, 5000);
 
 function loadInitialViewportTiles() {
     if (initialViewportTilesLoaded || initialViewportTilesLoading
@@ -604,6 +751,7 @@ function loadInitialViewportTiles() {
     loadWallTiles().then(() => {
         initialViewportTilesLoaded = true;
         reservationLoadingOverlay?.classList.add('hidden');
+        loadRecentPixels();
     }).catch((error) => {
         console.error('Failed to load initial wall viewport:', error);
         showInitialViewportLoadFailure();
@@ -631,9 +779,14 @@ async function refreshWallDimensions() {
         }
 
         const dimensions = await response.json();
+        if (knownTilesVersion !== null && dimensions.tiles_version > knownTilesVersion) {
+            setNewTilesAvailable(true);
+        }
         if (dimensions.width === wallWidth && dimensions.height === wallHeight) {
             return;
         }
+        // Neue Leinwandgröße: Hinweis am Reload-Button, die Kacheln werden erst beim Klick erneuert.
+        setNewTilesAvailable(true);
 
         const previousWidth = wallWidth;
         const previousHeight = wallHeight;
@@ -698,7 +851,7 @@ async function navigateWall(direction) {
         setStatus(t('300 px nach :direction navigiert.', { direction: t(({ left: 'links', right: 'rechts', up: 'oben', down: 'unten' })[direction]) }));
     } catch (error) {
         console.error(error);
-        setStatus(error.message || t('Die Wall konnte nicht erweitert werden.'));
+        setStatus(error.message || t('Die Leinwand konnte nicht erweitert werden.'));
     } finally {
         button.disabled = false;
         wallNavigationInProgress = false;
@@ -761,6 +914,10 @@ async function loadPixelsForSelection(area = selection) {
 }
 
 function savePixel(x, y, color) {
+    if (onboarding.isLocked()) {
+        setStatus(document.getElementById('welcomeTitle').textContent);
+        return Promise.resolve(false);
+    }
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     return apiFetch('/api/pixels', {
@@ -783,9 +940,6 @@ function savePixel(x, y, color) {
 
         const key = keyFor(x, y);
         pixels.set(key, color);
-        if (payload.locked_until) {
-            pixelLocks.set(key, { x, y, locked_until: payload.locked_until });
-        }
         renderCanvas();
         fetchPixelStatus().then((status) => setStatus(t('Pixel :x::y gespeichert. :quota', { x, y, quota: describeQuota(status) })));
     }).catch((error) => {
@@ -796,7 +950,8 @@ function savePixel(x, y, color) {
         }
         if (error.payload?.locked_pixels?.length) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
-            setStatus(t('Bereits bearbeitet. Bearbeitung in 10 Minuten wieder möglich.'));
+            const firstLocked = error.payload.locked_pixels[0];
+            setStatus(pixelLockMessage(firstLocked.x, firstLocked.y, firstLocked));
             return false;
         }
 
@@ -806,6 +961,10 @@ function savePixel(x, y, color) {
 }
 
 function savePixels(changedPixels) {
+    if (onboarding.isLocked()) {
+        setStatus(document.getElementById('rulesTitle').textContent);
+        return Promise.resolve(false);
+    }
     if (changedPixels.length === 0) {
         return Promise.resolve();
     }
@@ -833,9 +992,6 @@ function savePixels(changedPixels) {
         changedPixels.forEach((pixel) => {
             const key = keyFor(pixel.x, pixel.y);
             pixels.set(key, pixel.color);
-            if (payload.locked_until) {
-                pixelLocks.set(key, { x: pixel.x, y: pixel.y, locked_until: payload.locked_until });
-            }
         });
         renderCanvas();
         fetchPixelStatus().then((status) => setStatus(t('Pixel gespeichert: :x::y. :quota', { x: changedPixels[0].x, y: changedPixels[0].y, quota: describeQuota(status) })));
@@ -849,8 +1005,7 @@ function savePixels(changedPixels) {
         if (error.payload?.locked_pixels) {
             error.payload.locked_pixels.forEach((pixel) => pixelLocks.set(keyFor(pixel.x, pixel.y), pixel));
             const firstLock = error.payload.locked_pixels[0];
-            const minutesRemaining = Math.max(1, Math.ceil((Date.parse(firstLock.locked_until) - Date.now()) / 60000));
-            setStatus(t('Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining }));
+            setStatus(pixelLockMessage(firstLock.x, firstLock.y, firstLock));
             refreshPixelLocks();
             return false;
         }
@@ -897,8 +1052,7 @@ function paintPopupCell(event) {
     const globalY = selection.y + localY;
     const lock = getActivePixelLock(globalX, globalY);
     if (lock) {
-        const minutesRemaining = Math.max(1, Math.ceil((Date.parse(lock.locked_until) - Date.now()) / 60000));
-        setStatus(t('Bereits bearbeitet. Bearbeitung in :minutes Minuten wieder möglich.', { minutes: minutesRemaining }));
+        setStatus(pixelLockMessage(globalX, globalY, lock));
         return;
     }
 
@@ -962,6 +1116,9 @@ async function paintInstant(x, y) {
 }
 
 function handlePointerDown(event) {
+    if (reportMode) {
+        return;
+    }
     const cell = getCellFromEvent(event);
     if (!cell) {
         return;
@@ -977,7 +1134,7 @@ function handlePointerDown(event) {
 }
 
 function handleCanvasHover(event) {
-    if (selectionDrag) {
+    if (selectionDrag || reportMode) {
         return;
     }
 
@@ -992,7 +1149,7 @@ function handleCanvasHover(event) {
 }
 
 function handlePointerMove(event) {
-    if (!selectionDrag || !dragOrigin) {
+    if (reportMode || !selectionDrag || !dragOrigin) {
         return;
     }
 
@@ -1006,7 +1163,7 @@ function handlePointerMove(event) {
 }
 
 function handlePointerUp() {
-    if (!selectionDrag) {
+    if (reportMode || !selectionDrag) {
         return;
     }
 
@@ -1035,7 +1192,7 @@ function handlePointerUp() {
 }
 
 function handlePointerCancel() {
-    if (!selectionDrag) {
+    if (reportMode || !selectionDrag) {
         return;
     }
 
@@ -1219,35 +1376,6 @@ function persistSelectionToDatabase() {
     return savePixels(changedPixels);
 }
 
-function initCookieAndRules() {
-    const cookieKey = 'pixel-chaos-cookie-accepted';
-    const rulesKey = 'pixel-chaos-rules-seen';
-
-    if (!localStorage.getItem(cookieKey)) {
-        cookieBanner.classList.add('visible');
-    }
-
-    if (!localStorage.getItem(rulesKey)) {
-        rulesModal.classList.add('visible');
-    }
-
-    acceptCookiesBtn?.addEventListener('click', () => {
-        localStorage.setItem(cookieKey, '1');
-        cookieBanner.classList.remove('visible');
-    });
-
-    openRulesBtn?.addEventListener('click', () => {
-        wallMenuPanel?.classList.add('hidden');
-        wallMenuToggle?.setAttribute('aria-expanded', 'false');
-        rulesModal.classList.add('visible');
-    });
-
-    closeRulesBtn?.addEventListener('click', () => {
-        localStorage.setItem(rulesKey, '1');
-        rulesModal.classList.remove('visible');
-    });
-}
-
 function setActiveColor(color) {
     activeColor = color.toLowerCase();
     activeColorLabel.textContent = activeColor;
@@ -1341,6 +1469,139 @@ feedbackForm?.addEventListener('submit', async (event) => {
     }
 });
 
+const reportAreaBtn = document.getElementById('reportAreaBtn');
+const reportBar = document.getElementById('reportBar');
+const reportModal = document.getElementById('reportModal');
+const reportForm = document.getElementById('reportForm');
+const reportStatus = document.getElementById('reportStatus');
+const reportSubmitBtn = document.getElementById('reportSubmitBtn');
+const reportMaxSize = 300;
+
+function setReportMode(active) {
+    reportMode = active;
+    reportOrigin = null;
+    reportRect = null;
+    reportBar?.classList.toggle('hidden', !active);
+    canvas.classList.toggle('report-mode', active);
+    if (active) {
+        selection = null;
+        wallMenuPanel?.classList.add('hidden');
+        wallMenuToggle?.setAttribute('aria-expanded', 'false');
+    }
+    renderCanvas();
+}
+
+function updateReportRect(cell) {
+    const dx = clamp(cell.x - reportOrigin.x, -(reportMaxSize - 1), reportMaxSize - 1);
+    const dy = clamp(cell.y - reportOrigin.y, -(reportMaxSize - 1), reportMaxSize - 1);
+    reportRect = {
+        x: Math.min(reportOrigin.x, reportOrigin.x + dx),
+        y: Math.min(reportOrigin.y, reportOrigin.y + dy),
+        width: Math.abs(dx) + 1,
+        height: Math.abs(dy) + 1,
+    };
+}
+
+function closeReportModal() {
+    reportModal?.classList.add('hidden');
+    reportForm?.reset();
+    if (reportStatus) {
+        reportStatus.textContent = '';
+    }
+}
+
+reportAreaBtn?.addEventListener('click', () => {
+    setReportMode(true);
+    setStatus(t('Ziehe ein Rechteck über den Bereich, den du melden möchtest.'));
+});
+document.getElementById('reportCancelBar')?.addEventListener('click', () => setReportMode(false));
+document.getElementById('reportCancelBtn')?.addEventListener('click', () => {
+    closeReportModal();
+    setReportMode(false);
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && reportMode) {
+        closeReportModal();
+        setReportMode(false);
+    }
+});
+
+canvas.addEventListener('pointerdown', (event) => {
+    if (!reportMode) {
+        return;
+    }
+    const cell = getCellFromEvent(event);
+    if (!cell) {
+        return;
+    }
+    canvas.setPointerCapture?.(event.pointerId);
+    reportOrigin = cell;
+    updateReportRect(cell);
+    renderCanvas();
+});
+
+canvas.addEventListener('pointermove', (event) => {
+    if (!reportMode || !reportOrigin) {
+        return;
+    }
+    const cell = getCellFromEvent(event);
+    if (cell) {
+        updateReportRect(cell);
+        renderCanvas();
+    }
+});
+
+canvas.addEventListener('pointerup', () => {
+    if (!reportMode || !reportOrigin || !reportRect) {
+        return;
+    }
+    reportOrigin = null;
+    document.getElementById('reportArea').textContent = `${t('Bereich')} ${reportRect.x} : ${reportRect.y} · ${reportRect.width} × ${reportRect.height}`;
+    reportModal.classList.remove('hidden');
+    document.getElementById('reportReason')?.focus();
+});
+
+reportForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!reportRect) {
+        return;
+    }
+    reportSubmitBtn.disabled = true;
+    reportStatus.textContent = t('Meldung wird gesendet ...');
+
+    try {
+        const formData = new FormData(reportForm);
+        const response = await apiFetch('/report', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': formData.get('_token'),
+            },
+            body: JSON.stringify({
+                ...reportRect,
+                reason: formData.get('reason'),
+                message: formData.get('message'),
+                email: formData.get('email') || null,
+            }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const message = payload.errors
+                ? Object.values(payload.errors).flat()[0]
+                : payload.message || (response.status === 429 ? t('Zu viele Meldungen. Bitte versuche es später erneut.') : t('Meldung konnte nicht gesendet werden.'));
+            throw new Error(message);
+        }
+
+        closeReportModal();
+        setReportMode(false);
+        setStatus(t('Danke! Deine Meldung wurde gespeichert und wird geprüft.'));
+    } catch (error) {
+        reportStatus.textContent = error.message || t('Meldung konnte nicht gesendet werden.');
+    } finally {
+        reportSubmitBtn.disabled = false;
+    }
+});
 canvas.addEventListener('pointerdown', handlePointerDown);
 canvas.addEventListener('pointermove', handleCanvasHover);
 
@@ -1421,7 +1682,6 @@ applySelectionBtn?.addEventListener('click', async () => {
 closeEditorBtn?.addEventListener('click', closeEditorPopup);
 selectionPreviewCanvas?.addEventListener('click', paintPopupCell);
 
-initCookieAndRules();
 reservationLoadingRetry?.addEventListener('click', () => window.location.reload());
 Object.entries(wallNavigationButtons).forEach(([direction, button]) => {
     button?.addEventListener('click', () => navigateWall(direction));
@@ -1434,6 +1694,56 @@ zoomOutBtn?.addEventListener('click', () => {
         changeZoom(currentZoom - 1);
     }
 });
+function setNewTilesAvailable(available) {
+    newTilesAvailable = available;
+    if (!wallReloadBtn) {
+        return;
+    }
+    wallReloadBtn.classList.toggle('has-update', available);
+    wallReloadBtn.querySelector('.wall-reload-badge')?.classList.toggle('hidden', !available);
+    const label = available ? wallReloadBtn.dataset.labelNew : wallReloadBtn.dataset.label;
+    wallReloadBtn.setAttribute('aria-label', label);
+    const tip = wallReloadBtn.querySelector('.wall-reload-tip');
+    if (tip) {
+        tip.textContent = label;
+    }
+}
+
+async function reloadWallBackground() {
+    wallReloadBtn.disabled = true;
+    try {
+        const response = await apiFetch('/api/wall', { headers: { Accept: 'application/json' } });
+        if (response.ok) {
+            const dimensions = await response.json();
+            knownTilesVersion = dimensions.tiles_version ?? knownTilesVersion;
+            if (dimensions.width !== wallWidth || dimensions.height !== wallHeight) {
+                wallWidth = dimensions.width;
+                wallHeight = dimensions.height;
+                updateCanvasDisplaySize();
+            }
+        }
+        await Promise.all([...wallBackgroundTiles.keys()].map((key) => {
+            const [x, y] = key.split(':').map(Number);
+            return loadWallTile(x, y).catch(() => {});
+        }));
+        await loadWallTiles();
+        // Die neuen Kacheln enthalten alte Overlay-Pixel bereits; nur noch nicht verarbeitete Pixel bleiben darüber.
+        pixels.clear();
+        await loadRecentPixels({ full: true });
+        if (selection) {
+            await loadPixelsForSelection(selection);
+        }
+        setNewTilesAvailable(false);
+        renderCanvas();
+    } catch (error) {
+        console.error('Failed to reload wall background:', error);
+    } finally {
+        wallReloadBtn.disabled = false;
+    }
+}
+
+wallReloadBtn?.addEventListener('click', reloadWallBackground);
+
 zoomResetBtn?.addEventListener('click', () => changeZoom(0));
 zoomInBtn?.addEventListener('click', () => {
     const currentZoom = zoomLevels.indexOf(displayScale);
@@ -1453,6 +1763,8 @@ loadWallDimensions().catch((error) => {
     showInitialViewportLoadFailure();
 });
 window.setInterval(refreshWallDimensions, 15000);
+refreshPixelLocks();
+window.setInterval(refreshPixelLocks, 15000);
 
 // ---------------------------------------------------------------------------
 // Limits (Popup bei zu früher Änderung) und Shop (Pixel kaufen)
@@ -1466,6 +1778,7 @@ const limitUserActions = document.getElementById('limitUserActions');
 const limitBuyBtn = document.getElementById('limitBuyBtn');
 const shopModal = document.getElementById('shopModal');
 const shopProductsEl = document.getElementById('shopProducts');
+const shopExtensionsEl = document.getElementById('shopExtensions');
 const shopProvidersEl = document.getElementById('shopProviders');
 const shopCheckoutEl = document.getElementById('shopCheckout');
 const shopGuestNotice = document.getElementById('shopGuestNotice');
@@ -1493,7 +1806,11 @@ function updatePixelCounter(status) {
     }
     latestPixelStatus = status;
     const total = status.free + (status.credits || 0);
-    pixelCounterValue.textContent = `${total.toLocaleString(locale)}/${status.max_free.toLocaleString(locale)}`.replace(/\s*\/\s*/g, '/');
+    pixelCounterValue.textContent = `${status.free.toLocaleString(locale)}/${status.max_free.toLocaleString(locale)}`;
+    if (pixelCounterExtra) {
+        pixelCounterExtra.textContent = status.credits > 0 ? `+${status.credits.toLocaleString(locale)}` : '';
+        pixelCounterExtra.classList.toggle('hidden', !(status.credits > 0));
+    }
     pixelCounter.classList.toggle('empty', total === 0);
 }
 
@@ -1606,38 +1923,64 @@ function shopProductCopy(product) {
     if (product.type === 'extend') {
         const direction = product.axis === 'x' ? 'rechts' : 'unten';
         return {
-            title: t('Wand nach :direction erweitern', { direction: t(direction) }),
+            title: product.amount > 1
+                ? t('Leinwand um :amount Pixel nach :direction erweitern', { amount: product.amount.toLocaleString(locale), direction: t(direction) })
+                : t('Leinwand nach :direction erweitern', { direction: t(direction) }),
             badge: t('🌍 Für die ganze Community'),
-            text: t('Die Pixelwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung – dein Beitrag für die Community.', { amount: product.amount.toLocaleString(locale), direction: t(direction) }),
+            text: t('Die Leinwand wächst um :amount Pixel nach :direction. Der neue Platz steht ab sofort allen Spieler:innen zur Verfügung (im Hintergrundbild erscheint er nach bis zu 10 Minuten) – dein Beitrag für die Community.', { amount: product.amount.toLocaleString(locale), direction: t(direction) }),
         };
     }
 
-    if (product.amount >= 500) {
+    if (product.amount >= 1000) {
         return {
             title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
-            badge: t('💰 Spar-Paket: nur 0,03 € pro Pixel'),
-            text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Rund 40 % günstiger als das 100er-Paket.', { amount: product.amount.toLocaleString(locale) }),
+            badge: t('🏆 Bestpreis'),
+            text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Der günstigste Preis pro Pixel.', { amount: product.amount.toLocaleString(locale) }),
+        };
+    }
+
+    if (product.amount >= 600) {
+        return {
+            title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
+            badge: t('🔥 Beliebt'),
+            text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Das beste Verhältnis aus Preis und Menge.', { amount: product.amount.toLocaleString(locale) }),
         };
     }
 
     return {
         title: t(':amount Extra-Pixel', { amount: product.amount.toLocaleString(locale) }),
-        badge: t('⚡ Beliebt'),
+        badge: t('⚡ Starter'),
         text: t(':amount Pixel, die du sofort setzen kannst – ohne Wartezeit und über dem Vorrat von 50 hinaus. Perfekt zum Vergleichen und Ausprobieren.', { amount: product.amount.toLocaleString(locale) }),
     };
 }
 
+function shopSavingsPercent(product) {
+    const pixelProducts = shopData.products.filter((item) => item.type === 'pixels');
+    const base = Math.max(...pixelProducts.map((item) => item.price_cents / item.amount));
+    const percent = Math.round((1 - product.price_cents / product.amount / base) * 100);
+    return product.type === 'pixels' && percent > 0 ? percent : 0;
+}
+
 function renderShop() {
     shopProductsEl.replaceChildren();
+    shopExtensionsEl.replaceChildren();
     shopProvidersEl.replaceChildren();
     shopErrorEl.classList.add('hidden');
 
     const order = { pixels: 0, extend: 1 };
-    [...shopData.products].sort((a, b) => order[a.type] - order[b.type]).forEach((product) => {
+    const sortedProducts = [...shopData.products].sort((a, b) => order[a.type] - order[b.type]);
+    const isOverLimit = (product) => product.type === 'pixels' && shopData.authenticated && shopData.credits + product.amount > shopData.max_credits;
+    const selectable = sortedProducts.find((product) => product.id === shopSelected && !isOverLimit(product))
+        ?? sortedProducts.find((product) => !isOverLimit(product));
+    shopSelected = selectable ? selectable.id : null;
+
+    sortedProducts.forEach((product) => {
         const copy = shopProductCopy(product);
         const card = document.createElement('button');
         card.type = 'button';
         card.className = `shop-product shop-product-${product.type}`;
+        const overLimit = isOverLimit(product);
+        card.disabled = overLimit;
         card.dataset.product = product.id;
         card.setAttribute('aria-pressed', String(product.id === shopSelected));
 
@@ -1653,14 +1996,27 @@ function renderShop() {
         price.className = 'shop-price';
         price.textContent = product.price;
         card.append(badge, title, text, price);
+        if (overLimit) {
+            const limitNote = document.createElement('span');
+            limitNote.className = 'shop-limit-note';
+            limitNote.textContent = t('Nicht möglich: Limit von :max Extra-Pixeln würde überschritten.', { max: shopData.max_credits.toLocaleString(locale) });
+            card.appendChild(limitNote);
+        }
+        const savings = shopSavingsPercent(product);
+        if (savings > 0) {
+            const tag = document.createElement('span');
+            tag.className = 'shop-tag';
+            tag.textContent = `−${savings} %`;
+            card.appendChild(tag);
+        }
         card.addEventListener('click', () => {
             shopSelected = product.id;
             renderShop();
         });
-        shopProductsEl.appendChild(card);
+        (product.type === 'extend' ? shopExtensionsEl : shopProductsEl).appendChild(card);
     });
 
-    shopCreditsEl.textContent = shopData.authenticated ? t('Dein Guthaben: :credits Extra-Pixel', { credits: shopData.credits.toLocaleString(locale) }) : '';
+    shopCreditsEl.textContent = shopData.authenticated ? t('Dein Guthaben: :credits von maximal :max Extra-Pixeln', { credits: shopData.credits.toLocaleString(locale), max: shopData.max_credits.toLocaleString(locale) }) : '';
     shopCheckoutEl.classList.toggle('hidden', !(shopSelected && shopData.authenticated));
     shopGuestNotice.classList.toggle('hidden', !(shopSelected && !shopData.authenticated));
 
@@ -1668,11 +2024,25 @@ function renderShop() {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `shop-provider shop-provider-${provider.key}`;
-        const name = document.createElement('strong');
-        name.textContent = provider.label;
-        const mode = document.createElement('small');
-        mode.textContent = provider.mode;
-        button.append(name, mode);
+        button.setAttribute('aria-label', provider.label);
+        if (provider.key === 'paypal' || provider.key === 'stripe') {
+            const logo = document.createElement('img');
+            logo.className = 'shop-provider-logo';
+            logo.src = `/images/payments/${provider.key}.svg`;
+            logo.alt = '';
+            button.appendChild(logo);
+        } else {
+            const name = document.createElement('strong');
+            name.textContent = provider.label;
+            button.appendChild(name);
+        }
+        const hint = provider.key === 'stripe' ? provider.label : '';
+        const mode = String(provider.mode || '').toLowerCase() === 'live' ? '' : provider.mode;
+        const small = document.createElement('small');
+        small.textContent = [hint, mode].filter(Boolean).join(' · ');
+        if (small.textContent) {
+            button.appendChild(small);
+        }
         button.addEventListener('click', () => startCheckout(provider.key, button));
         shopProvidersEl.appendChild(button);
     });
@@ -1733,6 +2103,10 @@ async function startCheckout(provider, button) {
 }
 
 document.getElementById('openShopBtn')?.addEventListener('click', () => openShop());
+document.getElementById('openExtensionShopBtn')?.addEventListener('click', async () => {
+    await openShop();
+    document.getElementById('shopExtensionTitle')?.scrollIntoView({ block: 'start' });
+});
 document.getElementById('closeShopBtn')?.addEventListener('click', () => shopModal.classList.add('hidden'));
 document.getElementById('limitCloseBtn')?.addEventListener('click', hideLimitModal);
 limitBuyBtn?.addEventListener('click', () => openShop('pixels_100'));

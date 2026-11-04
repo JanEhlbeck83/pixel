@@ -53,4 +53,31 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect('/');
     }
+
+    public function test_authenticated_menu_has_a_localized_logout_form(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (['' => 'Log out', '/de' => 'Abmelden', '/es' => 'Cerrar sesión'] as $prefix => $label) {
+            foreach (['/', '/gallery'] as $path) {
+                $url = $prefix.$path;
+                $html = $this->actingAs($user)
+                    ->withHeader('User-Agent', 'Googlebot')
+                    ->get($url)
+                    ->assertOk()
+                    ->getContent();
+
+                $this->assertStringContainsString('method="POST" action="'.url($prefix.'/logout').'"', $html);
+                $this->assertStringContainsString('name="_token"', $html);
+                $this->assertStringContainsString(e($label), $html);
+                $this->assertStringContainsString('M9 21H5', $html);
+            }
+        }
+    }
+
+    public function test_guest_menu_does_not_offer_logout(): void
+    {
+        $html = $this->get('/de/gallery')->assertOk()->getContent();
+        $this->assertStringNotContainsString('action="'.url('/de/logout').'"', $html);
+    }
 }

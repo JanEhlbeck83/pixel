@@ -28,12 +28,12 @@ class ResetWallWithTextCommand extends Command
     ];
 
     protected $signature = 'wall:reset-text
-                            {--text="FUCK AFD!" : Text pro Zeile}
-                            {--lines=4 : Anzahl der Zeilen}
-                            {--image= : Bilddatei, 4× als 2×2-Raster, Ränder schwarz (statt Text)}
+                            {--image= : Bilddatei, 4× als 2×2-Raster, Ränder schwarz (Standard: resources/wall/start.png)}
+                            {--text= : Stattdessen diesen Text pro Zeile auf blauem Hintergrund setzen}
+                            {--lines=4 : Anzahl der Zeilen (nur mit --text)}
                             {--force : Ohne Rückfrage}';
 
-    protected $description = 'Setzt die Wand auf 3840 × 2160 mit blauem Hintergrund und wiederholtem Text zurück, löscht alte Kacheln/Snapshots und erzeugt alles neu';
+    protected $description = 'Setzt die Wand auf 3840 × 2160 zurück (Standard: Startbild resources/wall/start.png als 2×2-Raster), löscht alte Kacheln/Snapshots und erzeugt alles neu';
 
     public function handle(): int
     {
@@ -47,9 +47,10 @@ class ResetWallWithTextCommand extends Command
             return self::FAILURE;
         }
 
-        $image = $this->option('image')
-            ? $this->createImageArtwork((string) $this->option('image'))
-            : $this->createArtwork(strtoupper(trim((string) $this->option('text'), '"')), max(1, (int) $this->option('lines')));
+        $text = trim((string) $this->option('text'), '"');
+        $image = $text !== '' && ! $this->option('image')
+            ? $this->createArtwork(strtoupper($text), max(1, (int) $this->option('lines')))
+            : $this->createImageArtwork((string) ($this->option('image') ?: resource_path('wall/start.png')));
         $now = now();
 
         DB::transaction(function () use ($image, $now) {

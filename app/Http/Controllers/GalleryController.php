@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Snapshot;
+use App\Services\Wall\SnapshotThumbnail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 
@@ -35,7 +36,10 @@ class GalleryController extends Controller
                 return $snapshot;
             })
             ->sortByDesc('created_at')
-            ->values();
+            ->values()
+            ->each(function ($snapshot) {
+                $snapshot->thumbnail_path = SnapshotThumbnail::ensure($snapshot->image_path) ?? $snapshot->image_path;
+            });
 
         return view('gallery', compact('snapshots'));
     }

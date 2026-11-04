@@ -5,7 +5,7 @@
 @section('content')
     <h2>1. Geltungsbereich</h2>
     <p>
-        Diese Bedingungen gelten für die Nutzung von Pixel Chaos, betrieben von
+        Diese Bedingungen gelten für die Nutzung von PixRiot, betrieben von
         <x-legal-value key="name" />. Die Nutzung der Wand ist kostenlos. Zusätzliche Leistungen
         (Pixel-Pakete, Wandvergrößerung) sind kostenpflichtig.
     </p>
@@ -15,6 +15,7 @@
         <li>Jeder Pixel kann von jedem überschrieben werden, auch deiner. Es gibt keinen Anspruch auf Bestand eines Pixels oder Bildes.</li>
         <li>Neu gesetzte Pixel sind kurz gesperrt (10 Minuten).</li>
         <li>Gäste erhalten einmalig 50 Pixel. Mit Konto wächst alle 30 Sekunden ein Pixel nach, maximal 50 im Vorrat.</li>
+        <li>Gekaufte Extra-Pixel werden getrennt vom kostenlosen Vorrat gespeichert und erst verbraucht, wenn der kostenlose Vorrat leer ist. Sie verfallen nicht. Pro Konto können höchstens 10.000 Extra-Pixel gehalten werden; Pakete, die darüber hinausführen würden, können nicht gekauft werden.</li>
         <li>Verboten sind Hassbilder, verfassungsfeindliche oder verbotene Symbole, Beleidigungen, Pornografie, Gewaltdarstellungen und Inhalte, die Rechte Dritter verletzen.</li>
         <li>Automatisierte Zugriffe, Bots und Skripte zum Umgehen der Pixel-Limits sind nicht erlaubt.</li>
     </ul>
@@ -30,7 +31,7 @@
     <p>
         Die Wand entsteht gemeinsam. Du räumst uns das einfache, unentgeltliche Recht ein, die von dir
         gesetzten Pixel im Rahmen des Dienstes darzustellen, zu speichern, zu vervielfältigen und in Bildern
-        und Galerien der Wand zu zeigen. Pixel-Farben allein begründen in der Regel kein Urheberrecht an
+        und im Pixelart-Bereich der Wand zu zeigen. Pixel-Farben allein begründen in der Regel kein Urheberrecht an
         einzelnen Pixeln. Wir dürfen Inhalte entfernen, die gegen diese Bedingungen oder Gesetze verstoßen.
     </p>
 

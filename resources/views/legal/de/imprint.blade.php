@@ -36,6 +36,11 @@
         @endif
     </p>
 
+    <h2>Werbeflächen</h2>
+    <p>
+        Du möchtest eine Werbefläche erwerben oder Pixel dauerhaft sperren lassen, sodass sie von Nutzerinnen und Nutzern nicht mehr verändert werden können? Schreib uns an <a href="mailto:contact@pixriot.online">contact@pixriot.online</a>.
+    </p>
+
     <h2>Nutzerinhalte</h2>
     <p>
         Die Pixel auf der Wand werden von Nutzerinnen und Nutzern gesetzt. Für diese Inhalte sind wir erst ab

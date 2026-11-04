@@ -20,7 +20,6 @@ class Shop
         $all = [
             new PayPalProvider,
             new StripeProvider,
-            new MollieProvider,
             new FakeProvider,
         ];
 
@@ -71,14 +70,28 @@ class Shop
         return $order->fresh();
     }
 
-    public function settle(Order $order, string $status): void
-    {
-        if ($status === Order::PAID) {
-            $this->fulfill($order);
-        } elseif ($status === Order::FAILED && $order->status === Order::PENDING) {
-            $order->update(['status' => Order::FAILED]);
-        }
+public function settle(Order $order, string $status): void
+{
+    if ($status === Order::PAID) {
+        $this->fulfill($order);
+    } elseif ($status === Order::FAILED) {
+        DB::transaction(function () use ($order) {
+            $locked = Order::query()->lockForUpdate()->find($order->id);
+
+            if (
+                ! $locked
+                || $locked->status !== Order::PENDING
+                || $locked->fulfilled_at !== null
+            ) {
+                return;
+            }
+
+            $locked->update([
+                'status' => Order::FAILED,
+            ]);
+        });
     }
+}
 
     public function fulfill(Order $order): void
     {
@@ -86,13 +99,16 @@ class Shop
 
         DB::transaction(function () use ($order) {
             $locked = Order::query()->lockForUpdate()->find($order->id);
-            if (! $locked || $locked->fulfilled_at !== null) {
-                return;
-            }
+            if (! $locked
+    || $locked->status !== Order::PENDING
+    || $locked->fulfilled_at !== null
+) {
+    return;
+}
 
             $product = config('payments.products.'.$locked->product);
             if (($product['type'] ?? null) === 'extend') {
-                $this->extender->extend($product['axis']);
+                $this->extender->extend($product['axis'], (int) ($product['amount'] ?? 1));
             } elseif (($product['type'] ?? null) === 'pixels') {
                 User::query()->whereKey($locked->user_id)->increment('pixel_credits', (int) $product['amount']);
             }
@@ -106,9 +122,21 @@ class Shop
     }
 
     public function cancel(Order $order): void
-    {
-        if ($order->status === Order::PENDING) {
-            $order->update(['status' => Order::CANCELLED]);
+{
+    DB::transaction(function () use ($order) {
+        $locked = Order::query()->lockForUpdate()->find($order->id);
+
+        if (
+            ! $locked
+            || $locked->status !== Order::PENDING
+            || $locked->fulfilled_at !== null
+        ) {
+            return;
         }
-    }
+
+        $locked->update([
+            'status' => Order::CANCELLED,
+        ]);
+    });
+}
 }

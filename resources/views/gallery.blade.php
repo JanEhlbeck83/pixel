@@ -3,33 +3,33 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ __('Pixel Chaos | Galerie') }}</title>
+        <title>{{ __('Pixelart – Community-Kunstwerke & Snapshots | PixRiot') }}</title>
+        <meta name="description" content="{{ __('Entdecke die Kunstwerke der PixRiot-Community. Regelmäßige Snapshots zeigen, wie sich unsere gemeinsame Pixelwand verändert.') }}">
+        <x-favicons />
         <x-locale-head />
         <x-i18n-script />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body>
+    <body class="menu-page">
         <div class="pixel-shell">
-            <header class="pixel-topbar">
+            @include('partials.site-menu')
+            <header class="page-heading">
                 <div class="brand">
                     <small>{{ __('Archive') }}</small>
-                    <strong>PIXEL CHAOS</strong>
-                </div>
-                <div class="top-actions">
-                    <a href="{{ route('wall') }}">{{ __('Zur Wand') }}</a>
-                    <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
+                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
                 </div>
             </header>
 
             <main>
                 <div class="panel">
-                    <h3>{{ __('Automatische Schnappschüsse') }}</h3>
+                    <h1>{{ __('Kunstwerke im Wandel') }}</h1>
+                    <p>{{ __('Snapshots unserer gemeinsamen Pixelwand.') }}</p>
                     <div class="gallery-grid">
                         @forelse ($snapshots as $snapshot)
                             <article class="gallery-item">
                                 @if (!empty($snapshot->image_path))
                                     <a href="{{ asset($snapshot->image_path) }}" target="_blank" rel="noopener">
-                                        <img src="{{ asset($snapshot->image_path) }}" alt="{{ __('Schnappschuss: :label', ['label' => $snapshot->label]) }}" class="snapshot-image" loading="lazy">
+                                        <img src="{{ asset($snapshot->thumbnail_path) }}" alt="{{ __('Schnappschuss: :label', ['label' => $snapshot->label]) }}" class="snapshot-image" loading="lazy">
                                     </a>
                                 @else
                                     <div class="mini-wall" aria-label="{{ __('Schnappschuss Vorschau') }}">
@@ -37,20 +37,8 @@
                                     </div>
                                 @endif
                                 <h4>{{ __($snapshot->label) }}</h4>
-                                <p>
-                                    @php
-                                        $minutesAgo = max(0, (int) floor(now()->diffInMinutes($snapshot->created_at)));
-                                    @endphp
-                                    @if ($minutesAgo === 0)
-                                        {{ __('gerade eben') }}
-                                    @elseif ($minutesAgo === 1)
-                                        {{ __('vor 1 Minute') }}
-                                    @else
-                                        {{ __('vor :minutes Minuten', ['minutes' => $minutesAgo]) }}
-                                    @endif
-                                </p>
                                 @if (!empty($snapshot->image_path))
-                                    <a class="primary-button snapshot-download" href="{{ asset($snapshot->image_path) }}" download="pixel-chaos-{{ basename($snapshot->image_path) }}">{{ __('⬇ Als PNG herunterladen') }} @if (!empty($snapshot->summary['width']))({{ $snapshot->summary['width'] }} × {{ $snapshot->summary['height'] }} px)@endif</a>
+                                    <a class="snapshot-download" href="{{ asset($snapshot->image_path) }}" download="pixriot-{{ basename($snapshot->image_path) }}"><x-icon name="download" />{{ __('Als PNG herunterladen') }} @if (!empty($snapshot->summary['width']))({{ $snapshot->summary['width'] }} × {{ $snapshot->summary['height'] }} px)@endif</a>
                                 @endif
                             </article>
                         @empty

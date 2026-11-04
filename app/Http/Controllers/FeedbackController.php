@@ -15,14 +15,14 @@ class FeedbackController extends Controller
         }
 
         $data = $request->validate([
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => [$request->user() ? 'nullable' : 'required', 'email:rfc', 'max:255'],
             'message' => ['required', 'string', 'min:5', 'max:2000'],
             'website' => ['nullable', 'string', 'max:255'],
         ]);
 
         Feedback::create([
             'user_id' => $request->user()?->id,
-            'email' => $data['email'] ?? null,
+            'email' => $request->user()?->email ?? $data['email'],
             'message' => trim($data['message']),
         ]);
 

@@ -5,7 +5,7 @@
 @section('content')
     <h2>1. Scope</h2>
     <p>
-        These terms apply to the use of Pixel Chaos, operated by <x-legal-value key="name" />. Using the wall is
+        These terms apply to the use of PixRiot, operated by <x-legal-value key="name" />. Using the wall is
         free of charge. Additional services (pixel packs, wall expansion) are chargeable.
     </p>
 
@@ -14,6 +14,7 @@
         <li>Every pixel can be overwritten by anyone, including yours. There is no entitlement to any pixel or image being preserved.</li>
         <li>Newly placed pixels are briefly locked (10 minutes).</li>
         <li>Guests receive 50 pixels once. With an account, one pixel regenerates every 30 seconds, up to a maximum stock of 50.</li>
+        <li>Purchased extra pixels are stored separately from the free stock and are only used once the free stock is empty. They do not expire. An account can hold at most 10,000 extra pixels; packs that would exceed this cannot be purchased.</li>
         <li>Prohibited are hateful imagery, unconstitutional or banned symbols, insults, pornography, depictions of violence and content that infringes third-party rights.</li>
         <li>Automated access, bots and scripts used to circumvent the pixel limits are not permitted.</li>
     </ul>
@@ -28,7 +29,7 @@
     <h2>4. Content and rights</h2>
     <p>
         The wall is created collectively. You grant us a non-exclusive, royalty-free right to display, store and
-        reproduce the pixels you place within the scope of the service, and to show them in images and galleries
+        reproduce the pixels you place within the scope of the service, and to show them in images and the Pixelart section
         of the wall. Pixel colours alone do not, as a rule, give rise to copyright in individual pixels. We may
         remove content that violates these terms or the law.
     </p>
@@ -76,4 +77,3 @@
 
     <p>Further information: <a href="{{ route('legal.privacy') }}">Privacy Policy</a>, <a href="{{ route('legal.impressum') }}">Legal Notice</a>.</p>
 @endsection
-

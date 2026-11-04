@@ -36,6 +36,11 @@
         @endif
     </p>
 
+    <h2>Espacios publicitarios</h2>
+    <p>
+        ¿Quieres adquirir un espacio publicitario o bloquear píxeles de forma permanente para que los usuarios ya no puedan modificarlos? Escríbenos a <a href="mailto:contact@pixriot.online">contact@pixriot.online</a>.
+    </p>
+
     <h2>Contenido de los usuarios</h2>
     <p>
         Los píxeles del muro los colocan los usuarios. Solo somos responsables de dichos contenidos a partir del
@@ -68,6 +73,5 @@
     <p>
         La versión alemana de este aviso legal es la jurídicamente vinculante. Las versiones en inglés y en
         español son traducciones que se ofrecen únicamente a título informativo.
-    </p>
-@endsection
+    </p>@endsection
 

@@ -7,6 +7,39 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## PixRiot SEO
+
+Die XML-Sitemap ist unter `/sitemap.xml` erreichbar und wird bei jedem Aufruf
+aus den oeffentlichen Seiten und den konfigurierten Sprachen erzeugt.
+Sie enthaelt Startseite, Pixelart, FAQ und Rechtstexte mit `hreflang`-Alternativen
+einschliesslich `x-default`. Login, Profile, APIs und Weiterleitungen werden
+nicht aufgenommen. Eine Generierung per Artisan oder Scheduler ist nicht erforderlich.
+`public/robots.txt` verweist auf die Live-Sitemap unter
+`https://pixriot.online/sitemap.xml`; diese URL kann in Google Search Console
+eingereicht werden.
+
+Die sichtbare Bezeichnung lautet in allen Sprachen "Pixelart". Die bestehenden
+`/gallery`-URLs und Routennamen bleiben fuer vorhandene Links erhalten.
+Startseite und Pixelart haben eigene SEO-Titel und Meta-Beschreibungen in
+Deutsch, Englisch und Spanisch. Der Pixelart-Bereich hat eine lokalisierte
+Hauptueberschrift und einen kurzen Einleitungstext; bestehende Share-Metadaten
+fuer Ausschnitte der Wand bleiben erhalten.
+
+Beim ersten Wandbesuch erscheint ein Willkommensbanner; seine Bestaetigung
+und ungelesene Spielregeln. Erst nach optionaler Speicherzustimmung
+(`pixriot-onboarding-storage-accepted`) werden Einfuehrung (`pixriot-welcome-seen`)
+und Regeln (`pixriot-rules-seen`) dauerhaft in localStorage gespeichert.
+Alte Cookiebestaetigungen gelten nicht als Zustimmung zum neuen Speicherzweck.
+Nach "Spiel starten" folgen ungelesene Regeln. Erst ihre Bestaetigung gibt
+die Wand frei. Hintergrundklick und Escape bestaetigen keine Regeln.
+Der Cookiebanner liegt waehrenddessen hinter dem Sperrscreen und ist nicht
+bedienbar. Nach der Freigabe bleibt er unten sichtbar, bis er bestaetigt wird;
+seine Bestaetigung ist keine Voraussetzung zum Spielen. Ohne verfuegbaren
+localStorage gelten Bestaetigungen nur fuer den aktuellen Seitenaufruf.
+Der Menuebutton erhaelt nach der Einfuehrung keinen automatischen Fokus und
+keinen Fokusrand. Angemeldete Nutzer koennen sich im Menue per
+CSRF-geschuetztem POST-Formular abmelden.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

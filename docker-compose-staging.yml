@@ -1,0 +1,108 @@
+
+# Staging (staging.pixriot.online): sudo docker compose -p pixel-staging -f docker-compose-staging.yml up -d --build
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: staging
+      APP_DEBUG: "false"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pixel}
+      DB_USERNAME: ${DB_USERNAME:-pixel}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD muss in .env gesetzt sein}
+    volumes:
+      - /opt/pixel-data/staging/images/wall-tiles:/var/www/html/public/images/wall-tiles
+      - /opt/pixel-data/staging/images/snapshots:/var/www/html/public/images/snapshots
+      - private-data:/var/www/html/storage/app/private
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    restart: unless-stopped
+    user: "33:33"
+    command: ["php", "artisan", "schedule:work"]
+    env_file:
+      - .env
+    environment:
+      APP_ENV: staging
+      APP_DEBUG: "false"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pixel}
+      DB_USERNAME: ${DB_USERNAME:-pixel}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD muss in .env gesetzt sein}
+    volumes:
+      - /opt/pixel-data/staging/images/wall-tiles:/var/www/html/public/images/wall-tiles
+      - /opt/pixel-data/staging/images/snapshots:/var/www/html/public/images/snapshots
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - /opt/pixel-data/staging/images/wall-tiles:/var/www/html/public/images/wall-tiles:ro
+      - /opt/pixel-data/staging/images/snapshots:/var/www/html/public/images/snapshots:ro
+      - /opt/pixel-auth/staging.htpasswd:/etc/nginx/.htpasswd:ro
+    depends_on:
+      - app
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-pixel}
+      POSTGRES_USER: ${DB_USERNAME:-pixel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD muss in .env gesetzt sein}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  # Mail-Testserver (nur Staging): docker compose -p pixel-staging -f docker-compose-staging.yml --profile mail up -d mailpit
+  mailpit:
+    image: axllent/mailpit
+    profiles: ["mail"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+  private-data:
+
+networks:
+  backend:

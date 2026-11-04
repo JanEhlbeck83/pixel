@@ -26,9 +26,13 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="auth-error" />
         </div>
 
+        <label class="auth-check">
+            <input type="checkbox" name="newsletter" value="1" @checked(old('newsletter'))>
+            <span>{{ __('Ich möchte den PixRiot-Newsletter erhalten (jederzeit abbestellbar).') }}</span>
+        </label>
+
         <x-primary-button class="auth-submit">
             <span>{{ __('Konto erstellen') }}</span>
-            <span aria-hidden="true">→</span>
         </x-primary-button>
     </form>
 

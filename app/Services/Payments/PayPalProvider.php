@@ -7,6 +7,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class PayPalProvider implements PaymentProvider
@@ -69,46 +70,114 @@ class PayPalProvider implements PaymentProvider
         if (! $link) {
             throw new RuntimeException('PayPal: Keine Weiterleitungs-URL erhalten.');
         }
-
         return $link['href'];
     }
 
     public function verify(Order $order, ?Request $request = null): string
-    {
-        if (! $order->provider_reference) {
-            return Order::FAILED;
-        }
-
-        $capture = $this->http()
-            ->withBody('{}', 'application/json')
-            ->withHeaders(['PayPal-Request-Id' => $order->uuid.'-capture'])
-            ->post('/v2/checkout/orders/'.$order->provider_reference.'/capture');
-
-        $data = $capture->json();
-        if (! $capture->successful()) {
-            $issues = collect($data['details'] ?? [])->pluck('issue');
-            if (! $issues->contains('ORDER_ALREADY_CAPTURED')) {
-                return $issues->contains('ORDER_NOT_APPROVED') ? Order::PENDING : Order::FAILED;
-            }
-            $data = $this->http()->get('/v2/checkout/orders/'.$order->provider_reference)->json();
-        }
-
-        $unit = $data['purchase_units'][0] ?? [];
-        $payment = $unit['payments']['captures'][0] ?? null;
-        $amount = $payment['amount'] ?? [];
-        $expected = number_format($order->amount_cents / 100, 2, '.', '');
-
-        if (($data['status'] ?? null) === 'COMPLETED'
-            && ($payment['status'] ?? null) === 'COMPLETED'
-            && ($amount['value'] ?? null) === $expected
-            && ($amount['currency_code'] ?? null) === $order->currency) {
-            return Order::PAID;
-        }
-
-        return ($payment['status'] ?? null) === 'PENDING' ? Order::PENDING : Order::FAILED;
+{
+    if (! $order->provider_reference) {
+        return Order::FAILED;
     }
 
-    private function isLive(): bool
+    $capture = $this->http()
+        ->withBody('{}', 'application/json')
+        ->withHeaders(['PayPal-Request-Id' => $order->uuid.'-capture'])
+        ->post('/v2/checkout/orders/'.$order->provider_reference.'/capture');
+
+    $captureData = $capture->json() ?? [];
+    $issues = collect($captureData['details'] ?? []);
+
+    if (! $capture->successful()) {
+        $issueCodes = $issues->pluck('issue')->all();
+
+        Log::warning('PayPal Capture nicht erfolgreich', [
+            'order' => $order->uuid,
+            'http_status' => $capture->status(),
+            'name' => $captureData['name'] ?? null,
+            'message' => $captureData['message'] ?? null,
+            'issues' => $issueCodes,
+        ]);
+
+        if (in_array('ORDER_NOT_APPROVED', $issueCodes, true)) {
+            return Order::PENDING;
+        }
+    }
+
+    // Unabhängig vom Capture-Ergebnis den tatsächlichen PayPal-Status abrufen.
+    $response = $this->http()->get(
+        '/v2/checkout/orders/'.$order->provider_reference
+    );
+
+    if (! $response->successful()) {
+        Log::warning('PayPal Bestellstatus konnte nicht abgerufen werden', [
+            'order' => $order->uuid,
+            'http_status' => $response->status(),
+        ]);
+
+        return Order::PENDING;
+    }
+
+    $data = $response->json() ?? [];
+    $units = $data['purchase_units'] ?? [];
+
+if (! is_array($units) || count($units) !== 1) {
+    Log::warning('PayPal Anzahl der Purchase Units stimmt nicht', [
+        'order' => $order->uuid,
+    ]);
+
+    return Order::FAILED;
+}
+
+$unit = $units[0];
+
+    // Sicherheitsprüfung: Beide Referenzen müssen unserer Bestellung entsprechen.
+    if (($unit['reference_id'] ?? null) !== $order->uuid
+        || ($unit['custom_id'] ?? null) !== $order->uuid) {
+        Log::warning('PayPal Bestellreferenz stimmt nicht überein', [
+            'order' => $order->uuid,
+        ]);
+
+        return Order::FAILED;
+    }
+
+        $expectedMerchantId = (string) config('payments.providers.paypal.merchant_id');
+    $actualMerchantId = $unit['payee']['merchant_id'] ?? null;
+
+    if (
+        $expectedMerchantId === ''
+        || ! is_string($actualMerchantId)
+        || ! hash_equals($expectedMerchantId, $actualMerchantId)
+    ) {
+        Log::warning('PayPal Händler-ID stimmt nicht überein', [
+            'order' => $order->uuid,
+        ]);
+
+        return Order::FAILED;
+    }
+
+    $payment = $unit['payments']['captures'][0] ?? null;
+
+    if (! $payment) {
+        return Order::PENDING;
+    }
+
+    $amount = $payment['amount'] ?? [];
+    $expected = number_format($order->amount_cents / 100, 2, '.', '');
+
+    if (($data['status'] ?? null) === 'COMPLETED'
+        && ($payment['status'] ?? null) === 'COMPLETED'
+        && ($amount['value'] ?? null) === $expected
+        && ($amount['currency_code'] ?? null) === $order->currency) {
+        return Order::PAID;
+    }
+
+    return in_array($payment['status'] ?? null, ['PENDING'], true)
+        || ($data['status'] ?? null) === 'APPROVED'
+        ? Order::PENDING
+        : Order::FAILED;
+}
+
+   private function isLive(): bool
     {
         return config('payments.providers.paypal.mode') === 'live';
     }

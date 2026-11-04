@@ -21,7 +21,7 @@ class StripeProvider implements PaymentProvider
 
     public function modeLabel(): string
     {
-        return str_starts_with((string) config('payments.providers.stripe.secret_key'), 'sk_live') ? 'Live' : __('Sandbox');
+        return $this->isLiveKey() ? 'Live' : __('Sandbox');
     }
 
     public function isEnabled(): bool
@@ -31,8 +31,10 @@ class StripeProvider implements PaymentProvider
 
     public function createCheckout(Order $order): string
     {
-        $response = $this->http()->asForm()->post('/v1/checkout/sessions', [
+        // Die Zahlungsmethoden (Karte inkl. Apple/Google Pay, SEPA, Klarna, Link) steuert Stripe über die Dashboard-Einstellungen.
+        $response = $this->http()->withHeaders(['Idempotency-Key' => 'checkout-'.$order->uuid])->asForm()->post('/v1/checkout/sessions', [
             'mode' => 'payment',
+            'expires_at' => now()->addHour()->timestamp,
             'locale' => app()->getLocale(),
             'client_reference_id' => $order->uuid,
             'metadata' => ['order_uuid' => $order->uuid],
@@ -49,7 +51,7 @@ class StripeProvider implements PaymentProvider
         ]);
 
         if (! $response->successful() || ! $response->json('url')) {
-            throw new RuntimeException('Stripe: Zahlung konnte nicht angelegt werden ('.$response->status().').');
+            throw new RuntimeException('Stripe: Zahlung konnte nicht angelegt werden ('.$response->status().'): '.mb_substr((string) $response->json('error.message'), 0, 300));
         }
 
         $order->update(['provider_reference' => $response->json('id')]);
@@ -67,19 +69,30 @@ class StripeProvider implements PaymentProvider
         if (! $response->successful()) {
             return Order::PENDING;
         }
+        $session = $response->json() ?? [];
+        $expectedLiveMode = $this->isLiveKey();
 
-        $session = $response->json();
         if (($session['client_reference_id'] ?? null) !== $order->uuid
+            || ($session['id'] ?? $order->provider_reference) !== $order->provider_reference
             || (int) ($session['amount_total'] ?? -1) !== $order->amount_cents
-            || strtoupper((string) ($session['currency'] ?? '')) !== $order->currency) {
+            || strtoupper((string) ($session['currency'] ?? '')) !== $order->currency
+            || ($session['livemode'] ?? null) !== $expectedLiveMode
+            || ($session['mode'] ?? null) !== 'payment'
+            || ($session['metadata']['order_uuid'] ?? null) !== $order->uuid) {
             return Order::FAILED;
         }
 
-        if (($session['payment_status'] ?? null) === 'paid') {
+        if (($session['payment_status'] ?? null) === 'paid' && ($session['status'] ?? 'complete') === 'complete') {
             return Order::PAID;
         }
 
         return ($session['status'] ?? null) === 'expired' ? Order::FAILED : Order::PENDING;
+    }
+
+    // sk_live_ = Standard-Geheimschlüssel, rk_live_ = eingeschränkter Schlüssel
+    private function isLiveKey(): bool
+    {
+        return preg_match('/^[sr]k_live_/', (string) config('payments.providers.stripe.secret_key')) === 1;
     }
 
     private function http()

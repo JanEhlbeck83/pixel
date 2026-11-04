@@ -36,6 +36,7 @@ class ShopController extends Controller
         return response()->json([
             'authenticated' => $request->user() !== null,
             'credits' => (int) ($request->user()?->pixel_credits ?? 0),
+            'max_credits' => (int) config('payments.limits.max_credits'),
             'products' => $products,
             'providers' => $providers,
         ]);
@@ -47,6 +48,15 @@ class ShopController extends Controller
             'product' => ['required', Rule::in(array_keys(config('payments.products')))],
             'provider' => ['required', Rule::in(array_keys($this->shop->providers()))],
         ]);
+
+        $product = config('payments.products.'.$data['product']);
+        $max = (int) config('payments.limits.max_credits');
+        if (($product['type'] ?? null) === 'pixels' && (int) $request->user()->pixel_credits + $product['amount'] > $max) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Du kannst höchstens :max Extra-Pixel besitzen. Setze erst einige, dann kannst du nachkaufen.', ['max' => number_format($max, 0, ',', '.')]),
+            ], 422);
+        }
 
         $order = $this->shop->createOrder($request->user(), $data['product'], $data['provider']);
 
@@ -81,7 +91,7 @@ class ShopController extends Controller
             default => ['error', __('Die Zahlung wurde nicht abgeschlossen. Es wurde nichts berechnet.')],
         };
 
-        return redirect()->route('wall')->with('purchase', ['status' => $flash[0], 'message' => $flash[1]]);
+        return redirect()->route('home')->with('purchase', ['status' => $flash[0], 'message' => $flash[1]]);
     }
 
     public function cancel(Request $request, Order $order): RedirectResponse
@@ -89,7 +99,7 @@ class ShopController extends Controller
         $this->authorizeOrder($request, $order);
         $this->shop->cancel($order);
 
-        return redirect()->route('wall')->with('purchase', [
+        return redirect()->route('home')->with('purchase', [
             'status' => 'error',
             'message' => __('Zahlung abgebrochen. Es wurde nichts berechnet.'),
         ]);
@@ -123,16 +133,15 @@ class ShopController extends Controller
         }
 
         $event = $request->json()->all();
-        if (in_array($event['type'] ?? '', ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)) {
-            $this->refreshByReference('stripe', $event['data']['object']['id'] ?? null);
+        $reference = $event['data']['object']['id'] ?? null;
+        if (in_array($event['type'] ?? '', [
+            'checkout.session.completed',
+            'checkout.session.async_payment_succeeded',
+            'checkout.session.async_payment_failed',
+            'checkout.session.expired',
+        ], true)) {
+            $this->refreshByReference('stripe', is_string($reference) ? $reference : null);
         }
-
-        return response('ok');
-    }
-
-    public function mollieWebhook(Request $request)
-    {
-        $this->refreshByReference('mollie', $request->input('id'));
 
         return response('ok');
     }
@@ -152,20 +161,46 @@ class ShopController extends Controller
         }
     }
 
-    private function validStripeSignature(Request $request, string $secret): bool
-    {
-        $header = (string) $request->header('Stripe-Signature');
-        parse_str(str_replace(',', '&', $header), $parts);
-        $timestamp = $parts['t'] ?? null;
-        $signature = $parts['v1'] ?? null;
+private function validStripeSignature(Request $request, string $secret): bool
+{
+    $header = (string) $request->header('Stripe-Signature');
+    $parts = [];
 
-        if (! $timestamp || ! $signature || abs(time() - (int) $timestamp) > 300) {
-            return false;
+    foreach (explode(',', $header) as $part) {
+        $pair = explode('=', trim($part), 2);
+
+        if (count($pair) === 2) {
+            $parts[$pair[0]][] = $pair[1];
         }
-
-        return hash_equals(hash_hmac('sha256', $timestamp.'.'.$request->getContent(), $secret), $signature);
     }
 
+    $timestamps = $parts['t'] ?? [];
+    $signatures = $parts['v1'] ?? [];
+
+    if (count($timestamps) !== 1 || ! ctype_digit($timestamps[0]) || $signatures === []) {
+        return false;
+    }
+
+    $timestamp = $timestamps[0];
+
+    if (abs(time() - (int) $timestamp) > 300) {
+        return false;
+    }
+
+    $expected = hash_hmac(
+        'sha256',
+        $timestamp.'.'.$request->getContent(),
+        $secret
+    );
+
+    foreach ($signatures as $signature) {
+        if (preg_match('/^[a-f0-9]{64}$/i', $signature) && hash_equals($expected, $signature)) {
+            return true;
+        }
+    }
+
+    return false;
+}
     private function authorizeOrder(Request $request, Order $order): void
     {
         abort_unless($order->user_id === $request->user()->id, 403);

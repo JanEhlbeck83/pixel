@@ -12,7 +12,7 @@
 
     <h2>2. Overview</h2>
     <p>
-        Pixel Chaos is a shared pixel wall. We process personal data only to the extent necessary for operation,
+        PixRiot is a shared pixel wall. We process personal data only to the extent necessary for operation,
         accounts, payments and security. The legal basis is the GDPR.
     </p>
 
@@ -27,10 +27,17 @@
     <p>
         We only set technically necessary cookies: a session cookie, a protection cookie against cross-site
         attacks (CSRF/XSRF) and, if you use “stay logged in”, a login cookie. After a deliberate choice of
-        language, the functional cookie “pixel_locale” is added (see section 15). In addition, your browser
-        remembers in local storage that you have acknowledged the cookie notice and the rules of play. This
-        information does not leave your browser. The legal basis is Section 25(2) no. 2 TDDDG and
+        language, the functional cookie “pixel_locale” is added (see section 15).
+        The legal basis for necessary storage is Section 25(2) no. 2 TDDDG and
         Art. 6(1)(f) GDPR. We do not use tracking or advertising cookies.
+    </p>
+    <p>
+        Only with your additional consent via “Accept” do we remember the introduction and confirmed game
+        rules in localStorage: “pixriot-welcome-seen”, “pixriot-rules-seen” and
+        “pixriot-onboarding-storage-accepted”. These values do not leave your browser and remain until
+        deleted. The legal basis for this optional storage is Section 25(1) TDDDG and, where personal data
+        is involved, Art. 6(1)(a) GDPR. You can play without consent; confirmations then apply only to the
+        current page visit. You can withdraw consent by deleting this site's data in your browser settings.
     </p>
 
     <h2>5. Playing as a guest</h2>
@@ -56,7 +63,7 @@
     <p>
         The provider of Facebook Login is Meta Platforms Ireland Limited, Merrion Road, Dublin 4, D04 X2K5,
         Ireland. If you choose “Facebook”, your browser redirects you to Facebook. In doing so, Meta receives
-        technical data (including your IP address) and the information that you wish to log in to Pixel Chaos.
+        technical data (including your IP address) and the information that you wish to log in to PixRiot.
         After your consent, Facebook transmits to us your <strong>Facebook ID</strong>, your <strong>name</strong>
         and your <strong>email address</strong>. We store this information (ID, name, email) to maintain your
         account. We do not publish anything on Facebook and do not read friends lists, posts or other content.
@@ -81,7 +88,7 @@
         under the EU-US Data Privacy Framework.
     </p>
 
-    <h2>8. Pixels, activity history and gallery</h2>
+    <h2>8. Pixels, activity history and Pixelart</h2>
     <p>
         When you place a pixel, we store position, colour, your user reference and the time. An activity history
         (“who did what”) and images (snapshots) of the wall publicly show the result. Your name becomes publicly
@@ -92,8 +99,7 @@
 
     <h2>9. Feedback</h2>
     <p>
-        In the feedback form we store your message, your optional email address and, if you are logged in, your
-        account. We use this only to handle your message (Art. 6(1)(f) GDPR).
+        In the feedback form we store your message and either the email address of your account or the email address you enter (required for guests), so that we know who sent the feedback and can reply. We use this only to handle your message (Art. 6(1)(f) GDPR).
     </p>
 
     <h2>10. Purchases and payments</h2>
@@ -105,7 +111,6 @@
     <ul>
         <li>Stripe Payments Europe Ltd., Dublin, Ireland (<a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">privacy</a>)</li>
         <li>PayPal (Europe) S.à r.l. et Cie, S.C.A., Luxembourg (<a href="https://www.paypal.com/uk/legalhub/privacy-full" target="_blank" rel="noopener noreferrer">privacy</a>)</li>
-        <li>Mollie B.V., Amsterdam, Netherlands (<a href="https://www.mollie.com/privacy" target="_blank" rel="noopener noreferrer">privacy</a>)</li>
     </ul>
     <p>
         We do not enter or store your payment data (e.g. card number) ourselves; it goes directly to the
@@ -147,7 +152,7 @@
 
     <h2>15. Language selection, automatic redirection and language cookie</h2>
     <p>
-        Pixel Chaos is available in English (without a path prefix, e.g. “/”), German (“/de”) and Spanish
+        PixRiot is available in English (without a path prefix, e.g. “/”), German (“/de”) and Spanish
         (“/es”). The language is determined by the address (URL).
     </p>
     <p>
@@ -183,4 +188,3 @@
     <h2>18. Changes</h2>
     <p>We amend this policy when our offering or the legal situation changes.</p>
 @endsection
-

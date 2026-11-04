@@ -45,8 +45,8 @@ class Order extends Model
 
         return match ($product['type'] ?? null) {
             'extend' => ($product['axis'] ?? 'x') === 'x'
-                ? __('Pixelwand nach rechts erweitern (+:amount px)', ['amount' => $product['amount'] ?? 0])
-                : __('Pixelwand nach unten erweitern (+:amount px)', ['amount' => $product['amount'] ?? 0]),
+                ? __('Leinwand nach rechts erweitern (+:amount px)', ['amount' => $product['amount'] ?? 0])
+                : __('Leinwand nach unten erweitern (+:amount px)', ['amount' => $product['amount'] ?? 0]),
             'pixels' => __(':amount Extra-Pixel', ['amount' => $product['amount'] ?? 0]),
             default => $this->product,
         };

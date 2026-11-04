@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Pixel Chaos | {{ __('Test-Zahlung') }}</title>
+        <title>PixRiot | {{ __('Test-Zahlung') }}</title>
+        <x-favicons />
         @vite(['resources/css/app.css'])
     </head>
     <body class="profile-page">
