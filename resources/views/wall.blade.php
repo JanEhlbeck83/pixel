@@ -4,7 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>PixRiot</title>
+        <title>{{ __('PixRiot – Gemeinsam Pixelart online gestalten') }}</title>
+        <meta name="description" content="{{ __('Gestalte mit der PixRiot-Community eine gemeinsame Pixelwand. Setze kostenlos Pixel, erschaffe Pixelart und entdecke Kunstwerke im Wandel.') }}">
         <x-favicons />
         <meta property="og:type" content="website">
         <meta property="og:title" content="{{ __('PixRiot – baut gemeinsam ein Bild oder führt Pixelkrieg') }}">
@@ -157,12 +158,22 @@
             @include('legal.partials.links')
         </footer>
 
+        <div id="welcomeOverlay" class="welcome-overlay visible" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-describedby="welcomeDescription">
+            <section class="welcome-banner">
+                <h1 id="welcomeTitle">{{ __('PixRiot – Gemeinsam Pixelart online gestalten') }}</h1>
+                <p id="welcomeDescription">{{ __('Gestalte mit der PixRiot-Community eine gemeinsame Pixelwand. Setze kostenlos Pixel, erschaffe Pixelart und entdecke Kunstwerke im Wandel.') }}</p>
+                <button type="button" id="startGameBtn" class="primary-button">{{ __('Spiel starten') }}</button>
+                <a class="onboarding-privacy" href="{{ route('legal.privacy') }}">{{ __('Datenschutz') }}</a>
+            </section>
+        </div>
+
         <div id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite">
             <div class="cookie-content">
                 <div>
-                    <strong>{{ __('Cookies & Spielregeln') }}</strong>
-                    <p>{{ __('Wir nutzen Cookies nur für die Sitzung und die erste Erklärung der Regeln. Deine Bestätigung bleibt lokal im Browser gespeichert.') }} <a href="{{ route('legal.privacy') }}">{{ __('Datenschutz') }}</a></p>
+                    <strong>{{ __('Cookies & lokaler Speicher') }}</strong>
+                    <p>{{ __('Notwendige Cookies ermöglichen Sitzung und Sicherheit. Mit „Akzeptieren“ erlaubst du zusätzlich, Einführung und bestätigte Spielregeln dauerhaft in deinem Browser zu merken. Ohne Zustimmung kannst du spielen; beim nächsten Aufruf erscheint die Einführung erneut. Kein Tracking. Du kannst die Zustimmung durch Löschen dieser Websitedaten in deinem Browser widerrufen.') }} <a href="{{ route('legal.privacy') }}">{{ __('Datenschutz') }}</a></p>
                 </div>
+                <button type="button" id="declineStorageBtn" class="secondary-button">{{ __('Ohne Speichern weiterspielen') }}</button>
                 <button type="button" id="acceptCookiesBtn" class="primary-button">{{ __('Akzeptieren') }}</button>
             </div>
         </div>
@@ -181,6 +192,7 @@
                     <li>{{ __('Keine Hassbilder, keine verbotenen Symbole, keine Beleidigungen von Personen. Verstöße werden gelöscht.') }}</li>
                     <li>{{ __('Die Wall lässt sich bis 800 % zoomen – für den Feinschliff und für den Angriff auf einzelne Pixel.') }}</li>
                 </ul>
+                <a class="onboarding-privacy" href="{{ route('legal.privacy') }}">{{ __('Datenschutz') }}</a>
                 <button type="button" id="closeRulesBtn" class="primary-button">{{ __('Verstanden') }}</button>
             </div>
         </div>

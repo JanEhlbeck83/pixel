@@ -28,10 +28,18 @@
         Solo utilizamos cookies técnicamente necesarias: una cookie de sesión, una cookie de protección frente a
         ataques entre sitios (CSRF/XSRF) y, si usas «mantener la sesión iniciada», una cookie de inicio de
         sesión. Tras una elección deliberada de idioma se añade la cookie funcional «pixel_locale» (véase el
-        apartado 15). Además, tu navegador recuerda en el almacenamiento local que has confirmado el aviso de
-        cookies y las reglas del juego. Esta información no sale de tu navegador. La base jurídica es el
+        apartado 15). La base jurídica del almacenamiento necesario es el
         art. 25, apdo. 2, n.º 2 TDDDG y el art. 6, apdo. 1, letra f RGPD. No utilizamos cookies de seguimiento
         ni publicitarias.
+    </p>
+    <p>
+        Solo con tu consentimiento adicional mediante «Aceptar» recordamos la introducción y las reglas
+        confirmadas en localStorage: «pixriot-welcome-seen», «pixriot-rules-seen» y
+        «pixriot-onboarding-storage-accepted». Estos datos no salen de tu navegador y permanecen hasta que
+        los elimines. La base jurídica del almacenamiento opcional es el art. 25, apdo. 1 TDDDG y, cuando
+        se traten datos personales, el art. 6, apdo. 1, letra a RGPD. Puedes jugar sin consentimiento;
+        las confirmaciones solo se aplican a la visita actual. Puedes retirar tu consentimiento eliminando
+        los datos de este sitio en la configuración del navegador.
     </p>
 
     <h2>5. Jugar como invitado</h2>
@@ -84,7 +92,7 @@
         certificadas conforme al Marco de Privacidad de Datos UE-EE. UU.
     </p>
 
-    <h2>8. Píxeles, historial de actividad y galería</h2>
+    <h2>8. Píxeles, historial de actividad y Pixelart</h2>
     <p>
         Cuando colocas un píxel, almacenamos la posición, el color, tu referencia de usuario y el momento. Un
         historial de actividad («quién hizo qué») e imágenes (instantáneas) del muro muestran el resultado
@@ -186,4 +194,3 @@
     <h2>18. Modificaciones</h2>
     <p>Modificamos esta política cuando cambian nuestra oferta o la situación jurídica.</p>
 @endsection
-

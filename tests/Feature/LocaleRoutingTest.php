@@ -57,6 +57,75 @@ class LocaleRoutingTest extends TestCase
         $this->assertStringContainsString('hreflang="x-default"', $html);
     }
 
+    public function test_pixelart_label_is_used_in_every_language_without_changing_gallery_urls(): void
+    {
+        foreach (['', '/de', '/es'] as $prefix) {
+            $this->get($prefix.'/gallery')
+                ->assertOk()
+                ->assertSee('Pixelart')
+                ->assertDontSee('Galerie')
+                ->assertDontSee('Gallery')
+                ->assertDontSee('Galería');
+
+            $this->get($prefix.'/privacy')->assertOk()->assertSee('Pixelart');
+            $this->get($prefix.'/terms')->assertOk()->assertSee('Pixelart');
+        }
+    }
+
+    public function test_home_and_pixelart_seo_texts_are_localized(): void
+    {
+        $texts = [
+            'en' => [
+                'home_title' => 'PixRiot – Create Pixelart together online',
+                'home_description' => 'Create a shared pixel wall with the PixRiot community. Place pixels for free, make Pixelart and discover ever-changing artworks.',
+                'pixelart_title' => 'Pixelart – Community artworks & snapshots | PixRiot',
+                'pixelart_description' => 'Discover artworks created by the PixRiot community. Regular snapshots show how our shared pixel wall changes over time.',
+                'heading' => 'Artworks in motion',
+                'intro' => 'Snapshots of our shared pixel wall.',
+                'start' => 'Start playing',
+            ],
+            'de' => [
+                'home_title' => 'PixRiot – Gemeinsam Pixelart online gestalten',
+                'home_description' => 'Gestalte mit der PixRiot-Community eine gemeinsame Pixelwand. Setze kostenlos Pixel, erschaffe Pixelart und entdecke Kunstwerke im Wandel.',
+                'pixelart_title' => 'Pixelart – Community-Kunstwerke & Snapshots | PixRiot',
+                'pixelart_description' => 'Entdecke die Kunstwerke der PixRiot-Community. Regelmäßige Snapshots zeigen, wie sich unsere gemeinsame Pixelwand verändert.',
+                'heading' => 'Kunstwerke im Wandel',
+                'intro' => 'Snapshots unserer gemeinsamen Pixelwand.',
+                'start' => 'Spiel starten',
+            ],
+            'es' => [
+                'home_title' => 'PixRiot – Crea Pixelart en comunidad online',
+                'home_description' => 'Crea un muro de píxeles con la comunidad de PixRiot. Coloca píxeles gratis, crea Pixelart y descubre obras de arte en constante cambio.',
+                'pixelart_title' => 'Pixelart – Obras de la comunidad y capturas | PixRiot',
+                'pixelart_description' => 'Descubre las obras de la comunidad de PixRiot. Las capturas periódicas muestran cómo cambia nuestro muro de píxeles compartido.',
+                'heading' => 'Obras de arte en constante cambio',
+                'intro' => 'Capturas de nuestro muro de píxeles compartido.',
+                'start' => 'Empezar a jugar',
+            ],
+        ];
+
+        foreach ($texts as $locale => $text) {
+            $home = $this->withHeader('User-Agent', 'Googlebot')
+                ->get(Locales::url($locale))->assertOk()->getContent();
+            $pixelart = $this->get(Locales::url($locale, '/gallery'))->assertOk()->getContent();
+
+            $this->assertStringContainsString('<title>'.e($text['home_title']).'</title>', $home);
+            $this->assertStringContainsString('<meta name="description" content="'.e($text['home_description']).'">', $home);
+            $this->assertStringContainsString('<title>'.e($text['pixelart_title']).'</title>', $pixelart);
+            $this->assertStringContainsString('<meta name="description" content="'.e($text['pixelart_description']).'">', $pixelart);
+            $this->assertStringContainsString('<h1>'.e($text['heading']).'</h1>', $pixelart);
+            $this->assertStringContainsString('<p>'.e($text['intro']).'</p>', $pixelart);
+            $this->assertSame(1, substr_count($home, '<meta name="description"'));
+            $this->assertSame(1, substr_count($pixelart, '<meta name="description"'));
+            $this->assertSame(1, substr_count($pixelart, '<h1>'));
+            $this->assertStringContainsString('<h1 id="welcomeTitle">'.e($text['home_title']).'</h1>', $home);
+            $this->assertStringContainsString('<p id="welcomeDescription">'.e($text['home_description']).'</p>', $home);
+            $this->assertStringContainsString('id="startGameBtn" class="primary-button">'.e($text['start']).'</button>', $home);
+            $this->assertStringContainsString('id="welcomeOverlay" class="welcome-overlay visible"', $home);
+            $this->assertSame(1, substr_count($home, '<h1 '));
+        }
+    }
+
     public function test_geoip_maps_countries_to_languages(): void
     {
         if (! is_file(config('locales.geoip_database'))) {

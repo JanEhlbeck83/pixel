@@ -31,7 +31,7 @@
     <p>
         Die Wand entsteht gemeinsam. Du räumst uns das einfache, unentgeltliche Recht ein, die von dir
         gesetzten Pixel im Rahmen des Dienstes darzustellen, zu speichern, zu vervielfältigen und in Bildern
-        und Galerien der Wand zu zeigen. Pixel-Farben allein begründen in der Regel kein Urheberrecht an
+        und im Pixelart-Bereich der Wand zu zeigen. Pixel-Farben allein begründen in der Regel kein Urheberrecht an
         einzelnen Pixeln. Wir dürfen Inhalte entfernen, die gegen diese Bedingungen oder Gesetze verstoßen.
     </p>
 

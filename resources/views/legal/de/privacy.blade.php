@@ -27,10 +27,18 @@
     <p>
         Wir setzen nur technisch notwendige Cookies: ein Sitzungs-Cookie, ein Schutz-Cookie gegen
         Cross-Site-Angriffe (CSRF/XSRF) und, wenn du „angemeldet bleiben“ nutzt, ein Anmelde-Cookie. Nach einer bewussten Sprachwahl kommt das funktionale Cookie „pixel_locale“ hinzu
-        (siehe Abschnitt 15). Zusätzlich
-        merkt sich dein Browser im lokalen Speicher, dass du den Hinweis zu Cookies und die Spielregeln
-        bestätigt hast. Diese Angaben verlassen deinen Browser nicht. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2
+        (siehe Abschnitt 15). Rechtsgrundlage für notwendige Speicherung ist § 25 Abs. 2 Nr. 2
         TDDDG und Art. 6 Abs. 1 lit. f DSGVO. Tracking- oder Werbe-Cookies setzen wir nicht ein.
+    </p>
+    <p>
+        Nur mit deiner zusätzlichen Zustimmung über „Akzeptieren“ merken wir Einführung und bestätigte
+        Spielregeln dauerhaft im localStorage: „pixriot-welcome-seen“, „pixriot-rules-seen“ und
+        „pixriot-onboarding-storage-accepted“. Diese Angaben verlassen deinen Browser nicht und bleiben
+        gespeichert, bis du sie löschst. Rechtsgrundlage für diese optionale Speicherung ist § 25 Abs. 1
+        TDDDG; soweit personenbezogene Daten betroffen sind, Art. 6 Abs. 1 lit. a DSGVO.
+        Ohne Zustimmung kannst du uneingeschränkt spielen; Bestätigungen gelten dann nur für den aktuellen
+        Seitenaufruf. Du kannst die Zustimmung durch Löschen der Websitedaten in den Browsereinstellungen
+        widerrufen.
     </p>
 
     <h2>5. Spielen als Gast</h2>
@@ -85,7 +93,7 @@
         sind nach dem EU-US Data Privacy Framework zertifiziert.
     </p>
 
-    <h2>8. Pixel, Aktivitätsverlauf und Galerie</h2>
+    <h2>8. Pixel, Aktivitätsverlauf und Pixelart</h2>
     <p>
         Wenn du einen Pixel setzt, speichern wir Position, Farbe, deinen Nutzer-Bezug und den Zeitpunkt. Ein
         Aktivitätsverlauf („wer hat was getan“) und Bilder (Schnappschüsse) der Wand zeigen das Ergebnis

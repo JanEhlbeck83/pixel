@@ -29,7 +29,7 @@
     <h2>4. Contenidos y derechos</h2>
     <p>
         El muro se crea de forma colectiva. Nos concedes el derecho no exclusivo y gratuito a mostrar, almacenar
-        y reproducir los píxeles que coloques en el marco del servicio, y a mostrarlos en imágenes y galerías del
+        y reproducir los píxeles que coloques en el marco del servicio, y a mostrarlos en imágenes y en la sección Pixelart del
         muro. Los colores de los píxeles por sí solos, por regla general, no generan derechos de autor sobre
         píxeles individuales. Podemos retirar los contenidos que infrinjan estas condiciones o la ley.
     </p>
@@ -82,4 +82,3 @@
 
     <p>Más información: <a href="{{ route('legal.privacy') }}">Política de privacidad</a>, <a href="{{ route('legal.impressum') }}">Aviso legal</a>.</p>
 @endsection
-

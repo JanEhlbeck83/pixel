@@ -10,9 +10,12 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WallController;
 use App\Http\Middleware\GeoLocaleRedirect;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // Bewusste Sprachwahl (setzt das funktionale Sprach-Cookie).
 Route::get('/language/{lang}', [LanguageController::class, 'switch'])->name('language.switch');

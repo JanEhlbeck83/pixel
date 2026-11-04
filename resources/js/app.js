@@ -2,6 +2,7 @@ import './bootstrap';
 
 import Alpine from 'alpinejs';
 import { t, localizedUrl, apiFetch, locale } from './i18n';
+import { initOnboarding } from './onboarding';
 window.pixelI18n = { t, localizedUrl, apiFetch, locale };
 
 window.Alpine = Alpine;
@@ -51,11 +52,6 @@ const closeEditorBtn = document.getElementById('closeEditorBtn');
 const editorPopup = document.getElementById('editorPopup');
 const colorPicker = document.getElementById('colorPicker');
 const colorHexInput = document.getElementById('colorHexInput');
-const rulesModal = document.getElementById('rulesModal');
-const cookieBanner = document.getElementById('cookieBanner');
-const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
-const closeRulesBtn = document.getElementById('closeRulesBtn');
-const openRulesBtn = document.getElementById('openRulesBtn');
 const shareViewBtn = document.getElementById('shareViewBtn');
 const shareFacebookLink = document.getElementById('shareFacebookLink');
 const cursorCoords = document.getElementById('cursorCoords');
@@ -106,6 +102,7 @@ const wallMenuPanel = document.getElementById('wallMenuPanel');
 const feedbackForm = document.getElementById('feedbackForm');
 const feedbackStatus = document.getElementById('feedbackStatus');
 const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+const onboarding = initOnboarding();
 
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
@@ -917,6 +914,10 @@ async function loadPixelsForSelection(area = selection) {
 }
 
 function savePixel(x, y, color) {
+    if (onboarding.isLocked()) {
+        setStatus(document.getElementById('welcomeTitle').textContent);
+        return Promise.resolve(false);
+    }
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     return apiFetch('/api/pixels', {
@@ -960,6 +961,10 @@ function savePixel(x, y, color) {
 }
 
 function savePixels(changedPixels) {
+    if (onboarding.isLocked()) {
+        setStatus(document.getElementById('rulesTitle').textContent);
+        return Promise.resolve(false);
+    }
     if (changedPixels.length === 0) {
         return Promise.resolve();
     }
@@ -1371,47 +1376,6 @@ function persistSelectionToDatabase() {
     return savePixels(changedPixels);
 }
 
-function initCookieAndRules() {
-    const cookieKey = 'pixriot-cookie-accepted';
-    const rulesKey = 'pixriot-rules-seen';
-
-    if (!localStorage.getItem(cookieKey)) {
-        cookieBanner.classList.add('visible');
-    }
-
-    if (!localStorage.getItem(rulesKey)) {
-        rulesModal.classList.add('visible');
-    }
-
-    acceptCookiesBtn?.addEventListener('click', () => {
-        localStorage.setItem(cookieKey, '1');
-        cookieBanner.classList.remove('visible');
-    });
-
-    openRulesBtn?.addEventListener('click', () => {
-        wallMenuPanel?.classList.add('hidden');
-        wallMenuToggle?.setAttribute('aria-expanded', 'false');
-        rulesModal.classList.add('visible');
-    });
-
-    closeRulesBtn?.addEventListener('click', closeRules);
-    rulesModal.addEventListener('click', (event) => {
-        if (event.target === rulesModal) {
-            closeRules();
-        }
-    });
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && rulesModal.classList.contains('visible')) {
-            closeRules();
-        }
-    });
-
-    function closeRules() {
-        localStorage.setItem(rulesKey, '1');
-        rulesModal.classList.remove('visible');
-    }
-}
-
 function setActiveColor(color) {
     activeColor = color.toLowerCase();
     activeColorLabel.textContent = activeColor;
@@ -1718,7 +1682,6 @@ applySelectionBtn?.addEventListener('click', async () => {
 closeEditorBtn?.addEventListener('click', closeEditorPopup);
 selectionPreviewCanvas?.addEventListener('click', paintPopupCell);
 
-initCookieAndRules();
 reservationLoadingRetry?.addEventListener('click', () => window.location.reload());
 Object.entries(wallNavigationButtons).forEach(([direction, button]) => {
     button?.addEventListener('click', () => navigateWall(direction));

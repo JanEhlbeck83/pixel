@@ -27,10 +27,17 @@
     <p>
         We only set technically necessary cookies: a session cookie, a protection cookie against cross-site
         attacks (CSRF/XSRF) and, if you use “stay logged in”, a login cookie. After a deliberate choice of
-        language, the functional cookie “pixel_locale” is added (see section 15). In addition, your browser
-        remembers in local storage that you have acknowledged the cookie notice and the rules of play. This
-        information does not leave your browser. The legal basis is Section 25(2) no. 2 TDDDG and
+        language, the functional cookie “pixel_locale” is added (see section 15).
+        The legal basis for necessary storage is Section 25(2) no. 2 TDDDG and
         Art. 6(1)(f) GDPR. We do not use tracking or advertising cookies.
+    </p>
+    <p>
+        Only with your additional consent via “Accept” do we remember the introduction and confirmed game
+        rules in localStorage: “pixriot-welcome-seen”, “pixriot-rules-seen” and
+        “pixriot-onboarding-storage-accepted”. These values do not leave your browser and remain until
+        deleted. The legal basis for this optional storage is Section 25(1) TDDDG and, where personal data
+        is involved, Art. 6(1)(a) GDPR. You can play without consent; confirmations then apply only to the
+        current page visit. You can withdraw consent by deleting this site's data in your browser settings.
     </p>
 
     <h2>5. Playing as a guest</h2>
@@ -81,7 +88,7 @@
         under the EU-US Data Privacy Framework.
     </p>
 
-    <h2>8. Pixels, activity history and gallery</h2>
+    <h2>8. Pixels, activity history and Pixelart</h2>
     <p>
         When you place a pixel, we store position, colour, your user reference and the time. An activity history
         (“who did what”) and images (snapshots) of the wall publicly show the result. Your name becomes publicly
@@ -181,4 +188,3 @@
     <h2>18. Changes</h2>
     <p>We amend this policy when our offering or the legal situation changes.</p>
 @endsection
-

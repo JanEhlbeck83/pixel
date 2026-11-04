@@ -4,7 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>PixRiot</title>
+        <title>{{ __('PixRiot – Gemeinsam Pixelart online gestalten') }}</title>
+        <meta name="description" content="{{ __('Gestalte mit der PixRiot-Community eine gemeinsame Pixelwand. Setze kostenlos Pixel, erschaffe Pixelart und entdecke Kunstwerke im Wandel.') }}">
         <x-favicons />
         <x-locale-head />
         <x-i18n-script />
@@ -50,7 +51,7 @@
                                 @else
                                     <a href="{{ route('register') }}" class="primary-button">{{ __('Jetzt mitmachen') }}</a>
                                 @endif
-                                <a href="{{ route('gallery') }}" class="secondary-button">{{ __('Galerie ansehen') }}</a>
+                                <a href="{{ route('gallery') }}" class="secondary-button">{{ __('Pixelart ansehen') }}</a>
                             </div>
 
                             <div class="metric-row">

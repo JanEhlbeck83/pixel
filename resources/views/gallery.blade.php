@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ __('PixRiot | Galerie') }}</title>
+        <title>{{ __('Pixelart – Community-Kunstwerke & Snapshots | PixRiot') }}</title>
+        <meta name="description" content="{{ __('Entdecke die Kunstwerke der PixRiot-Community. Regelmäßige Snapshots zeigen, wie sich unsere gemeinsame Pixelwand verändert.') }}">
         <x-favicons />
         <x-locale-head />
         <x-i18n-script />
@@ -21,7 +22,8 @@
 
             <main>
                 <div class="panel">
-                    <h3>{{ __('Automatische Schnappschüsse') }}</h3>
+                    <h1>{{ __('Kunstwerke im Wandel') }}</h1>
+                    <p>{{ __('Snapshots unserer gemeinsamen Pixelwand.') }}</p>
                     <div class="gallery-grid">
                         @forelse ($snapshots as $snapshot)
                             <article class="gallery-item">

@@ -29,7 +29,7 @@
     <h2>4. Content and rights</h2>
     <p>
         The wall is created collectively. You grant us a non-exclusive, royalty-free right to display, store and
-        reproduce the pixels you place within the scope of the service, and to show them in images and galleries
+        reproduce the pixels you place within the scope of the service, and to show them in images and the Pixelart section
         of the wall. Pixel colours alone do not, as a rule, give rise to copyright in individual pixels. We may
         remove content that violates these terms or the law.
     </p>
@@ -77,4 +77,3 @@
 
     <p>Further information: <a href="{{ route('legal.privacy') }}">Privacy Policy</a>, <a href="{{ route('legal.impressum') }}">Legal Notice</a>.</p>
 @endsection
-

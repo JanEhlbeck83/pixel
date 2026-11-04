@@ -29,6 +29,10 @@
             @if (Route::has('login'))
                 @auth
                     <a href="{{ route('profile.edit') }}"><x-icon name="user" />{{ __('Profil') }}</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"><x-icon name="logout" />{{ __('Abmelden') }}</button>
+                    </form>
                 @else
                     <a href="{{ route('login') }}"><x-icon name="login" />{{ __('Anmelden') }}</a>
                     @if (Route::has('register'))
@@ -48,7 +52,7 @@
             @unless ($onWall)
                 <a href="{{ route('home') }}"><x-icon name="wall" />{{ __('Zur Wand') }}</a>
             @endunless
-            <a href="{{ route('gallery') }}"><x-icon name="gallery" />{{ __('Galerie') }}</a>
+            <a href="{{ route('gallery') }}"><x-icon name="gallery" />{{ __('Pixelart') }}</a>
             @if ($onWall)
                 <button type="button" id="openRulesBtn"><x-icon name="rules" />{{ __('Spielregeln') }}</button>
                 <button type="button" id="reportAreaBtn"><x-icon name="flag" />{{ __('Inhalt melden') }}</button>
