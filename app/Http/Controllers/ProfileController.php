@@ -32,6 +32,7 @@ class ProfileController extends Controller
                     report($e);
                 }
             });
+        $communityMembership = $user->communityMembership()->with('group')->first();
 
         return view('profile.edit', [
             'user' => $user->fresh(),
@@ -39,6 +40,10 @@ class ProfileController extends Controller
             'quota' => app(PixelQuota::class)->status($request),
             'regenSeconds' => app(PixelQuota::class)->regenSeconds(),
             'nextFreePixelIn' => app(PixelQuota::class)->secondsUntilNext($user),
+            'communityMembership' => $communityMembership,
+            'activeGroupMembersCount' => $communityMembership
+                ? $communityMembership->group->members()->where('last_active_at', '>=', now()->subMinutes(5))->count()
+                : 0,
         ]);
     }
 
@@ -62,6 +67,16 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    public function updateProjectNotifications(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'project_phase_notifications' => ['required', 'boolean'],
+        ]);
+        $request->user()->forceFill($data)->save();
+
+        return Redirect::route('profile.edit')->with('status', 'project-notifications-updated');
     }
 
     /**

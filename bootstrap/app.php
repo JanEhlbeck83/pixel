@@ -14,14 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('wall:tiles')->everyTenMinutes()->withoutOverlapping(30);
         $schedule->command('snapshot:generate')->cron('0 */12 * * *')->withoutOverlapping(60);
+        $schedule->command('community:advance-projects')->everyMinute()->withoutOverlapping();
         $schedule->command('geoip:update')->monthlyOn(3, '04:00');
         $schedule->command('analytics:prune')->daily()->withoutOverlapping();
+        $schedule->call(fn () => \App\Models\WallDraft::whereNull('user_id')->where('expires_at', '<=', now())->delete())
+            ->name('wall-drafts:prune-guests')->daily()->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: ['webhooks/*', 'auth/facebook/deauthorize', 'auth/facebook/data-deletion', 'newsletter/unsubscribe/*']);
         $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\RecordUserActivity::class,
             \App\Http\Middleware\RecordAnalyticsVisit::class,
         ]);
 

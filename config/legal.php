@@ -24,5 +24,5 @@ return [
     'register' => env('LEGAL_REGISTER'),
     'responsible' => env('LEGAL_RESPONSIBLE'),
     'hosting' => env('LEGAL_HOSTING'),
-    'updated_at' => '2026-10-28',
+    'updated_at' => '2026-11-05',
 ];

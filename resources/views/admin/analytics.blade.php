@@ -16,7 +16,7 @@
             <header class="page-heading">
                 <div class="brand">
                     <small>{{ __('Admin') }}</small>
-                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
+                    <a class="brand-wordmark" href="{{ route('home') }}" aria-label="{{ __('PixRiot – zur Wand') }}">Pix<span>Riot</span></a>
                 </div>
             </header>
 

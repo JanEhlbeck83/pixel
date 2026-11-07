@@ -1,0 +1,27 @@
+[Unit]
+Description=PixRiot isolated 50-user 14-day endurance test
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=pixriot-soak
+WorkingDirectory=/opt/pixriot-soak/scripts/soak
+EnvironmentFile=/etc/pixriot-soak.env
+ExecStart=/usr/bin/python3 /opt/pixriot-soak/scripts/soak/run.py --manifest /var/lib/pixriot-soak/manifest.json --output /var/lib/pixriot-soak/results --ssh-host pixriot-staging --confirm-isolated --resume
+ExecStopPost=/usr/bin/python3 /opt/pixriot-soak/scripts/soak/report.py /var/lib/pixriot-soak/results
+Restart=on-failure
+RestartPreventExitStatus=2
+RestartSec=30
+TimeoutStopSec=150
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/pixriot-soak
+
+[Install]
+WantedBy=multi-user.target

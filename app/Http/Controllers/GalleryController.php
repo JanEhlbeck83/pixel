@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Snapshot;
+use App\Models\CommunityProject;
 use App\Services\Wall\SnapshotThumbnail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
@@ -41,6 +42,15 @@ class GalleryController extends Controller
                 $snapshot->thumbnail_path = SnapshotThumbnail::ensure($snapshot->image_path) ?? $snapshot->image_path;
             });
 
-        return view('gallery', compact('snapshots'));
+        $communityProjects = CommunityProject::query()
+            ->where('status', 'published')
+            ->whereNotNull('image_path')
+            ->with('group')
+            ->latest('published_at')
+            ->get();
+
+        $artworks = \App\Models\WallArtwork::where('is_public', true)->with('user')->latest()->limit(24)->get();
+
+        return view('gallery', compact('snapshots', 'communityProjects', 'artworks'));
     }
 }

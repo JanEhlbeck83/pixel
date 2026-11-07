@@ -1,4 +1,5 @@
 <x-guest-layout>
+    <p>{{ __('Sichere deinen Gastentwurf im Konto und starte mit bis zu 50 kostenlosen Pixeln. Dein bereits bezahlter Entwurf wird übernommen.') }}</p>
     <form class="auth-form" method="POST" action="{{ route('register') }}">
         @csrf
 

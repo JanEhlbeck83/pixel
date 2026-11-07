@@ -72,6 +72,7 @@ class SocialAuthController extends Controller
 
         Auth::login($user, true);
         request()->session()->regenerate();
+        app(\App\Services\Wall\WallDrafts::class)->claim(request());
 
         return redirect()->intended(route('home'));
     }

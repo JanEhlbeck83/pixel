@@ -32,15 +32,41 @@ class LocaleRoutingTest extends TestCase
 
     public function test_shop_displays_small_business_vat_notice_and_withdrawal_consent(): void
     {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Selection');
+
         $this->get('/de')
             ->assertOk()
             ->assertSee('Kleinunternehmer im Sinne von § 19 UStG')
+            ->assertSee('Auswahl')
+            ->assertDontSee('Bezahlen mit')
             ->assertSee('Ich habe die Widerrufsbelehrung gelesen')
             ->assertSee('Widerrufsbelehrung lesen');
+
+        $this->get('/es')
+            ->assertOk()
+            ->assertSee('Selección');
 
         $this->get('/de/terms')
             ->assertOk()
             ->assertSee('keine Umsatzsteuer berechnet oder ausgewiesen');
+    }
+
+    public function test_pixel_mode_is_locked_by_default_and_localized(): void
+    {
+        foreach ([
+            '/' => ['Start pixel mode', "Don't show this notice again"],
+            '/de' => ['Pixelmodus starten', 'Diesen Hinweis dauerhaft ausblenden'],
+            '/es' => ['Iniciar modo píxel', 'No volver a mostrar este aviso'],
+        ] as $path => [$toggle, $dismiss]) {
+            $this->get($path)
+                ->assertOk()
+                ->assertSee('aria-pressed="false"', false)
+                ->assertSee($toggle)
+                ->assertSee('id="pixelModeModal"', false)
+                ->assertSee($dismiss);
+        }
     }
 
     public function test_old_german_legal_urls_redirect_permanently(): void
@@ -83,6 +109,35 @@ class LocaleRoutingTest extends TestCase
             $this->get($prefix.'/privacy')->assertOk()->assertSee('Pixelart');
             $this->get($prefix.'/terms')->assertOk()->assertSee('Pixelart');
         }
+
+    }
+
+    public function test_page_brand_and_shared_menu_always_link_back_to_the_wall(): void
+    {
+        foreach (['/gallery' => '/', '/community' => '/', '/de/gallery' => '/de'] as $path => $wall) {
+            $html = $this->get($path)->assertOk()->getContent();
+            $this->assertStringContainsString('class="brand-wordmark" href="'.url($wall).'"', $html);
+            $this->assertStringContainsString('aria-label="PixRiot –', $html);
+        }
+    }
+
+    public function test_community_pages_use_the_current_url_locale(): void
+    {
+        $this->get('/community')
+            ->assertOk()
+            ->assertHeader('Content-Language', 'en')
+            ->assertSee('href="'.url('/community').'"', false);
+
+        $this->get('/de/community')
+            ->assertOk()
+            ->assertHeader('Content-Language', 'de')
+            ->assertSee('href="'.url('/de/community').'"', false)
+            ->assertSee('aria-label="PixRiot – zur Wand"', false);
+
+        $this->get('/es/community')
+            ->assertOk()
+            ->assertHeader('Content-Language', 'es')
+            ->assertSee('href="'.url('/es/community').'"', false);
     }
 
     public function test_home_and_pixelart_seo_texts_are_localized(): void
@@ -90,27 +145,30 @@ class LocaleRoutingTest extends TestCase
         $texts = [
             'en' => [
                 'home_title' => 'PixRiot – Create Pixelart together online',
-                'home_description' => 'Create a shared pixel wall with the PixRiot community. Place pixels for free, make Pixelart and discover ever-changing artworks.',
+                'home_description' => 'Join a PixRiot group, vote on pixel-art ideas, create together, and publish your work on the community wall.',
                 'pixelart_title' => 'Pixelart – Community artworks & snapshots | PixRiot',
                 'pixelart_description' => 'Discover artworks created by the PixRiot community. Regular snapshots show how our shared pixel wall changes over time.',
+                'welcome_heading' => 'Your pixels. Your group. One shared creation.',
                 'heading' => 'Artworks in motion',
                 'intro' => 'Snapshots of our shared pixel wall.',
                 'start' => 'Start playing',
             ],
             'de' => [
                 'home_title' => 'PixRiot – Gemeinsam Pixelart online gestalten',
-                'home_description' => 'Gestalte mit der PixRiot-Community eine gemeinsame Pixelwand. Setze kostenlos Pixel, erschaffe Pixelart und entdecke Kunstwerke im Wandel.',
+                'home_description' => 'Tritt bei PixRiot einer Gruppe bei, stimmt über Pixelart-Ideen ab, gestaltet gemeinsam und veröffentlicht euer Werk auf der Community-Leinwand.',
                 'pixelart_title' => 'Pixelart – Community-Kunstwerke & Snapshots | PixRiot',
                 'pixelart_description' => 'Entdecke die Kunstwerke der PixRiot-Community. Regelmäßige Snapshots zeigen, wie sich unsere gemeinsame Pixelwand verändert.',
+                'welcome_heading' => 'Deine Pixel. Eure Gruppe. Ein gemeinsames Werk.',
                 'heading' => 'Kunstwerke im Wandel',
                 'intro' => 'Snapshots unserer gemeinsamen Pixelwand.',
                 'start' => 'Spiel starten',
             ],
             'es' => [
                 'home_title' => 'PixRiot – Crea Pixelart en comunidad online',
-                'home_description' => 'Crea un muro de píxeles con la comunidad de PixRiot. Coloca píxeles gratis, crea Pixelart y descubre obras de arte en constante cambio.',
+                'home_description' => 'Únete a un grupo de PixRiot, votad ideas de pixel art, cread juntos y publicad vuestra obra en el muro comunitario.',
                 'pixelart_title' => 'Pixelart – Obras de la comunidad y capturas | PixRiot',
                 'pixelart_description' => 'Descubre las obras de la comunidad de PixRiot. Las capturas periódicas muestran cómo cambia nuestro muro de píxeles compartido.',
+                'welcome_heading' => 'Tus píxeles. Tu grupo. Una creación compartida.',
                 'heading' => 'Obras de arte en constante cambio',
                 'intro' => 'Capturas de nuestro muro de píxeles compartido.',
                 'start' => 'Empezar a jugar',
@@ -131,7 +189,7 @@ class LocaleRoutingTest extends TestCase
             $this->assertSame(1, substr_count($home, '<meta name="description"'));
             $this->assertSame(1, substr_count($pixelart, '<meta name="description"'));
             $this->assertSame(1, substr_count($pixelart, '<h1>'));
-            $this->assertStringContainsString('<h1 id="welcomeTitle">'.e($text['home_title']).'</h1>', $home);
+            $this->assertStringContainsString('<h1 id="welcomeTitle">'.e($text['welcome_heading']).'</h1>', $home);
             $this->assertStringContainsString('<p id="welcomeDescription">'.e($text['home_description']).'</p>', $home);
             $this->assertStringContainsString('id="startGameBtn" class="primary-button">'.e($text['start']).'</button>', $home);
             $this->assertStringContainsString('id="welcomeOverlay" class="welcome-overlay visible"', $home);

@@ -27,6 +27,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        app(\App\Services\Wall\WallDrafts::class)->claim($request);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

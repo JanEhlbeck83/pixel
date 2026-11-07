@@ -48,6 +48,10 @@ class SetLocale
         if ($urlIsAuthoritative && $request->hasSession()) {
             $request->session()->put('locale', $locale);
         }
+        $user = $request->user();
+        if ($urlIsAuthoritative && $user && $user->preferred_locale !== $locale) {
+            $user->forceFill(['preferred_locale' => $locale])->saveQuietly();
+        }
 
         $response = $next($request);
         $response->headers->set('Content-Language', $locale);

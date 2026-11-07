@@ -6,6 +6,33 @@
 
 @section('content')
     <div class="faq">
+        <h2>Community und Gruppenprojekte</h2>
+
+        <details open>
+            <summary>Wie funktioniert die PixRiot-Community?</summary>
+            <p>Schließe dich einer freigegebenen Gruppe an – pro Person ist nur eine Gruppe möglich. Du kannst einmal eine Gruppe gründen; der Admin prüft den Antrag. In der Gruppe sammelt ihr Projektideen, stimmt über den Entwurf ab und gestaltet danach gemeinsam auf einer geschützten Projektleinwand.</p>
+        </details>
+
+        <details>
+            <summary>Wie entstehen und starten Community-Projekte?</summary>
+            <p>Nach dem Projektstart können Gruppenmitglieder 7 Tage lang Vorschläge mit Text, Bild und gewünschter Größe einreichen. Danach stimmt die Gruppe 3 Tage lang ab. Die Projektleitung reserviert den gewählten Bereich. Das Projektbild bleibt bis zur gemeinsamen Veröffentlichung von der öffentlichen Leinwand getrennt.</p>
+        </details>
+
+        <details>
+            <summary>Wann wird ein Projekt veröffentlicht?</summary>
+            <p>Projektteilnehmer gestalten bis zu 14 Tage auf der privaten Projektleinwand und können sich dort im Teilnehmer-Chat austauschen. Stimmen alle Projektteilnehmer dem Abschluss zu, wird das Bild sofort veröffentlicht – auch vor Ablauf der 14 Tage. Die Pixel werden an der reservierten Stelle auf die Wand übertragen und das Werk erscheint in der Galerie.</p>
+        </details>
+
+        <details>
+            <summary>Wie lange bleibt ein veröffentlichtes Bild reserviert?</summary>
+            <p>Nach Veröffentlichung bleibt die Fläche zunächst 7 Wochen für die Gruppe reserviert. Mindestens 5 aktuelle Gruppenmitglieder müssen der Verlängerung zustimmen; dann verlängert sich die Reservierung jeweils um weitere 7 Wochen. Auf der Projektseite seht ihr den Countdown. Läuft er ohne ausreichende Verlängerung ab, ist die Fläche wieder für alle offen.</p>
+        </details>
+
+        <details>
+            <summary>Wer kann den Projektchat lesen?</summary>
+            <p>Nur Projektteilnehmer können den Chat während der Gestaltungsphase sehen und nutzen. Nach der Veröffentlichung bleibt der vollständige Verlauf für die Teilnehmer lesbar, ist aber schreibgeschützt.</p>
+        </details>
+
         <h2>Pixel</h2>
 
         <details open>

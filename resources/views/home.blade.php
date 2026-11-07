@@ -15,7 +15,7 @@
         <div class="pixel-shell">
             <header class="pixel-topbar">
                 <div class="brand">
-                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
+                    <a class="brand-wordmark" href="{{ route('home') }}" aria-label="{{ __('PixRiot – zur Wand') }}">Pix<span>Riot</span></a>
                 </div>
                 <div class="top-actions">
                     @if (Route::has('login'))

@@ -6,6 +6,33 @@
 
 @section('content')
     <div class="faq">
+        <h2>Community and group projects</h2>
+
+        <details open>
+            <summary>How does the PixRiot community work?</summary>
+            <p>Join an approved group—each person can belong to one group only. You can apply to found one group, subject to admin approval. In your group, collect project ideas, vote on a design, then create it together on a protected project canvas.</p>
+        </details>
+
+        <details>
+            <summary>How are community projects proposed and started?</summary>
+            <p>After a project starts, group members have 7 days to submit ideas with text, an image and a preferred size. The group then votes for 3 days. The project lead reserves the selected area. The project artwork stays separate from the public wall until it is published together.</p>
+        </details>
+
+        <details>
+            <summary>When is a project published?</summary>
+            <p>Participants can create on the private project canvas for up to 14 days and chat with other participants there. If all project participants agree to finish, the image is published immediately—even before the 14 days are up. Its pixels are transferred to the reserved wall area and the artwork is added to the gallery.</p>
+        </details>
+
+        <details>
+            <summary>How long is a published image reserved?</summary>
+            <p>After publication, the area is initially reserved for the group for 7 weeks. At least 5 current group members must agree to extend it; each successful vote extends the reservation by another 7 weeks. The project page shows a countdown. If the time expires without enough votes, the area opens to everyone again.</p>
+        </details>
+
+        <details>
+            <summary>Who can read the project chat?</summary>
+            <p>Only project participants can see and use the chat during creation. After publication, participants can still read the complete history, but it is read-only.</p>
+        </details>
+
         <h2>Pixels</h2>
 
         <details open>

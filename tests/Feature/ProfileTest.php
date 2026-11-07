@@ -61,6 +61,54 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+    public function test_project_notification_preferences_can_be_saved_independently(): void
+    {
+        $user = User::factory()->create(['newsletter_subscribed_at' => now()]);
+        $other = User::factory()->create();
+        $this->assertTrue($user->fresh()->project_phase_notifications);
+        $this->actingAs($user)->get('/profile')->assertOk()
+            ->assertSee(__('Projekteinstellungen & Benachrichtigungen'));
+        $this->patch(route('profile.project-notifications.update'), [
+            'project_phase_notifications' => '0',
+            'id' => $other->id,
+        ])->assertRedirect(route('profile.edit'))->assertSessionHasNoErrors();
+        $this->assertFalse($user->fresh()->project_phase_notifications);
+        $this->assertTrue($other->fresh()->project_phase_notifications);
+        $this->assertNotNull($user->fresh()->newsletter_subscribed_at);
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->patch('/profile', ['name' => $user->name, 'email' => $user->email])->assertSessionHasNoErrors();
+        $this->assertFalse($user->fresh()->project_phase_notifications);
+        $this->patch(route('profile.project-notifications.update'), [
+            'project_phase_notifications' => '1',
+        ])->assertSessionHasNoErrors();
+        $this->assertTrue($user->fresh()->project_phase_notifications);
+        $this->patch(route('profile.project-notifications.update'), [
+            'project_phase_notifications' => 'invalid',
+        ])->assertSessionHasErrors('project_phase_notifications');
+    }
+
+    public function test_activity_is_recorded_and_throttled_for_authenticated_requests(): void
+    {
+        $this->travelTo(now()->startOfSecond());
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/profile')->assertOk();
+        $first = $user->fresh()->last_active_at;
+        $this->assertTrue($first->equalTo(now()));
+        $this->travel(30)->seconds();
+        $this->get('/profile')->assertOk();
+        $this->assertTrue($first->equalTo($user->fresh()->last_active_at));
+        $this->travel(31)->seconds();
+        $this->get('/profile')->assertOk();
+        $this->assertTrue(now()->equalTo($user->fresh()->last_active_at));
+    }
+
+    public function test_guests_cannot_change_project_notification_settings(): void
+    {
+        $this->patch('/profile/project-notifications', [
+            'project_phase_notifications' => '0',
+        ])->assertRedirect('/login');
+    }
+
     public function test_user_can_delete_their_account(): void
     {
         $user = User::factory()->create();

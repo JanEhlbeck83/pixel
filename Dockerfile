@@ -11,9 +11,9 @@ FROM php:8.3-fpm-bookworm AS app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip libpq-dev libzip-dev libicu-dev \
-    libcurl4-openssl-dev libpng-dev libjpeg62-turbo-dev \
+    libcurl4-openssl-dev libpng-dev libjpeg62-turbo-dev libwebp-dev \
     libfreetype6-dev libonig-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
        bcmath curl exif gd intl mbstring opcache pcntl pdo_pgsql zip \
     && apt-get clean \

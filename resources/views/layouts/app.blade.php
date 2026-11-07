@@ -7,6 +7,7 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
         <x-i18n-script />
+        <x-project-phase-notices />
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

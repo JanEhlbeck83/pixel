@@ -3,7 +3,11 @@
 use App\Http\Controllers\AdminNewsletterController;
 use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\AdminAnalyticsController;
+use App\Http\Controllers\AdminCommunityGroupController;
 use App\Http\Controllers\AnalyticsHeartbeatController;
+use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\CommunityProjectController;
+use App\Http\Controllers\CommunityPhaseUpdateController;
 use App\Http\Controllers\NewsletterPublicController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ReportController;
@@ -19,6 +23,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
+Route::get('/api/community/reservations', [CommunityController::class, 'reservations'])->name('api.community.reservations');
+Route::get('/api/community/phase-updates', CommunityPhaseUpdateController::class)
+    ->middleware(['auth', 'verified', 'throttle:30,1'])->name('api.community.phase-updates');
+
 // Bewusste Sprachwahl (setzt das funktionale Sprach-Cookie).
 Route::get('/language/{lang}', [LanguageController::class, 'switch'])->name('language.switch');
 
@@ -28,6 +36,30 @@ Route::group($prefixed ? ['prefix' => '{locale}', 'where' => ['locale' => 'de|es
     Route::get('/', [WallController::class, 'index'])->middleware(GeoLocaleRedirect::class)->name('home');
     Route::get('/wall', fn () => redirect()->route('home', [], 301));
     Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
+    Route::get('/artists/{user}/gallery', [\App\Http\Controllers\WallArtworkController::class, 'index'])->name('artworks.index');
+    Route::get('/artworks/{artwork}/image', [\App\Http\Controllers\WallArtworkController::class, 'image'])->name('artworks.image');
+    Route::patch('/artworks/{artwork}', [\App\Http\Controllers\WallArtworkController::class, 'update'])->middleware('auth')->name('artworks.update');
+    Route::delete('/artworks/{artwork}', [\App\Http\Controllers\WallArtworkController::class, 'destroy'])->middleware('auth')->name('artworks.destroy');
+
+    Route::get('/community', [CommunityController::class, 'index'])->name('community.index');
+    Route::get('/community/groups/{group}/gallery', [CommunityController::class, 'gallery'])->name('community.groups.gallery');
+    Route::post('/community/groups', [CommunityController::class, 'store'])->middleware(['auth', 'verified'])->name('community.groups.store');
+    Route::get('/community/groups/{group}', [CommunityController::class, 'show'])->name('community.groups.show');
+    Route::post('/community/groups/{group}/join', [CommunityController::class, 'join'])->middleware(['auth', 'verified'])->name('community.groups.join');
+    Route::delete('/community/group-membership', [CommunityController::class, 'leave'])->middleware(['auth', 'verified'])->name('community.groups.leave');
+    Route::post('/community/groups/{group}/projects', [CommunityController::class, 'createProject'])->middleware(['auth', 'verified'])->name('community.projects.store');
+    Route::get('/community/projects/{project}', [CommunityProjectController::class, 'show'])->name('community.projects.show');
+    Route::get('/community/projects/{project}/image', [CommunityProjectController::class, 'image'])->name('community.projects.image');
+    Route::get('/community/projects/{project}/template', [CommunityProjectController::class, 'templateImage'])->middleware(['auth', 'verified'])->name('community.projects.template');
+    Route::patch('/community/projects/{project}/template', [CommunityProjectController::class, 'updateTemplate'])->middleware(['auth', 'verified'])->name('community.projects.template.update');
+    Route::post('/community/projects/{project}/join', [CommunityProjectController::class, 'join'])->middleware(['auth', 'verified'])->name('community.projects.join');
+    Route::post('/community/projects/{project}/cancel', [CommunityProjectController::class, 'cancel'])->middleware(['auth', 'verified'])->name('community.projects.cancel');
+    Route::post('/community/projects/{project}/reserve', [CommunityProjectController::class, 'reserve'])->middleware(['auth', 'verified'])->name('community.projects.reserve');
+    Route::get('/community/projects/{project}/pixels', [CommunityProjectController::class, 'pixels'])->middleware(['auth', 'verified'])->name('community.projects.pixels');
+    Route::post('/community/projects/{project}/pixels', [CommunityProjectController::class, 'paint'])->middleware(['auth', 'verified', 'throttle:600,1'])->name('community.projects.paint');
+    Route::post('/community/projects/{project}/complete', [CommunityProjectController::class, 'complete'])->middleware(['auth', 'verified'])->name('community.projects.complete');
+    Route::get('/community/projects/{project}/chat', [CommunityProjectController::class, 'chat'])->middleware(['auth', 'verified'])->name('community.projects.chat');
+    Route::post('/community/projects/{project}/chat', [CommunityProjectController::class, 'sendChatMessage'])->middleware(['auth', 'verified', 'throttle:20,1'])->name('community.projects.chat.send');
 
     Route::get('/imprint', [LegalController::class, 'imprint'])->name('legal.impressum');
     Route::get('/faq', [LegalController::class, 'faq'])->name('faq');
@@ -49,6 +81,7 @@ Route::group($prefixed ? ['prefix' => '{locale}', 'where' => ['locale' => 'de|es
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::patch('/profile/project-notifications', [ProfileController::class, 'updateProjectNotifications'])->name('profile.project-notifications.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
 
@@ -57,10 +90,16 @@ Route::group($prefixed ? ['prefix' => '{locale}', 'where' => ['locale' => 'de|es
 }
 
 // Technische Endpunkte ohne Sprach-Prefix (Sprache kommt aus Header X-App-Locale bzw. Session).
+Route::get('/api/soak/status', \App\Http\Controllers\SoakStatusController::class)
+    ->middleware(['auth', 'verified'])->name('soak.status');
 Route::get('/api/pixels', [WallController::class, 'pixels'])->name('api.pixels');
 Route::get('/api/pixels/locks', [WallController::class, 'pixelLocks'])->name('api.pixels.locks');
 Route::get('/api/pixels/recent', [WallController::class, 'recentPixels'])->name('api.pixels.recent');
 Route::post('/api/pixels', [WallController::class, 'store'])->name('api.pixels.store');
+Route::post('/api/pixels/glyph', \App\Http\Controllers\WallGlyphController::class)->middleware('throttle:30,1')->name('api.pixels.glyph');
+Route::get('/api/wall-drafts', [\App\Http\Controllers\WallDraftController::class, 'index'])->middleware('throttle:60,1');
+Route::patch('/api/wall-drafts/{draft}', [\App\Http\Controllers\WallDraftController::class, 'update'])->middleware('throttle:120,1')->whereNumber('draft');
+Route::post('/api/wall-drafts/{draft}/publish', [\App\Http\Controllers\WallDraftController::class, 'publish'])->middleware('throttle:30,1')->whereNumber('draft');
 Route::get('/api/activity', [WallController::class, 'activity'])->name('api.activity');
 Route::get('/api/wall', [WallController::class, 'dimensions'])->name('api.wall.dimensions');
 Route::get('/api/pixels/status', [WallController::class, 'pixelStatus'])->name('api.pixels.status');
@@ -74,6 +113,9 @@ Route::match(['get', 'post'], '/newsletter/unsubscribe/{user}', [NewsletterPubli
     ->middleware(['signed', 'throttle:20,1'])->name('newsletter.unsubscribe');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/community-groups', [AdminCommunityGroupController::class, 'index'])->name('admin.community-groups');
+    Route::post('/community-groups/{group}/approve', [AdminCommunityGroupController::class, 'approve'])->name('admin.community-groups.approve');
+    Route::post('/community-groups/{group}/reject', [AdminCommunityGroupController::class, 'reject'])->name('admin.community-groups.reject');
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('admin.analytics');
     Route::get('/reports', [AdminReportController::class, 'index'])->name('admin.reports');
     Route::get('/reports/{report}/image', [AdminReportController::class, 'image'])->name('admin.reports.image');

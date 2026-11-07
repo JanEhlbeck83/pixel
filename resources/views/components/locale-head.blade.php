@@ -6,3 +6,4 @@
     <link rel="canonical" href="{{ $alternates[app()->getLocale()] }}">
     <meta property="og:locale" content="{{ app()->getLocale() }}">
 @endif
+<x-project-phase-notices />

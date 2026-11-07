@@ -55,6 +55,15 @@
         (Art. 6(1)(f) GDPR, protection against abuse).
     </p>
 
+    <p>
+        Opening the personal draft editor sets the technically necessary encrypted HttpOnly session cookie
+        “wall_draft”. It links your browser to a private server-side 20 × 50-pixel draft containing colours,
+        a title and already paid cells. Without this cookie, a guest draft cannot be recovered.
+        Browsers may retain session cookies when restoring a session. Guest drafts expire after 30 days
+        without editing and are cleaned up daily. Login or registration transfers the draft to your
+        account (Art. 6(1)(b) GDPR; Section 25(2) no. 2 TDDDG). Drafts are not stored in localStorage.
+    </p>
+
     <h2>6. Account and login</h2>
     <p>
         When you register, we store your name, email address and a password stored in encrypted form (hash), as
@@ -103,6 +112,15 @@
         visible where it is displayed. The legal basis is Art. 6(1)(b) GDPR (use of the wall). If you delete
         your account, the link to you is removed from pixels and activities. The pixels themselves remain as an
         anonymous image of the wall.
+    </p>
+
+    <p>
+        Personal account drafts are stored privately so you can continue later. Publishing on the Wall
+        archives the picture with its title, time and Wall position in your initially private profile
+        gallery. Only when you make it public can everyone access the gallery original and your displayed
+        name. You can revoke this visibility or delete gallery entries; already published Wall pixels
+        and snapshots remain. Storage provides the drawing and gallery functionality you request
+        (Art. 6(1)(b) GDPR). Account deletion removes account drafts and gallery originals.
     </p>
 
     <h2>9. Feedback</h2>

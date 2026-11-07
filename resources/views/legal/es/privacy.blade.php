@@ -58,6 +58,16 @@
         (art. 6, apdo. 1, letra f RGPD, protección frente a abusos).
     </p>
 
+    <p>
+        Al abrir el editor personal se establece la cookie de sesión cifrada y HttpOnly «wall_draft»,
+        técnicamente necesaria. Vincula tu navegador con un borrador privado de 20 × 50 píxeles en el
+        servidor, con colores, título y casillas ya pagadas. Sin esta cookie no se puede recuperar el
+        borrador de invitado. El navegador puede conservar cookies al restaurar una sesión. Los borradores
+        de invitados caducan tras 30 días sin editarse y se depuran diariamente. Al iniciar sesión o
+        registrarte, el borrador se transfiere a tu cuenta (art. 6, apdo. 1, letra b RGPD;
+        art. 25, apdo. 2, n.º 2 TDDDG). No se guarda el borrador en localStorage.
+    </p>
+
     <h2>6. Cuenta e inicio de sesión</h2>
     <p>
         Al registrarte almacenamos tu nombre, tu correo electrónico y una contraseña almacenada de forma cifrada
@@ -108,6 +118,16 @@
         públicamente. Tu nombre se hace visible públicamente en la medida en que se muestre. La base jurídica es
         el art. 6, apdo. 1, letra b RGPD (uso del muro). Si eliminas tu cuenta, se suprime el vínculo contigo en
         los píxeles y las actividades. Los propios píxeles permanecen como imagen anónima del muro.
+    </p>
+
+    <p>
+        Guardamos los borradores de tu cuenta de forma privada para que puedas continuar más tarde.
+        Al publicar en el mural, archivamos el dibujo con título, fecha y posición en tu galería
+        de perfil, inicialmente privada. Solo al hacerlo público, el original de la galería y tu nombre
+        visible quedan accesibles para todos. Puedes revocar la visibilidad o eliminar entradas;
+        los píxeles y las instantáneas ya publicados en el mural permanecen. El almacenamiento permite
+        las funciones de dibujo y galería solicitadas (art. 6, apdo. 1, letra b RGPD).
+        Al eliminar la cuenta se eliminan sus borradores y los originales de la galería.
     </p>
 
     <h2>9. Comentarios</h2>

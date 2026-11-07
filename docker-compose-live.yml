@@ -25,6 +25,7 @@ services:
       - /opt/pixel-data/live/images/wall-tiles:/var/www/html/public/images/wall-tiles
       - /opt/pixel-data/live/images/snapshots:/var/www/html/public/images/snapshots
       - private-data:/var/www/html/storage/app/private
+      - public-data:/var/www/html/storage/app/public
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,6 +46,11 @@ services:
     volumes:
       - /opt/pixel-data/live/images/wall-tiles:/var/www/html/public/images/wall-tiles
       - /opt/pixel-data/live/images/snapshots:/var/www/html/public/images/snapshots
+      - type: volume
+        source: public-data
+        target: /var/www/html/storage/app/public
+        volume:
+          nocopy: true
     depends_on:
       postgres:
         condition: service_healthy
@@ -88,6 +94,7 @@ services:
 volumes:
   pgdata:
   private-data:
+  public-data:
 
 networks:
   backend:

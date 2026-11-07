@@ -3,7 +3,7 @@
     <button type="button" class="secondary-button" id="reportCancelBar">{{ __('Abbrechen') }}</button>
 </div>
 
-<div id="reportModal" class="shop-modal hidden" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+<div id="reportModal" class="shop-modal hidden" role="dialog" aria-modal="true" aria-labelledby="reportTitle" aria-describedby="reportArea">
     <div class="shop-card report-card">
         <h3 id="reportTitle">{{ __('Inhalt melden') }}</h3>
         <p class="report-area" id="reportArea"></p>

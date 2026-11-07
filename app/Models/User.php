@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -42,6 +43,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function communityMembership(): HasOne
+    {
+        return $this->hasOne(CommunityGroupMember::class);
+    }
+
+    public function foundedCommunityGroup(): HasOne
+    {
+        return $this->hasOne(CommunityGroup::class, 'founder_id');
     }
 
     /** Passwort-Reset-Mail in der Sprache der Anfrage (Nutzer haben keine eigene Sprachspalte). */
@@ -87,7 +98,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'free_pixels_at' => 'datetime',
             'banned_at' => 'datetime',
             'newsletter_subscribed_at' => 'datetime',
+            'community_group_left_at' => 'datetime',
             'password' => 'hashed',
+            'project_phase_notifications' => 'boolean',
+            'last_active_at' => 'datetime',
         ];
     }
 

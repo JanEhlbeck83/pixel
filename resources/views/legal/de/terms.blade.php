@@ -16,18 +16,32 @@
         <li>Neu gesetzte Pixel sind kurz gesperrt (10 Minuten).</li>
         <li>Gäste erhalten einmalig 50 Pixel. Mit Konto wächst alle 30 Sekunden ein Pixel nach, maximal 50 im Vorrat.</li>
         <li>Gekaufte Extra-Pixel werden getrennt vom kostenlosen Vorrat gespeichert und erst verbraucht, wenn der kostenlose Vorrat leer ist. Sie verfallen nicht. Pro Konto können höchstens 10.000 Extra-Pixel gehalten werden; Pakete, die darüber hinausführen würden, können nicht gekauft werden.</li>
+        <li>In Community-Projekten gestalten Mitglieder einer Gruppe gemeinsam. Jede Person kann nur einer Gruppe angehören und höchstens eine Gruppe gründen. Gruppengründungen werden vor der Freigabe durch den Admin geprüft.</li>
+        <li>Projektideen werden zunächst 7 Tage gesammelt und anschließend 3 Tage durch die Gruppe abgestimmt. Das Projektmotiv wird auf einer separaten, geschützten Projektleinwand gestaltet und erst nach einstimmigem Abschluss durch alle Projektteilnehmer auf der gemeinsamen Wand veröffentlicht.</li>
+        <li>Nach der Veröffentlichung bleibt der reservierte Wandbereich zunächst 7 Wochen für die Gruppe gesperrt. Mindestens 5 aktuelle Gruppenmitglieder können die Reservierung jeweils um weitere 7 Wochen verlängern. Nach Ablauf ohne ausreichende Verlängerung wird der Bereich für alle freigegeben.</li>
+        <li>Der Projektchat ist nur für Projektteilnehmer sichtbar. Nach der Veröffentlichung bleibt der Verlauf für die Teilnehmer lesbar, ist aber schreibgeschützt.</li>
         <li>Verboten sind Hassbilder, verfassungsfeindliche oder verbotene Symbole, Beleidigungen, Pornografie, Gewaltdarstellungen und Inhalte, die Rechte Dritter verletzen.</li>
         <li>Automatisierte Zugriffe, Bots und Skripte zum Umgehen der Pixel-Limits sind nicht erlaubt.</li>
     </ul>
 
-    <h2>3. Konto</h2>
+    <h2>3. Community und Gruppenprojekte</h2>
+    <p>
+        Gruppenprojekte beruhen auf gemeinsamer Planung und Gestaltung. Vorschläge und Abstimmungen erfolgen
+        innerhalb der Gruppe; während der Gestaltungsphase können nur Projektteilnehmer die geschützte
+        Projektleinwand und den Projektchat nutzen. Die Veröffentlichung überträgt die gestalteten Pixel an
+        die reservierte Stelle der gemeinsamen Wand und zeigt das Projekt in der Galerie. Eine Reservierung
+        ist befristet und kann nur durch mindestens fünf aktuelle Gruppenmitglieder verlängert werden.
+        Projektteilnehmer können dem Abschluss vor Ablauf der Gestaltungszeit einstimmig zustimmen.
+    </p>
+
+    <h2>4. Konto</h2>
     <p>
         Du musst deine Angaben wahrheitsgemäß machen und deine Zugangsdaten geheim halten. Pro Person
         ist ein Konto vorgesehen. Wir dürfen Konten sperren oder löschen, wenn du gegen diese Bedingungen verstößt.
         Du kannst dein Konto jederzeit löschen, siehe <a href="{{ route('legal.data-deletion') }}">Daten löschen</a>.
     </p>
 
-    <h2>4. Inhalte und Rechte</h2>
+    <h2>5. Inhalte und Rechte</h2>
     <p>
         Die Wand entsteht gemeinsam. Du räumst uns das einfache, unentgeltliche Recht ein, die von dir
         gesetzten Pixel im Rahmen des Dienstes darzustellen, zu speichern, zu vervielfältigen und in Bildern
@@ -35,7 +49,7 @@
         einzelnen Pixeln. Wir dürfen Inhalte entfernen, die gegen diese Bedingungen oder Gesetze verstoßen.
     </p>
 
-    <h2>5. Kostenpflichtige Leistungen</h2>
+    <h2>6. Kostenpflichtige Leistungen</h2>
     <p>
         Die Preise werden im Shop in Euro als Endpreise angezeigt. Wir wenden die Kleinunternehmerregelung
         gemäß § 19 UStG an; deshalb wird keine Umsatzsteuer berechnet oder ausgewiesen. Die Zahlung erfolgt
@@ -43,7 +57,7 @@
         eine Wandvergrößerung wird nach erfolgreicher Zahlung umgesetzt. Ein Kauf setzt ein Konto voraus.
     </p>
 
-    <h2 id="withdrawal">6. Widerrufsrecht bei digitalen Inhalten</h2>
+    <h2 id="withdrawal">7. Widerrufsrecht bei digitalen Inhalten</h2>
     <p>
         Verbraucher haben bei Fernabsatzverträgen grundsätzlich ein 14-tägiges Widerrufsrecht. Unsere
         Produkte – Pixel-Guthaben und Leinwanderweiterungen – sind digitale Inhalte, die nicht auf einem
@@ -60,7 +74,7 @@
         Widerrufsrecht bestehen.
     </p>
 
-    <h2>7. Verfügbarkeit und Haftung</h2>
+    <h2>8. Verfügbarkeit und Haftung</h2>
     <p>
         Wir bemühen uns um einen unterbrechungsfreien Betrieb, schulden aber keine ständige Verfügbarkeit.
         Wir haften unbeschränkt bei Vorsatz und grober Fahrlässigkeit, bei Verletzung von Leben, Körper und
@@ -68,13 +82,13 @@
         Verletzung wesentlicher Vertragspflichten und begrenzt auf den vorhersehbaren, typischen Schaden.
     </p>
 
-    <h2>8. Meldung von Verstößen</h2>
+    <h2>9. Meldung von Verstößen</h2>
     <p>
         Rechtswidrige Inhalte kannst du an <x-legal-value key="email" /> melden. Bitte nenne die Position
         (x/y) der Wand und den Grund.
     </p>
 
-    <h2>9. Schlussbestimmungen</h2>
+    <h2>10. Schlussbestimmungen</h2>
     <p>
         Es gilt deutsches Recht unter Ausschluss des UN-Kaufrechts. Bei Verbrauchern bleiben zwingende
         Verbraucherschutzvorschriften des Aufenthaltsstaates unberührt. Sollten einzelne Regelungen

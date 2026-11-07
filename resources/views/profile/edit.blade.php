@@ -15,17 +15,52 @@
             <header class="page-heading">
                 <div class="brand">
                     <small>{{ __('Mein Konto') }}</small>
-                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
+                    <a class="brand-wordmark" href="{{ route('home') }}" aria-label="{{ __('PixRiot – zur Wand') }}">Pix<span>Riot</span></a>
                 </div>
             </header>
 
             <main class="profile-main">
                 <h1 class="profile-title">{{ __('Hallo, :name', ['name' => $user->name]) }}</h1>
+                <section class="profile-card">
+                    <h2>{{ __('Meine Pixelgalerie') }}</h2>
+                    <p>{{ __('Veröffentlichte Entwürfe bleiben hier als eigene Bilder erhalten. Du entscheidest, welche davon öffentlich sichtbar sind.') }}</p>
+                    <a class="primary-button" href="{{ route('artworks.index', $user) }}">{{ __('Meine Pixelgalerie') }}</a>
+                    <a class="secondary-button" href="{{ route('home') }}#draft">{{ __('Am Entwurf weitermalen') }}</a>
+                </section>
 
                 @if (session('status') === 'profile-updated')
                     <p class="profile-flash" role="status">{{ __('Profil gespeichert.') }}</p>
                 @elseif (session('status') === 'password-updated')
                     <p class="profile-flash" role="status">{{ __('Passwort geändert.') }}</p>
+                @elseif (session('status') === 'project-notifications-updated')
+                    <p class="profile-flash" role="status">{{ __('Projekteinstellungen gespeichert.') }}</p>
+                @endif
+
+                @if ($communityMembership)
+                    <section class="profile-card profile-community-group" aria-labelledby="profileCommunityGroupTitle">
+                        <div class="community-my-group-emblem">
+                            @if ($communityMembership->group->emblem)
+                                <img class="community-group-emblem" src="{{ asset('images/community/emblems/'.$communityMembership->group->emblem.'.svg') }}" alt="{{ __('Emblem der Gruppe :name', ['name' => $communityMembership->group->name]) }}" width="88" height="88">
+                            @endif
+                        </div>
+                        <div class="community-my-group-content">
+                            <span class="community-eyebrow">{{ __('Deine Gruppe') }}</span>
+                            <h2 id="profileCommunityGroupTitle"><a href="{{ route('community.groups.show', $communityMembership->group) }}">{{ $communityMembership->group->name }}</a></h2>
+                            <p>{{ $communityMembership->group->description }}</p>
+                            <div class="community-my-group-meta">
+                                <span>{{ __('In den letzten 5 Minuten aktiv: :count', ['count' => $activeGroupMembersCount]) }}</span>
+                                @if ($communityMembership->last_active_at)
+                                    <span>{{ __('Zuletzt in der Gruppe aktiv: :time', ['time' => $communityMembership->last_active_at->diffForHumans()]) }}</span>
+                                @endif
+                            </div>
+                            <a class="community-gallery-link" href="{{ route('community.groups.show', $communityMembership->group) }}">{{ __('Zur Gruppe') }}</a>
+                            <form method="POST" action="{{ route('community.groups.leave') }}" onsubmit="return confirm('{{ __('Möchtest du die Gruppe wirklich verlassen?') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="secondary-button" type="submit">{{ __('Gruppe verlassen') }}</button>
+                            </form>
+                        </div>
+                    </section>
                 @endif
 
                 <section class="profile-stats" aria-label="{{ __('Übersicht') }}">
@@ -89,6 +124,19 @@
                             </table>
                         </div>
                     @endif
+                </section>
+
+                <section class="profile-card" aria-labelledby="projectNotificationsTitle">
+                    <h2 id="projectNotificationsTitle">{{ __('Projekteinstellungen & Benachrichtigungen') }}</h2>
+                    <p class="profile-muted">{{ __('Erhalte eine E-Mail, wenn ein Gruppenprojekt die Phase wechselt, zum Beispiel von der Vorschlagseinreichung zur Abstimmung. Wenn du in den letzten 5 Minuten auf PixRiot aktiv warst, wird keine E-Mail gesendet.') }}</p>
+                    <form method="POST" action="{{ route('profile.project-notifications.update') }}" class="profile-form">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="project_phase_notifications" value="0">
+                        <label class="check-row"><input type="checkbox" name="project_phase_notifications" value="1" @checked(old('project_phase_notifications', $user->project_phase_notifications))> {{ __('E-Mails zu Projektphasen erhalten') }}</label>
+                        @error('project_phase_notifications') <p class="profile-error">{{ $message }}</p> @enderror
+                        <button class="primary-button" type="submit">{{ __('Speichern') }}</button>
+                    </form>
                 </section>
 
                 <div class="profile-grid">

@@ -36,10 +36,20 @@
 
                 <section class="auth-card" aria-labelledby="auth-title">
                     <div class="auth-card-heading">
-                        <span class="auth-eyebrow">{{ $isRegistering ? __('Werde Teil davon') : __('Schön, dass du da bist') }}</span>
-                        <h2 id="auth-title">{{ $isRegistering ? __('Dein Platz auf der Wand.') : __('Willkommen zurück.') }}</h2>
-                        <p>{{ $isRegistering ? __('Erstelle dein Konto und setz deinen ersten Pixel.') : __('Melde dich an und mach weiter, wo du aufgehört hast.') }}</p>
+                        <span class="auth-eyebrow">{{ $isRegistering ? __('Werde Teil der PixRiot-Community') : __('Schön, dass du wieder da bist') }}</span>
+                        <h2 id="auth-title">{{ $isRegistering ? __('Pixel setzen. Zusammen gestalten.') : __('Deine Gruppe wartet.') }}</h2>
+                        <p>{{ $isRegistering ? __('Erstelle dein kostenloses Konto, tritt einer Gruppe bei und gestaltet euer eigenes Pixelart-Projekt.') : __('Melde dich an, um mit deiner Gruppe abzustimmen und gemeinsam an Projekten weiterzuarbeiten.') }}</p>
                     </div>
+
+                    <aside class="auth-community-promo">
+                        <div class="auth-community-promo-heading"><x-icon name="community" /><strong>{{ __('So wirst du Teil eines Community-Projekts') }}</strong></div>
+                        <ol>
+                            <li>{{ __('Einer Gruppe beitreten – du kannst nur einer Gruppe angehören.') }}</li>
+                            <li>{{ __('Vorschläge einreichen und mit der Gruppe über das Motiv abstimmen.') }}</li>
+                            <li>{{ __('Auf einer geschützten Projektleinwand gemeinsam pixeln und veröffentlichen.') }}</li>
+                        </ol>
+                        <a href="{{ route('community.index') }}">{{ __('Gruppen und Ablauf ansehen') }} <span aria-hidden="true">→</span></a>
+                    </aside>
 
                     {{ $slot }}
                 </section>

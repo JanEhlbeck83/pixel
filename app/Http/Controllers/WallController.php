@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
+use App\Models\CommunityProject;
 use App\Models\Pixel;
 use App\Models\PixelEditLock;
 use App\Models\Snapshot;
 use App\Services\Analytics;
+use App\Services\Community\ProjectLifecycle;
+use App\Services\Community\WallReservationMutex;
+use App\Services\Wall\PixelGlyphs;
 use App\Services\Wall\PixelQuota;
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -19,18 +23,51 @@ class WallController extends Controller
     public function __construct(
         private PixelQuota $quota,
         private Analytics $analytics,
+        private WallReservationMutex $reservationMutex,
+        private ProjectLifecycle $projectLifecycle,
     ) {}
 
     private const WALL_TILE_SIZE = 300;
 
-    private const PIXEL_LOCK_MINUTES = 10;
+    private const PIXEL_LOCK_MINUTES = WallReservationMutex::PIXEL_LOCK_MINUTES;
 
     private const EDIT_LOCK_MINUTES = 2;
 
-    public function index()
+    public function index(Request $request)
     {
+        $reserveProject = null;
+        if ($request->query->has('reserve_project')) {
+            abort_unless($request->user(), 404);
+            $reserveProject = CommunityProject::query()
+                ->whereKey($request->query('reserve_project'))
+                ->whereIn('status', ['scheduled', 'active'])
+                ->whereHas('group.members', fn ($query) => $query->where('community_group_members.user_id', $request->user()->id))
+                ->with('group:id,name')
+                ->firstOrFail();
+            $reserveProject = $this->projectLifecycle->refresh($reserveProject);
+            abort_unless(
+                in_array($reserveProject->status, ['scheduled', 'active'], true)
+                && $reserveProject->canBeReservedBy($request->user()),
+                404
+            );
+        }
+
+        $communityGroup = $request->user()?->communityMembership()->with('group')->first()?->group;
+        $communityProjects = $communityGroup
+            ? $communityGroup->projects()
+                ->whereIn('status', CommunityProject::RUNNING_STATUSES)
+                ->whereHas('participants', fn ($query) => $query->where('user_id', $request->user()->id))
+                ->orderBy('id')->get()
+            : collect();
+        $communityProjects = $communityProjects->map(fn ($project) => $this->projectLifecycle->refresh($project))
+            ->filter(fn ($project) => in_array($project->status, CommunityProject::RUNNING_STATUSES, true));
+
         return view('wall', [
             'shareImage' => ($path = Snapshot::latest()->value('image_path')) ? asset($path) : null,
+            'reserveProject' => $reserveProject,
+            'glyphCatalog' => app(PixelGlyphs::class)->catalog(),
+            'communityGroup' => $communityGroup,
+            'communityProjects' => $communityProjects,
         ]);
     }
 
@@ -208,6 +245,7 @@ class WallController extends Controller
 
         return response()->json(['locked_pixels' => $lockedPixels]);
     }
+
     public function lockPixelArea(Request $request)
     {
         $area = $request->validate([
@@ -228,6 +266,14 @@ class WallController extends Controller
         }
 
         return DB::transaction(function () use ($request, $area) {
+            $this->reservationMutex->lockRegion($area['x'], $area['y'], $area['width'], $area['height']);
+            $reservation = $this->reservationMutex->reservationAt($area['x'], $area['y'], $area['width'], $area['height']);
+            if ($reservation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Diese Fläche ist für das Community-Projekt von Gruppe :group reserviert.', ['group' => $reservation->group->name]),
+                ], 423);
+            }
             $now = now();
             $expiresAt = $now->copy()->addMinutes(self::EDIT_LOCK_MINUTES);
             PixelEditLock::query()->where('expires_at', '<=', $now)->delete();
@@ -381,6 +427,36 @@ class WallController extends Controller
         $savePixels = function () use ($validatedPixels, $isBatch, $user, $request) {
             return DB::transaction(function () use ($validatedPixels, $isBatch, $user, $request) {
                 $coordinates = collect($validatedPixels)->unique(fn ($pixel) => $pixel['x'].':'.$pixel['y']);
+                $this->reservationMutex->lockCoordinates($coordinates);
+                foreach ($coordinates as $coordinate) {
+                    $reservation = CommunityProject::query()
+                        ->where(function ($query) {
+                            $query->whereIn('status', ['scheduled', 'active'])
+                                ->orWhere(fn ($query) => $query
+                                    ->where('status', 'published')
+                                    ->where('reserved_until', '>', now()));
+                        })
+                        ->where('reserved_x', '<=', $coordinate['x'])
+                        ->whereRaw('reserved_x + width > ?', [$coordinate['x']])
+                        ->where('reserved_y', '<=', $coordinate['y'])
+                        ->whereRaw('reserved_y + height > ?', [$coordinate['y']])
+                        ->with('group:id,name')
+                        ->first();
+
+                    if ($reservation) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => __('Diese Fläche ist für das Community-Projekt von Gruppe :group reserviert.', [
+                                'group' => $reservation->group->name,
+                            ]),
+                            'reservation' => [
+                                'group' => $reservation->group->name,
+                                'project_id' => $reservation->id,
+                            ],
+                        ], 423);
+                    }
+                }
+
                 $lockedPixels = Pixel::query()
                     ->whereNotNull('updated_by_user_id')
                     ->when($user, fn ($query) => $query->where('updated_by_user_id', '!=', $user->id))

@@ -72,6 +72,14 @@ class PixelWallPageTest extends TestCase
         $response->assertSee('100%', false);
         $response->assertSee('id="wallMenuToggle"', false);
         $response->assertSee('id="wallMenuPanel"', false);
+        $response->assertSee('id="pixelModeToggle"', false);
+        $response->assertSee('wall-nav-pixel-mode', false);
+        $response->assertSee('aria-pressed="false"', false);
+        $response->assertSee('id="pixelModeNotices"', false);
+        $response->assertSee('id="pixelModeModal"', false);
+        $response->assertSee('id="pixelModeDismissPermanently"', false);
+        $response->assertSee("Don't show this notice again");
+        $response->assertSee('Start pixel mode?');
         $response->assertSee('id="feedbackForm"', false);
         $response->assertSee('id="reservationLoadingOverlay"', false);
         $response->assertSee('class="reservation-loading-spinner"', false);
@@ -88,6 +96,25 @@ class PixelWallPageTest extends TestCase
         $response->assertDontSee('id="extendDownBtn"', false);
         $response->assertDontSee('id="colorPalette"');
         $this->assertDatabaseCount('pixels', 0);
+    }
+
+    public function test_mobile_controls_share_one_menu_entry_and_keep_color_tools_accessible(): void
+    {
+        foreach (['/', '/gallery', '/community'] as $url) {
+            $response = $this->get($url)->assertOk()
+                ->assertSee('data-menu-backdrop', false)
+                ->assertSee('data-menu-close', false);
+            $this->assertSame(1, substr_count($response->getContent(), 'id="wallMenuToggle"'));
+            $this->assertSame(1, substr_count($response->getContent(), 'id="wallMenuPanel"'));
+            $response->assertDontSee("toggle.addEventListener('click'", false);
+        }
+
+        $this->get('/')->assertOk()
+            ->assertSee('data-game-color-settings', false)
+            ->assertSee('data-game-color-swatch', false)
+            ->assertSee('data-mobile-start="Paint"', false)
+            ->assertSee('aria-label="Color and paint settings"', false)
+            ->assertSee('id="wallDragPaint"', false);
     }
 
     public function test_snapshot_generation_creates_an_image_and_records_it(): void
@@ -147,7 +174,7 @@ class PixelWallPageTest extends TestCase
             $this->artisan('wall:tiles')->assertSuccessful();
 
             $image = imagecreatefrompng($tile);
-            $this->assertSame(0x00ff00, imagecolorat($image, 0, 0) & 0xFFFFFF);
+            $this->assertSame(0x00FF00, imagecolorat($image, 0, 0) & 0xFFFFFF);
             $this->assertSame($untouchedMtime - 100, filemtime($untouched));
         } finally {
             File::deleteDirectory($output);

@@ -56,6 +56,17 @@
         (Art. 6 Abs. 1 lit. f DSGVO, Schutz vor Missbrauch).
     </p>
 
+    <p>
+        Wenn du den persönlichen Entwurfseditor öffnest, setzt PixRiot das technisch notwendige,
+        verschlüsselte HttpOnly-Sessioncookie „wall_draft“. Es ordnet deinem Browser einen privaten
+        serverseitigen 20 × 50-Pixel-Entwurf mit Farben, Titel und bereits bezahlten Feldern zu.
+        Ohne dieses Cookie kannst du den Gastentwurf nicht wiederherstellen. Browser können
+        Sessioncookies bei einer Sitzungswiederherstellung behalten. Gastentwürfe laufen nach
+        30 Tagen ohne Bearbeitung ab und werden täglich bereinigt. Bei Anmeldung oder Registrierung
+        wird der Entwurf in dein Konto übernommen (Art. 6 Abs. 1 lit. b DSGVO;
+        § 25 Abs. 2 Nr. 2 TDDDG). Der Entwurf wird nicht im localStorage gespeichert.
+    </p>
+
     <h2>6. Konto und Anmeldung</h2>
     <p>
         Bei der Registrierung speichern wir Name, E-Mail-Adresse und ein verschlüsselt gespeichertes Passwort
@@ -108,6 +119,16 @@
         öffentlich. Dein Name wird dabei, soweit er angezeigt wird, öffentlich sichtbar. Rechtsgrundlage ist
         Art. 6 Abs. 1 lit. b DSGVO (Nutzung der Wand). Wenn du dein Konto löschst, wird der Bezug zu dir
         aus Pixeln und Aktivitäten gelöst. Die Pixel selbst bleiben als anonymes Bild der Wand bestehen.
+    </p>
+
+    <p>
+        Persönliche Kontoentwürfe speichern wir privat, damit du später weiterarbeiten kannst.
+        Bei Veröffentlichung auf der Wall archivieren wir das Bild mit Titel, Zeitpunkt und
+        Wall-Position in deiner zunächst privaten Profilgalerie. Erst wenn du es öffentlich schaltest,
+        sind das Galerieoriginal und dein angezeigter Name für alle zugänglich. Du kannst diese Freigabe
+        zurücknehmen oder Galerieeinträge löschen; bereits veröffentlichte Wall-Pixel und Schnappschüsse
+        bleiben bestehen. Die Speicherung dient der von dir gewünschten Zeichen- und Galeriefunktion
+        (Art. 6 Abs. 1 lit. b DSGVO). Bei Kontolöschung werden Kontoentwürfe und Galerieoriginale gelöscht.
     </p>
 
     <h2>9. Feedback</h2>

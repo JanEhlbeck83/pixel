@@ -6,6 +6,33 @@
 
 @section('content')
     <div class="faq">
+        <h2>Comunidad y proyectos de grupo</h2>
+
+        <details open>
+            <summary>¿Cómo funciona la comunidad de PixRiot?</summary>
+            <p>Únete a un grupo aprobado: cada persona solo puede pertenecer a uno. Puedes solicitar la creación de un grupo, sujeto a la aprobación del administrador. En el grupo, proponéis ideas, votáis un diseño y lo creáis juntos en un lienzo protegido.</p>
+        </details>
+
+        <details>
+            <summary>¿Cómo se proponen e inician los proyectos comunitarios?</summary>
+            <p>Al comenzar un proyecto, los miembros del grupo tienen 7 días para enviar propuestas con texto, imagen y tamaño deseado. Después, el grupo vota durante 3 días. La dirección del proyecto reserva el área elegida. La imagen del proyecto permanece separada del muro público hasta su publicación conjunta.</p>
+        </details>
+
+        <details>
+            <summary>¿Cuándo se publica un proyecto?</summary>
+            <p>Los participantes pueden crear en el lienzo privado del proyecto durante un máximo de 14 días y conversar allí. Si todos aceptan finalizar, la imagen se publica de inmediato, incluso antes de que transcurran los 14 días. Los píxeles se transfieren al área reservada del muro y la obra se añade a la galería.</p>
+        </details>
+
+        <details>
+            <summary>¿Cuánto tiempo queda reservada una imagen publicada?</summary>
+            <p>Tras la publicación, el área queda reservada inicialmente para el grupo durante 7 semanas. Al menos 5 miembros actuales deben aceptar la prórroga; cada votación aprobada añade otras 7 semanas. La página del proyecto muestra una cuenta atrás. Si vence el plazo sin suficientes votos, el área vuelve a estar disponible para todos.</p>
+        </details>
+
+        <details>
+            <summary>¿Quién puede leer el chat del proyecto?</summary>
+            <p>Solo los participantes pueden ver y usar el chat durante la creación. Después de la publicación, pueden seguir leyendo todo el historial, pero será de solo lectura.</p>
+        </details>
+
         <h2>Píxeles</h2>
 
         <details open>

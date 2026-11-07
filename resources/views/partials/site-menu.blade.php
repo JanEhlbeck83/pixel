@@ -1,5 +1,7 @@
 @php($onWall = $onWall ?? false)
+@vite('resources/js/site-menu.js')
 <header class="pixel-topbar minimal wall-menu">
+    <button type="button" class="site-menu-backdrop hidden" data-menu-backdrop aria-label="{{ __('Schließen') }}" tabindex="-1"></button>
     @if (auth()->user()?->isAdmin())
         <div class="admin-menu" id="adminMenu">
             <button type="button" class="wall-menu-toggle secondary-button" id="adminMenuToggle" aria-expanded="false" aria-controls="adminMenuPanel">
@@ -7,12 +9,14 @@
                 <span>Admin</span>
             </button>
             <div class="wall-menu-panel admin-menu-panel hidden" id="adminMenuPanel">
+                <button type="button" class="icon-button mobile-menu-close" data-menu-close aria-label="{{ __('Schließen') }}">×</button>
                 <div class="brand">
-                    <strong class="brand-wordmark">Pix<span>Riot</span></strong>
+                    <a class="brand-wordmark" href="{{ route('home') }}" aria-label="{{ __('PixRiot – zur Wand') }}">Pix<span>Riot</span></a>
                 </div>
                 <nav class="top-actions wall-menu-links" aria-label="Admin">
                     <a href="{{ route('admin.analytics') }}"><x-icon name="faq" />{{ __('Analyse') }}</a>
                     <a href="{{ route('admin.reports') }}"><x-icon name="flag" />{{ __('Meldungen') }}</a>
+                    <a href="{{ route('admin.community-groups') }}">{{ __('Gruppenfreigaben') }}</a>
                     <a href="{{ route('admin.newsletters') }}"><x-icon name="faq" />Newsletter</a>
                 </nav>
             </div>
@@ -23,8 +27,9 @@
         <span>{{ __('Menü') }}</span>
     </button>
     <div class="wall-menu-panel hidden" id="wallMenuPanel">
+        <button type="button" class="icon-button mobile-menu-close" data-menu-close aria-label="{{ __('Schließen') }}">×</button>
         <div class="brand">
-            <strong class="brand-wordmark">Pix<span>Riot</span></strong>
+            <a class="brand-wordmark" href="{{ route('home') }}" aria-label="{{ __('PixRiot – zur Wand') }}">Pix<span>Riot</span></a>
         </div>
         <nav class="top-actions wall-menu-links" aria-label="{{ __('Hauptnavigation') }}">
             @if (Route::has('login'))
@@ -43,8 +48,8 @@
             @endif
             @if ($onWall)
                 <hr class="wall-menu-divider">
-                <button type="button" id="openShopBtn"><x-icon name="shop" />{{ __('Pixel kaufen') }}</button>
-                <button type="button" id="openExtensionShopBtn"><x-icon name="shop" />{{ __('Erweiterung kaufen') }}</button>
+                <button type="button" id="openShopBtn" data-menu-dismiss><x-icon name="shop" />{{ __('Pixel kaufen') }}</button>
+                <button type="button" id="openExtensionShopBtn" data-menu-dismiss><x-icon name="shop" />{{ __('Erweiterung kaufen') }}</button>
                 <hr class="wall-menu-divider">
                 <button type="button" id="shareViewBtn"><x-icon name="link" />{{ __('Ausschnitt teilen') }}</button>
                 <div id="shareFeedback" class="share-feedback hidden">
@@ -59,9 +64,10 @@
                 <a href="{{ route('home') }}"><x-icon name="wall" />{{ __('Zur Wand') }}</a>
             @endunless
             <a href="{{ route('gallery') }}"><x-icon name="gallery" />{{ __('Pixelart') }}</a>
+            <a class="wall-community-menu-link" href="{{ route('community.index') }}"><x-icon name="community" />{{ __('Gruppen & Community-Projekte') }}</a>
             @if ($onWall)
-                <button type="button" id="openRulesBtn"><x-icon name="rules" />{{ __('Spielregeln') }}</button>
-                <button type="button" id="reportAreaBtn"><x-icon name="flag" />{{ __('Inhalt melden') }}</button>
+                <button type="button" id="openRulesBtn" data-menu-dismiss><x-icon name="rules" />{{ __('Spielregeln') }}</button>
+                <button type="button" id="reportAreaBtn" data-menu-dismiss><x-icon name="flag" />{{ __('Inhalt melden') }}</button>
             @endif
             <a href="{{ route('faq') }}"><x-icon name="faq" />{{ __('FAQ') }}</a>
             <hr class="wall-menu-divider">
@@ -90,51 +96,3 @@
         @endif
     </div>
 </header>
-@if (auth()->user()?->isAdmin())
-    <script>
-        (() => {
-            const admin = document.getElementById('adminMenu');
-            const toggle = document.getElementById('adminMenuToggle');
-            const panel = document.getElementById('adminMenuPanel');
-            const mainToggle = document.getElementById('wallMenuToggle');
-            const mainPanel = document.getElementById('wallMenuPanel');
-            const closeAdmin = () => {
-                panel.classList.add('hidden');
-                toggle.setAttribute('aria-expanded', 'false');
-            };
-            const closeMain = () => {
-                mainPanel.classList.add('hidden');
-                mainToggle.setAttribute('aria-expanded', 'false');
-            };
-            toggle.addEventListener('click', () => {
-                const open = toggle.getAttribute('aria-expanded') === 'true';
-                toggle.setAttribute('aria-expanded', String(!open));
-                panel.classList.toggle('hidden', open);
-                if (!open) closeMain();
-            });
-            mainToggle.addEventListener('click', closeAdmin);
-            document.addEventListener('click', (event) => { if (!admin.contains(event.target)) closeAdmin(); });
-            document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdmin(); });
-        })();
-    </script>
-@endif
-@unless ($onWall)
-    <script>
-        (() => {
-            const menu = document.querySelector('.wall-menu');
-            const toggle = document.getElementById('wallMenuToggle');
-            const panel = document.getElementById('wallMenuPanel');
-            const close = () => {
-                panel.classList.add('hidden');
-                toggle.setAttribute('aria-expanded', 'false');
-            };
-            toggle.addEventListener('click', () => {
-                const open = toggle.getAttribute('aria-expanded') === 'true';
-                toggle.setAttribute('aria-expanded', String(!open));
-                panel.classList.toggle('hidden', open);
-            });
-            document.addEventListener('click', (event) => { if (!menu.contains(event.target)) close(); });
-            document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
-        })();
-    </script>
-@endunless

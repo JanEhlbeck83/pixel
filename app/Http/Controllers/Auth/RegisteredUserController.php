@@ -49,6 +49,7 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+        app(\App\Services\Wall\WallDrafts::class)->claim($request);
 
         return redirect(route('verification.notice', absolute: false));
     }

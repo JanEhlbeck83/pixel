@@ -4,6 +4,7 @@ namespace App\Services\Wall;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -29,9 +30,9 @@ class PixelQuota
         return (int) Cache::get($this->guestKey($request), 0);
     }
 
-    public function recordGuestPixel(Request $request): void
+    public function recordGuestPixel(Request $request, int $count = 1): void
     {
-        Cache::forever($this->guestKey($request), $this->guestUsed($request) + 1);
+        Cache::forever($this->guestKey($request), $this->guestUsed($request) + $count);
     }
 
     public function maxFree(): int
@@ -89,40 +90,37 @@ class PixelQuota
     }
 
     /**
-     * Verbraucht eine Pixel-Berechtigung. Muss in einer Transaktion laufen.
+     * Verbraucht Pixel-Berechtigungen atomar. Muss in einer Transaktion laufen.
      * Nutzt zuerst den kostenlosen Vorrat, danach gekaufte Extra-Pixel.
      *
      * @return array<string,mixed>|null null = erlaubt, sonst die Ablehnung als Status-Array
      */
-    public function consume(User $user): ?array
+    public function consume(User $user, int $count = 1): ?array
     {
+        if ($count < 1) {
+            throw new \InvalidArgumentException('Pixel count must be positive.');
+        }
         $locked = User::query()->lockForUpdate()->findOrFail($user->id);
         [$free, $anchor] = $this->bucket($locked);
 
-        if ($free > 0) {
+        if ($free + $locked->pixel_credits >= $count) {
             // Läuft der Vorrat gerade aus dem vollen Zustand, startet der Nachwachs-Takt erst jetzt.
             $locked->forceFill([
-                'free_pixels' => $free - 1,
+                'free_pixels' => max(0, $free - $count),
+                'pixel_credits' => $locked->pixel_credits - max(0, $count - $free),
                 'free_pixels_at' => $free >= $this->maxFree() ? now() : $anchor,
             ])->save();
 
             return null;
         }
 
-        if ($locked->pixel_credits > 0) {
-            $locked->forceFill(['free_pixels' => 0, 'free_pixels_at' => $anchor])->save();
-            $locked->decrement('pixel_credits');
-
-            return null;
-        }
-
         return [
             'authenticated' => true,
-            'can_edit' => false,
+            'can_edit' => $free + $locked->pixel_credits > 0,
             'limit' => 'user',
             'retry_after' => $this->secondsUntilNext($locked),
-            'credits' => 0,
-            'free' => 0,
+            'credits' => (int) $locked->pixel_credits,
+            'free' => $free,
             'max_free' => $this->maxFree(),
         ];
     }
@@ -130,7 +128,7 @@ class PixelQuota
     /**
      * Aktueller Vorrat inkl. Nachwachsen und der Zeitpunkt, ab dem das nächste Pixel zählt.
      *
-     * @return array{0:int,1:\Illuminate\Support\Carbon}
+     * @return array{0:int,1:Carbon}
      */
     private function bucket(User $user): array
     {

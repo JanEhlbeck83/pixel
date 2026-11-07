@@ -16,6 +16,9 @@ public/images/wall-tiles/**
 public/images/snapshots/**
 
 storage/logs/*
+storage/app/private/soak/
+**/__pycache__/
+**/*.pyc
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*

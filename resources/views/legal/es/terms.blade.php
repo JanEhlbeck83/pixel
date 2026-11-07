@@ -15,18 +15,32 @@
         <li>Los píxeles recién colocados quedan bloqueados brevemente (10 minutos).</li>
         <li>Los invitados reciben 50 píxeles una sola vez. Con cuenta, se regenera un píxel cada 30 segundos, hasta un máximo de 50 en reserva.</li>
         <li>Los píxeles extra comprados se guardan por separado de la reserva gratuita y solo se usan cuando esta está vacía. No caducan. Una cuenta puede tener como máximo 10.000 píxeles extra; no se pueden comprar paquetes que superen ese límite.</li>
+        <li>Los miembros de un grupo crean juntos los proyectos comunitarios. Cada persona puede pertenecer a un solo grupo y fundar como máximo uno. El administrador debe aprobar los nuevos grupos.</li>
+        <li>Las ideas del proyecto se recopilan durante 7 días y el grupo vota durante 3 días. El proyecto se crea en un lienzo privado independiente y solo se transfiere al muro compartido cuando todos sus participantes acuerdan finalizarlo por unanimidad.</li>
+        <li>Tras su publicación, el área reservada del muro queda bloqueada para el grupo inicialmente durante 7 semanas. Al menos 5 miembros actuales del grupo pueden ampliar la reserva 7 semanas cada vez. Si no se amplía a tiempo, el área vuelve a estar disponible para todos.</li>
+        <li>El chat del proyecto solo es visible para sus participantes. Después de la publicación, pueden seguir leyendo el historial, pero no enviar mensajes nuevos.</li>
         <li>Están prohibidas las imágenes de odio, los símbolos anticonstitucionales o prohibidos, los insultos, la pornografía, las representaciones de violencia y los contenidos que vulneren derechos de terceros.</li>
         <li>No se permiten los accesos automatizados, bots ni scripts para eludir los límites de píxeles.</li>
     </ul>
 
-    <h2>3. Cuenta</h2>
+    <h2>3. Grupos y proyectos comunitarios</h2>
+    <p>
+        Los proyectos de grupo se planifican y crean en colaboración. Las propuestas y votaciones tienen lugar
+        dentro del grupo; durante la fase de creación, solo los participantes pueden usar el lienzo privado y
+        el chat del proyecto. La publicación transfiere los píxeles creados al área reservada del muro
+        compartido y añade el proyecto a la galería. Las reservas son temporales y solo pueden ampliarlas al
+        menos cinco miembros actuales del grupo. Los participantes pueden finalizar el proyecto por unanimidad
+        antes de que termine el plazo de creación.
+    </p>
+
+    <h2>4. Cuenta</h2>
     <p>
         Debes facilitar datos veraces y mantener en secreto tus credenciales de acceso. Está prevista una cuenta
         por persona. Podemos suspender o eliminar cuentas si incumples estas condiciones. Puedes eliminar tu
         cuenta en cualquier momento; consulta <a href="{{ route('legal.data-deletion') }}">Eliminar datos</a>.
     </p>
 
-    <h2>4. Contenidos y derechos</h2>
+    <h2>5. Contenidos y derechos</h2>
     <p>
         El muro se crea de forma colectiva. Nos concedes el derecho no exclusivo y gratuito a mostrar, almacenar
         y reproducir los píxeles que coloques en el marco del servicio, y a mostrarlos en imágenes y en la sección Pixelart del
@@ -34,7 +48,7 @@
         píxeles individuales. Podemos retirar los contenidos que infrinjan estas condiciones o la ley.
     </p>
 
-    <h2>5. Servicios de pago</h2>
+    <h2>6. Servicios de pago</h2>
     <p>
         Los precios se muestran en euros como precios finales. Aplicamos el régimen alemán para pequeñas
         empresas conforme al § 19 de la Ley alemana del IVA (UStG); por tanto, no se cobra ni se indica el IVA.
@@ -43,7 +57,7 @@
         Para comprar es necesaria una cuenta.
     </p>
 
-    <h2 id="withdrawal">6. Derecho de desistimiento sobre contenidos digitales</h2>
+    <h2 id="withdrawal">7. Derecho de desistimiento sobre contenidos digitales</h2>
     <p>
         Los consumidores tienen, por regla general, un derecho de desistimiento de 14 días en los contratos a
         distancia. Nuestros productos —saldo de píxeles y ampliaciones del muro— son contenidos digitales que
@@ -59,7 +73,7 @@
         los requisitos legales aplicables para la extinción del derecho de desistimiento, este sigue vigente.
     </p>
 
-    <h2>7. Disponibilidad y responsabilidad</h2>
+    <h2>8. Disponibilidad y responsabilidad</h2>
     <p>
         Nos esforzamos por ofrecer un servicio ininterrumpido, pero no garantizamos una disponibilidad
         permanente. Respondemos sin limitación en caso de dolo y negligencia grave, por daños a la vida, la
@@ -68,13 +82,13 @@
         previsible y típico.
     </p>
 
-    <h2>8. Notificación de infracciones</h2>
+    <h2>9. Notificación de infracciones</h2>
     <p>
         Puedes notificar contenidos ilícitos a <x-legal-value key="email" />. Indica la posición (x/y) en el
         muro y el motivo.
     </p>
 
-    <h2>9. Disposiciones finales</h2>
+    <h2>10. Disposiciones finales</h2>
     <p>
         Se aplica el derecho alemán, con exclusión de la Convención de las Naciones Unidas sobre compraventa
         internacional de mercaderías. En el caso de los consumidores, se mantienen las disposiciones imperativas
